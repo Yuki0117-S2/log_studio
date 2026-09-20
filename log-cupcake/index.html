@@ -2826,6 +2826,7 @@
                         </div>
                         <div
                             style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.6;">
+                            <b>자동 인물색:</b> **이름** "대사" (이름 등록 없이 사용)<br>
                             <b>화자:</b> AI: / USER: / CHAR-01: | <b>대사:</b> "대사" | <b>생각:</b> '생각'<br>
                             <b>통신:</b> &gt; 메시지 | <b>속삭임:</b> ((메시지)) | <b>외침:</b> ! 메시지<br>
                             <b>나레이션:</b> - 텍스트 | <b>제작자 코멘트:</b> %%%내용%%% 또는 ```내용```<br>
@@ -3153,6 +3154,7 @@ USER: "반가워요."
 
     <!-- 번들된 JavaScript 파일 로드 -->
 
+    <script src="../speaker-colors.js"></script>
     <script>
 // ===== themes.js =====
 
@@ -5705,7 +5707,7 @@ USER: "반가워요."
                     }
 
                     // 나레이션 (- 또는 * 로 시작)
-                    if (line.startsWith('-') || (line.startsWith('*') && !line.endsWith('*'))) {
+                    if (line.startsWith('-') || (line.startsWith('*') && !line.endsWith('*') && !LogSpeakerColors.starts(line))) {
                         flushBubbles();
                         currentSpeaker = null;
                         currentSpeakerType = null;
@@ -5819,6 +5821,10 @@ USER: "반가워요."
 
         // 마크다운 처리
         function processMarkdown(text) {
+            return LogSpeakerColors.format(text, processMarkdownOriginal);
+        }
+
+        function processMarkdownOriginal(text) {
             let result = escapeHtml(text);
 
             // **굵게**
@@ -6374,7 +6380,7 @@ USER: "반가워요."
                     }
 
                     // 나레이션 (- 또는 * 로 시작)
-                    if (line.startsWith('-') || (line.startsWith('*') && !line.endsWith('*'))) {
+                    if (line.startsWith('-') || (line.startsWith('*') && !line.endsWith('*') && !LogSpeakerColors.starts(line))) {
                         flushBubblesOnlyArca();
                         currentSpeaker = null;
                         currentSpeakerType = null;
@@ -6532,6 +6538,10 @@ USER: "반가워요."
         }
 
         function processMarkdownArca(text) {
+            return LogSpeakerColors.format(text, processMarkdownArcaOriginal);
+        }
+
+        function processMarkdownArcaOriginal(text) {
             // HTML 이스케이프
             text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             // 마크다운 처리
