@@ -2478,8 +2478,29 @@ function normalizeImageUrl(url) {
 
 function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWidth) {
     if (!text) return '';
+    // Apply user replacement rules once, before detecting the new speaker syntax.
+    const replaced = applyReplacements(text);
+    return LogSpeakerColors.format(replaced,
+        masked => parseTextOriginal(masked, themeStyle, skipIndent, reduceParagraphSpacing, imageWidth, true),
+        speech => {
+            // Keep the original quote/italic/thought processing, while letting
+            // the new outer speaker span supply the dialogue ink and paper.
+            const inlineTheme = { ...themeStyle, text: 'inherit', quote2Text: 'inherit', quote2Bg: 'transparent' };
+            const fragment = document.createElement('template');
+            fragment.innerHTML = parseTextOriginal(speech, inlineTheme, true, true, imageWidth, true);
+            for (const paragraph of fragment.content.querySelectorAll('p')) {
+                const inline = document.createElement('span');
+                inline.innerHTML = paragraph.innerHTML;
+                paragraph.replaceWith(inline);
+            }
+            return fragment.innerHTML;
+        });
+}
 
-    let processedText = applyReplacements(text);
+function parseTextOriginal(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWidth, alreadyReplaced = false) {
+    if (!text) return '';
+
+    let processedText = alreadyReplaced ? text : applyReplacements(text);
 
     const useRoundedQuotes = document.getElementById('useRoundedQuotes').checked;
     const useTextIndent = document.getElementById('useTextIndent').checked;
