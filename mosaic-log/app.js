@@ -1569,6 +1569,12 @@ function combineSoftBreakLines(lines){
 
 // 한 카드 분량의 줄들을 문단 HTML로 조립 (일부 접기 포함)
 function assembleBody(lines, settings){
+  return LogSpeakerColors.format(lines.join('\n'),
+    masked => assembleBodyOriginal(masked.split('\n'), settings),
+    speech => processBodyInline(speech, settings.emphasisColor, { softBreakSpacing:settings.softBreakSpacing }));
+}
+
+function assembleBodyOriginal(lines, settings){
   const renderLines = expandDialogueLinesForOutput(combineSoftBreakLines(lines), settings);
   // GAP은 자체 높이와 일반 문단 여백만 사용하고, 보이는 구분 요소만 HR 전용 여백을 더한다.
   const isSep = (l) => { const u = l.toUpperCase(); return u === '[HR]' || u === '[HR2]' || u === '[HR3]'; };

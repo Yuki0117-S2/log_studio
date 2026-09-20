@@ -437,6 +437,7 @@
       <summary>입력 문법 도움말</summary>
       <div class="syntaxHelpSection">
         <div class="syntaxHelpSectionTitle">글자와 대사</div>
+        <p class="hint"><b>자동 인물색:</b> <code>**이름** "대사"</code> · 등록 없이 이름과 대사를 같은 색으로 표시 · 서술은 유지</p>
         <p class="hint"><b>대사:</b> <code>"…"</code> 인식 · 옵션 3–5는 출력에서 자동 줄바꿈</p>
         <p class="hint"><b>강조:</b> <code>*이 부분*</code> → 강조 색상 이탤릭</p>
         <p class="hint"><b>속마음:</b> <code>'이 부분'</code> → 강조 색상 · 기울임 없음</p>
@@ -1094,6 +1095,7 @@
       <span><code>&gt;&gt;</code> {{char}}</span>
       <span><code>&lt;&lt;</code> {{user}}</span>
       <span><code>[이름]</code> 다른 인물</span>
+      <span><code>**이름** "대사"</code> 자동 인물색 · 등록 불필요</span>
       <span><code>**굵게**</code></span>
       <span><code>*강조*</code></span>
       <span><code>'속마음'</code></span>
@@ -1136,6 +1138,7 @@
   <button type="button" id="undoBtn">되돌리기</button>
 </div>
 
+<script src="../speaker-colors.js" defer></script>
 <script src="./app.js" defer></script>
 
 </body>
