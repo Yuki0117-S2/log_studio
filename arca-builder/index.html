@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Arca Studio · HTML 빌더</title>
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="reference-theme.css">
+  <script defer src="core.js"></script>
+  <script defer src="components.js"></script>
+  <script defer src="assets.js"></script>
+  <script defer src="upload.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Arca Studio"><span class="brand-context">log_studio /</span><span>아카라이브 HTML 빌더</span></a>
+    <div class="file-actions"><button id="newDoc">새 문서</button><button id="importHtml">HTML 불러오기</button><button id="openProject">프로젝트 열기</button><button id="saveProject">저장 <kbd>Ctrl S</kbd></button></div>
+    <div class="history-actions"><button id="undo" title="되돌리기 · Ctrl Z" aria-label="되돌리기">↶</button><button id="redo" title="다시 실행 · Ctrl Shift Z" aria-label="다시 실행">↷</button></div>
+    <button id="editorThemeToggle" class="editor-theme" aria-pressed="false" title="편집기 라이트 테마로 전환">☾ 편집기 · 다크</button><button id="backups" class="quiet">백업</button><button id="exportHtml" class="primary">게시용 HTML 내보내기 ↗</button>
+      <div class="canvas-toolbar">
+        <div class="segmented" aria-label="미리보기 모드"><button data-mode="edit" class="active">편집</button><button data-mode="final">게시 예상</button></div>
+        <div class="toolbar-divider"></div>
+        <div class="segmented" aria-label="미리보기 너비"><button data-width="900" class="active">PC</button><button data-width="360">모바일</button></div>
+        <button id="themeToggle" class="quiet" title="미리보기 배경 전환">☼ 라이트</button>
+        <label class="zoom-label">배율<select id="zoom"><option value="fit">맞춤</option><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select></label>
+        <span class="spacer"></span><button id="help" class="round-button" aria-label="사용법">?</button>
+      </div>
+  </header>
+  <div class="workspace">
+    <aside class="left-panel panel">
+      <div class="tabs" role="tablist" aria-label="왼쪽 패널"><button class="active" role="tab" aria-selected="true" data-left="tree">구성 트리</button><button role="tab" aria-selected="false" data-left="library">블록 추가 <span>＋</span></button></div>
+      <section id="treePanel" class="pane">
+        <div class="panel-sub"><span id="elementCount">문서 구성</span><button id="collapseTree" class="text-button">모두 접기</button></div>
+        <input id="treeSearch" type="search" placeholder="태그 또는 내용 찾기" aria-label="구성 트리 검색">
+        <div id="tree" class="tree" aria-label="HTML 구성"></div>
+        <div class="quick-blocks"><small>블록 추가</small><div><button data-quick="heading">제목</button><button data-quick="paragraph">텍스트</button><button data-quick="gallery">이미지 2×2</button><button data-quick="fold">접기</button><button data-quick="callout">콜아웃</button><button data-quick="link">버튼</button></div><button id="quickLocalImages">＋ 원본 이미지 · 주소 연결</button></div><div class="panel-foot"><span class="dot"></span>끌어서 이동 · 펼쳐서 안쪽 요소 선택</div>
+      </section>
+      <section id="libraryPanel" class="pane" hidden>
+        <div class="library-intro">필요한 만큼, 자유롭게.<small>선택한 위치에 새 블록을 넣어요.</small></div>
+        <label class="field">새 블록 색상<select id="palette"><option value="lavender">라벤더 · #8888CC</option><option value="rose">로즈 · #DDAACC</option><option value="sand">샌드 · #CCAA88</option><option value="berry">베리 · #BB6688</option></select></label>
+        <button id="localImages" class="wide image-button">▧ 원본 이미지 · 주소 연결</button><div id="library"></div><button id="images" class="wide image-button">＋ 여러 이미지 한 번에 넣기</button>
+      </section>
+    </aside>
+    <main class="main-panel">
+      <div class="context-strip"><span id="previewCaption">편집 미리보기 · 900px</span><span id="previewHint">클릭하면 코드와 속성이 함께 선택돼요</span></div>
+      <div id="canvasArea" class="canvas-area"><div id="frameSizer"><iframe id="preview" title="HTML 실시간 미리보기" sandbox="allow-same-origin"></iframe></div></div>
+    </main>
+    <aside class="right-panel panel">
+      <div class="tabs" role="tablist" aria-label="오른쪽 패널"><button class="active" role="tab" aria-selected="true" data-right="properties">속성</button><button role="tab" aria-selected="false" data-right="issues">호환성 <span id="issueCount">0</span></button></div>
+      <section id="propertiesPanel" class="pane">
+        <div id="noSelection" class="empty-selection"><div class="selection-illustration">⌖</div><h2>어디를 바꿔볼까요?</h2><p>미리보기, 구성 트리, 코드에서<br>원하는 부분을 눌러보세요.</p><div class="mini-guide"><span>01</span> 고를 때는 미리보기에서<br><span>02</span> 바꿀 때는 속성이나 코드에서<br><span>03</span> 결과는 바로 확인</div></div>
+        <div id="inspector" hidden>
+          <div class="selected-heading"><code id="selectedTag"></code><span id="selectedLabel"></span></div>
+          <div class="element-actions"><button data-operation="up" title="위로 이동">↑</button><button data-operation="down" title="아래로 이동">↓</button><button data-operation="parent">상위 선택</button><button data-operation="duplicate">복제</button><button data-operation="delete" class="danger-text">삭제</button></div>
+          <div id="inspectorFields"></div>
+          <details class="inspector-section"><summary>내부 HTML 편집</summary><p class="muted">하위 요소까지 바꾸려면 여기에서 수정하세요.</p><textarea id="innerHtml" spellcheck="false" rows="7" aria-label="선택 요소 내부 HTML"></textarea><button id="applyInner" class="wide">선택 영역에 적용</button></details>
+        </div>
+        <div class="insert-position"><label class="field">추가·이동 위치<select id="insertPosition"><option value="after">선택 요소 뒤</option><option value="inside">선택 요소 안쪽 맨 끝</option><option value="before">선택 요소 앞</option></select></label><small>선택이 없으면 문서 끝에 추가돼요.</small></div>
+      </section>
+      <section id="issuesPanel" class="pane" hidden><div class="lint-intro"><strong>가이드 v6.6 기준</strong><p>원본은 자동으로 지우지 않아요.<br>게시 예상과 내보내기에서 정리 결과를 확인하세요.</p></div><div id="issues"></div><p class="compat-note">이 검사는 제공된 가이드 기반의 예상입니다. 실제 아카라이브 저장·재접속 결과는 다를 수 있어요.</p></section>
+    </aside>
+      <div class="selection-bar"><span id="selectionPath">미리보기에서 고칠 부분을 선택하세요</span><span id="selectionLine"></span></div>
+      <div id="codeResizer" role="separator" aria-label="코드 영역 높이 조절" aria-orientation="horizontal" tabindex="0"></div>
+      <section class="code-panel">
+        <div class="code-header"><div><span class="code-dot"></span><strong>HTML 코드</strong><span class="code-caption">양방향 동기화 · 코드를 고치면 미리보기도 갱신</span></div><div><button id="findCode" class="text-button">코드 찾기</button><button id="copySource" class="text-button">원본 복사</button><button id="downloadSource" class="text-button">원본 저장</button></div></div>
+        <div class="code-wrap"><pre id="lineNumbers" aria-hidden="true">1</pre><textarea id="code" aria-label="HTML 원본 코드" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea></div>
+        <div class="code-footer"><span id="codeStats"></span><span id="changeSummary">준비됐어요</span></div>
+      </section>
+  </div>
+  <footer class="statusbar"><span id="saveStatus"><span class="dot"></span>브라우저에 자동 저장</span><span>Arca Studio <b>01</b><i></i>가이드 v6.6</span></footer>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <dialog id="modal"><form method="dialog" class="modal-heading"><h2 id="modalTitle"></h2><button aria-label="닫기" value="cancel">×</button></form><div id="modalBody"></div></dialog>
+  <input id="fileInput" type="file" hidden>
+  <div id="imageMenu" class="image-context-menu" role="menu" aria-label="이미지 작업" hidden><button id="contextDeleteImage" role="menuitem">이미지 삭제 <small>칸은 유지</small></button></div>
+  <div id="mobileImageActions" class="mobile-image-actions" role="toolbar" aria-label="선택 이미지 작업" hidden><span>선택한 이미지</span><button id="mobileDeleteImage">이미지 삭제</button></div>
+</body>
+</html>
