@@ -4,7 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f2eee5">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    /* 저장된 테마를 먼저 적용해 깜빡임을 막는다 */
+    try { var t = localStorage.getItem('log_studio.html_to_image.theme'); if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  </script>
   <title>HTML 이미지 변환</title>
   <meta name="description" content="편집기에서 만든 HTML을 지금 보이는 모습(접기 상태 포함) 그대로 이미지 한 장으로 저장합니다.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2327231f'/%3E%3Crect x='8' y='7' width='16' height='18' fill='%23f2eee5'/%3E%3Crect x='11' y='11' width='10' height='2' fill='%232f6b55'/%3E%3Crect x='11' y='15' width='7' height='2' fill='%23a79d8c'/%3E%3Crect x='11' y='19' width='9' height='2' fill='%23a79d8c'/%3E%3C/svg%3E">
@@ -21,7 +25,10 @@
         <a class="kicker" href="../">LOG STUDIO · 제1호 · HTML → IMAGE</a>
         <h1>HTML을 <em>이미지 한 장</em>으로</h1>
       </div>
-      <p class="lead">편집기에서 만든 HTML을 붙여넣거나 파일로 여세요. 접기를 원하는 대로 열고 닫은 뒤 저장하면, <b>보이는 그대로</b> 저장됩니다. 교정지를 누르면 원고의 해당 코드가 표시됩니다.</p>
+      <div class="mast-side">
+        <button type="button" class="theme-btn" id="themeBtn" aria-pressed="false">☾ 다크</button>
+        <p class="lead">편집기에서 만든 HTML을 붙여넣거나 파일로 여세요. 접기를 원하는 대로 열고 닫은 뒤 저장하면, <b>보이는 그대로</b> 저장됩니다. 교정지를 누르면 원고의 해당 코드가 표시됩니다.</p>
+      </div>
     </header>
 
     <main class="desk" id="desk">
@@ -54,6 +61,7 @@
             <button type="button" class="text-btn" id="expandAll">모두 펼치기</button>
             <button type="button" class="text-btn" id="collapseAll">모두 접기</button>
             <span class="folds" id="foldCount"></span>
+            <button type="button" class="box-btn" id="boxBtn" aria-pressed="true"><i class="sw sw-m"></i><i class="sw sw-p"></i>여백</button>
             <button type="button" class="text-btn zoom" id="zoomBtn" title="교정지 보기 배율 전환">맞춤</button>
           </div>
         </div>
@@ -149,7 +157,7 @@
 
     <footer class="footnote">
       <span>각주 — 외부 이미지·폰트는 서버가 허용(CORS)하지 않으면 빠질 수 있음(빠지는 그림은 교정지 아래에 표시) · 전체 문서의 body 바깥 여백은 '여백'으로 대체</span>
-      <span>설정은 기억, 원고는 저장 안 함 · <a href="vendor/LICENSES.txt" target="_blank" rel="noopener">사용한 라이브러리</a></span>
+      <span>설정·마지막 원고는 이 브라우저에만 기억(대체 그림은 제외) · <a href="vendor/LICENSES.txt" target="_blank" rel="noopener">사용한 라이브러리</a></span>
     </footer>
   </div>
 
