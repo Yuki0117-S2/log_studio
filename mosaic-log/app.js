@@ -526,7 +526,16 @@ function findChar(settings, name){
 
 // 대사 줄 맨 앞의 화자 마커를 떼어냄: >> / << / [인물이름]
 // 반환 {speaker, line} — speaker는 'char' | 'user' | {name,color} | null
+function normalizeAngleSpeakers(text, onName){
+  return LogSpeakerColors.replaceAngles(text, (name, gap, speech) => {
+    if(onName) onName(name);
+    // A character literally named C must not become the [C] centering command.
+    return '[' + (/^C$/i.test(name) ? ' ' : '') + name + ']"' + speech.slice(1, -1) + '"';
+  });
+}
+
 function stripSpeaker(line, settings){
+  line = normalizeAngleSpeakers(line);
   if(line.startsWith('>>')) return { speaker: 'char', line: line.slice(2).trim() };
   if(line.startsWith('<<')) return { speaker: 'user', line: line.slice(2).trim() };
   const m = line.match(/^\[([^\[\]\n]{1,24})\]\s*/);
@@ -588,7 +597,7 @@ function parseOutputBodyImage(line){
 
 function buildParagraph(rawLine, settings, opts){
   opts = opts || {};
-  let line = normalizeStandaloneHr(normalizeQuotes(rawLine.trim()));
+  let line = normalizeStandaloneHr(normalizeQuotes(normalizeAngleSpeakers(rawLine).trim()));
   if(!line) return '';
 
   const pal = tonePalette(settings);
@@ -1417,7 +1426,7 @@ function buildHeadingFold(level, title, innerHTML, settings, forceCenter){
 
 // 접두어({#색}, >>, <<)를 벗겨낸 뒤 줄 전체가 "..." 대사인지 판별 (연속 대사 간격용)
 function isPureDialogueLine(line, settings){
-  let l = normalizeQuotes(line.trim());
+  let l = normalizeQuotes(normalizeAngleSpeakers(line).trim());
   const cm = l.match(/^\{(#?(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}))\}\s*/);
   if(cm) l = l.slice(cm[0].length).trim();
   if(l.startsWith('>>') || l.startsWith('<<')) l = l.slice(2).trim();
@@ -1477,7 +1486,7 @@ function combineSoftBreakPair(left, right){
 
 function splitDialogueLineForOutput(rawLine, settings){
   const original = String(rawLine);
-  let line = normalizeQuotes(original).trim();
+  let line = normalizeQuotes(normalizeAngleSpeakers(original)).trim();
   if(!usesSeparatedDialogueOutput(settings)
     || !/"[^"]*"/.test(line)
     || isPureDialogueLine(line, settings)
@@ -1569,7 +1578,7 @@ function combineSoftBreakLines(lines){
 
 // 한 카드 분량의 줄들을 문단 HTML로 조립 (일부 접기 포함)
 function assembleBody(lines, settings){
-  return LogSpeakerColors.format(lines.join('\n'),
+  return LogSpeakerColors.format(normalizeAngleSpeakers(lines.join('\n')),
     masked => assembleBodyOriginal(masked.split('\n'), settings),
     speech => processBodyInline(speech, settings.emphasisColor, { softBreakSpacing:settings.softBreakSpacing }));
 }
@@ -2797,8 +2806,12 @@ function sourceProjectionMeta(line){
     offset += color[0].length;
     rest = normalized.slice(offset);
   }
+  const angleSpeaker = /^<<([^<>\[\]\r\n]{1,24})>>[ \t]*(?:[:：][ \t]*)?(?=["“「『])/.exec(rest);
   const fixedSpeaker = rest.match(/^(?:>>|<<)\s*/);
-  if(fixedSpeaker){
+  if(angleSpeaker && findChar(currentSettings, angleSpeaker[1])){
+    hide(offset, offset + angleSpeaker[0].length);
+    offset += angleSpeaker[0].length;
+  } else if(fixedSpeaker){
     hide(offset, offset + fixedSpeaker[0].length);
     offset += fixedSpeaker[0].length;
   } else {
@@ -2830,9 +2843,9 @@ function lineSearchProjection(line){
   // 일반 문단 중간의 화자 마커만 화면에서 사라진다. 제목·인용문에서는 글자 그대로다.
   if(meta.maskInlineSpeakers){
     const settings = getSettings();
-    const speakerRe = /(>>|<<|\[([^\[\]\n]{1,24})\])\s*(?=["“‘'])/g;
+    const speakerRe = /(<<([^<>\[\]\r\n]{1,24})>>[ \t]*(?:[:：][ \t]*)?|>>|<<|\[([^\[\]\n]{1,24})\])\s*(?=["“‘'「『])/g;
     while((m = speakerRe.exec(normalized)) !== null){
-      const known = m[1] === '>>' || m[1] === '<<' || !!findChar(settings, m[2]);
+      const known = m[1] === '>>' || m[1] === '<<' || !!findChar(settings, m[2] || m[3]);
       if(known) mask(m.index, m.index + m[0].length);
     }
   }
@@ -10766,13 +10779,14 @@ const RESERVED_MARKERS = /^(HR(?:2|3)?|GAP|C|IMG\b|NEWCARD|\/?접기)/i;
 function detectCharNames(){
   const names = [];
   getCards().filter(card => card.type !== 'comment' && card.visible !== false).forEach(card => {
-    const body = card.body;
+    const angleNames = new Set();
+    const body = normalizeAngleSpeakers(card.body, name => angleNames.add(name.toLowerCase()));
     normalizeQuotes(body).split('\n').forEach(line => {
       const re = /\[([^\[\]\n]{1,24})\]\s*(?=")/g;
       let m;
       while((m = re.exec(line)) !== null){
         const name = m[1].trim();
-        if(!name || RESERVED_MARKERS.test(name)) continue;
+        if(!name || (RESERVED_MARKERS.test(name) && !angleNames.has(name.toLowerCase()))) continue;
         if(!names.some(existing => existing.toLowerCase() === name.toLowerCase())) names.push(name);
       }
     });

@@ -2479,7 +2479,8 @@ function normalizeImageUrl(url) {
 function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWidth) {
     if (!text) return '';
     // Apply user replacement rules once, before detecting the new speaker syntax.
-    const replaced = applyReplacements(text);
+    const replaced = LogSpeakerColors.replaceRoles(applyReplacements(text),
+        (role, speech) => '**' + (role === 'char' ? '캐릭터' : '유저') + '** ' + speech);
     return LogSpeakerColors.format(replaced,
         masked => parseTextOriginal(masked, themeStyle, skipIndent, reduceParagraphSpacing, imageWidth, true),
         speech => {

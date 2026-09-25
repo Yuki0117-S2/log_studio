@@ -7861,6 +7861,14 @@
     rebaseNativeInlineProperty(property, previous, nextValue);
     state[property] = nextValue;
   }
+  function applySpeakerSyntax(textarea) {
+    var parsed = LogSpeakerColors.parseLine(textarea.value);
+    if (!parsed) return;
+    setNativeTextProperty("speaker", parsed.name || (parsed.role === "char" ? state.botName || "BOT" : state.personaName || "USER"));
+    setNativeTextProperty("quote", parsed.speech);
+    textarea.value = parsed.speech;
+    render();
+  }
   function trackTextareaSelection(textarea, kind, fieldIndex) {
     if (!textarea || textarea.selectionEnd <= textarea.selectionStart) {
       trackedTextSelection = null;
@@ -8053,6 +8061,7 @@
   }
   function renderLayerTextInspector() {
     var fields = textFieldsForLayer(state.selectedLayer, state.side);
+    $("#angleSpeakerHint").hidden = !fields.some(function (field) { return field.prop === "quote"; });
     var definition = layerDefinition(state.selectedLayer);
     var label = layerLabel(definition, state.side, state);
     $("#layerTextInspectorName").textContent = label ? label[0] : "텍스트";
@@ -10432,6 +10441,10 @@
   document.addEventListener("pointerup", finishPointerLayerDrag, true);
   document.addEventListener("pointercancel", finishPointerLayerDrag, true);
 
+  // Convert only a complete single-speaker entry on change, in the same undo step.
+  $("#quoteInput").addEventListener("change", function () {
+    applySpeakerSyntax(this);
+  });
   bindInput("#quoteInput", function (value) { setNativeTextProperty("quote", value); });
   $("#layerTextColorMode").addEventListener("change", function () {
     var value = $("#layerTextColorMode").value;
@@ -10497,6 +10510,10 @@
   [0, 1].forEach(function (index) {
     var suffix = index ? "B" : "A";
     var textarea = $("#layerTextValue" + suffix);
+    textarea.addEventListener("change", function () {
+      var field = textFieldsForLayer(state.selectedLayer, state.side)[index];
+      if (field && field.prop === "quote") applySpeakerSyntax(textarea);
+    });
     ["select", "keyup", "mouseup", "focus"].forEach(function (eventName) {
       textarea.addEventListener(eventName, function () { trackTextareaSelection(textarea, "native", index); });
     });

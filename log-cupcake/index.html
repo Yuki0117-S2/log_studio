@@ -2826,6 +2826,8 @@
                         </div>
                         <div
                             style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.6;">
+                            <b>인물 대사:</b> &lt;&lt;이름&gt;&gt; "대사" · 추가 캐릭터에 자동 등록 (최대 10명, 이후 자동 인물색)<br>
+                            <b>간편 화자:</b> &gt;&gt;"대사" = AI / &lt;&lt;"대사" = USER<br>
                             <b>자동 인물색:</b> **이름** "대사" (이름 등록 없이 사용)<br>
                             <b>화자:</b> AI: / USER: / CHAR-01: | <b>대사:</b> "대사" | <b>생각:</b> '생각'<br>
                             <b>통신:</b> &gt; 메시지 | <b>속삭임:</b> ((메시지)) | <b>외침:</b> ! 메시지<br>
@@ -5319,6 +5321,43 @@ USER: "반가워요."
         }
 
         // ========== 로그 파싱 및 생성 ==========
+        // Angle aliases only consume complete speech; existing AI:/USER: communication stays intact.
+        function cupcakeSpeakerColor(name) {
+            const key = name.normalize('NFC').trim().toLowerCase();
+            const person = extraCharacters.find(c => c.name.normalize('NFC').trim().toLowerCase() === key);
+            return person ? { ink: person.textColor, paper: person.bgColor } : null;
+        }
+
+        function normalizeCupcakeSpeakers(text) {
+            let added = false;
+            const result = LogSpeakerColors.replaceAngles(text, (name, gap, speech, original, offset, source) => {
+                const key = name.normalize('NFC').trim().toLowerCase();
+                const ai = document.getElementById('name-ai').value || 'AI';
+                const user = document.getElementById('name-user').value || 'USER';
+                let prefix;
+                if(key === ai.normalize('NFC').trim().toLowerCase()) prefix = 'AI';
+                else if(key === user.normalize('NFC').trim().toLowerCase()) prefix = 'USER';
+                else {
+                    let index = extraCharacters.findIndex(c => c.name.normalize('NFC').trim().toLowerCase() === key);
+                    if(index < 0 && extraCharacters.length < 10){
+                        const color = LogSpeakerColors.colors(name);
+                        index = extraCharacters.length;
+                        extraCharacters.push({ id: 'CHAR-' + String(index + 1).padStart(2, '0'), name,
+                            bgColor: color.paper, textColor: color.ink, nameColor: color.ink, commColor: color.base,
+                            avatarData: '', avatarShape: 'rounded', bio: '' });
+                        added = true;
+                    }
+                    if(index >= 0) prefix = 'CHAR-' + String(index + 1).padStart(2, '0');
+                }
+                const before = source.slice(source.lastIndexOf('\n', offset - 1) + 1, offset);
+                const end = source.indexOf('\n', offset + original.length);
+                const after = source.slice(offset + original.length, end < 0 ? source.length : end);
+                return prefix && !before.trim() && !after.trim() ? prefix + ': "' + speech.slice(1, -1) + '"' : original;
+            });
+            if(added){ renderExtraCharacters(); updateAddCharButton(); }
+            return LogSpeakerColors.replaceRoles(result, (role, speech) => (role === 'char' ? 'AI: "' : 'USER: "') + speech.slice(1, -1) + '"');
+        }
+
         function generateLog() {
             // 현재 프레임 타입 가져오기
             const currentFrameType = document.getElementById('frame-select').value;
@@ -5354,7 +5393,7 @@ USER: "반가워요."
                     console.log('치환 전:', originalText.substring(0, 200));
                     console.log('치환 후:', blockText.substring(0, 200));
                 }
-                return blockText;
+                return normalizeCupcakeSpeakers(blockText);
             });
 
             const preview = document.getElementById('log-preview');
@@ -5821,7 +5860,7 @@ USER: "반가워요."
 
         // 마크다운 처리
         function processMarkdown(text) {
-            return LogSpeakerColors.format(text, processMarkdownOriginal);
+            return LogSpeakerColors.format(text, processMarkdownOriginal, null, cupcakeSpeakerColor);
         }
 
         function processMarkdownOriginal(text) {
@@ -6059,7 +6098,7 @@ USER: "반가워요."
                 });
                 return {
                     title: titleInput ? titleInput.value : `블록 ${block.dataset.blockId}`,
-                    content: blockText,
+                    content: normalizeCupcakeSpeakers(blockText),
                     color: block.dataset.blockColor || ''
                 };
             });
@@ -6538,7 +6577,7 @@ USER: "반가워요."
         }
 
         function processMarkdownArca(text) {
-            return LogSpeakerColors.format(text, processMarkdownArcaOriginal);
+            return LogSpeakerColors.format(text, processMarkdownArcaOriginal, null, cupcakeSpeakerColor);
         }
 
         function processMarkdownArcaOriginal(text) {
