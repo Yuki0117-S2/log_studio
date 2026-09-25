@@ -35,7 +35,7 @@
         <div class="panel-sub"><span id="elementCount">문서 구성</span><button id="collapseTree" class="text-button">모두 접기</button></div>
         <input id="treeSearch" type="search" placeholder="태그 또는 내용 찾기" aria-label="구성 트리 검색">
         <div id="tree" class="tree" aria-label="HTML 구성"></div>
-        <div class="quick-blocks"><small>블록 추가</small><div><button data-quick="heading">제목</button><button data-quick="paragraph">텍스트</button><button data-quick="gallery">이미지 2×2</button><button data-quick="fold">접기</button><button data-quick="callout">콜아웃</button><button data-quick="link">버튼</button></div><button id="quickLocalImages">＋ 원본 이미지 · 주소 연결</button></div><div class="panel-foot"><span class="dot"></span>끌어서 이동 · 펼쳐서 안쪽 요소 선택</div>
+        <div class="quick-blocks"><small>블록 추가</small><div><button data-quick="heading">제목</button><button data-quick="paragraph">텍스트</button><button data-quick="gallery">이미지 2×2</button><button data-quick="fold">접기</button><button data-quick="callout">콜아웃</button><button data-quick="link">버튼</button></div><button id="quickLocalImages">＋ 원본 이미지 · 주소 연결</button></div><div class="panel-foot"><span class="dot"></span>Ctrl+클릭 여러 개 선택 · 끌어서 이동</div>
       </section>
       <section id="libraryPanel" class="pane" hidden>
         <div class="library-intro">필요한 만큼, 자유롭게.<small>선택한 위치에 새 블록을 넣어요.</small></div>
@@ -53,9 +53,9 @@
         <div id="noSelection" class="empty-selection"><div class="selection-illustration">⌖</div><h2>어디를 바꿔볼까요?</h2><p>미리보기, 구성 트리, 코드에서<br>원하는 부분을 눌러보세요.</p><div class="mini-guide"><span>01</span> 고를 때는 미리보기에서<br><span>02</span> 바꿀 때는 속성이나 코드에서<br><span>03</span> 결과는 바로 확인</div></div>
         <div id="inspector" hidden>
           <div class="selected-heading"><code id="selectedTag"></code><span id="selectedLabel"></span></div>
-          <div class="element-actions"><button data-operation="up" title="위로 이동">↑</button><button data-operation="down" title="아래로 이동">↓</button><button data-operation="parent">상위 선택</button><button data-operation="duplicate">복제</button><button data-operation="delete" class="danger-text">삭제</button></div>
+          <div id="singleElementActions" class="element-actions"><button data-operation="up" title="위로 이동">↑</button><button data-operation="down" title="아래로 이동">↓</button><button data-operation="parent">상위 선택</button><button data-operation="duplicate">복제</button><button data-operation="delete" class="danger-text">삭제</button></div>
           <div id="inspectorFields"></div>
-          <details class="inspector-section"><summary>내부 HTML 편집</summary><p class="muted">하위 요소까지 바꾸려면 여기에서 수정하세요.</p><textarea id="innerHtml" spellcheck="false" rows="7" aria-label="선택 요소 내부 HTML"></textarea><button id="applyInner" class="wide">선택 영역에 적용</button></details>
+          <details id="innerHtmlSection" class="inspector-section"><summary>내부 HTML 편집</summary><p class="muted">하위 요소까지 바꾸려면 여기에서 수정하세요.</p><textarea id="innerHtml" spellcheck="false" rows="7" aria-label="선택 요소 내부 HTML"></textarea><button id="applyInner" class="wide">선택 영역에 적용</button></details>
         </div>
         <div class="insert-position"><label class="field">추가·이동 위치<select id="insertPosition"><option value="after">선택 요소 뒤</option><option value="inside">선택 요소 안쪽 맨 끝</option><option value="before">선택 요소 앞</option></select></label><small>선택이 없으면 문서 끝에 추가돼요.</small></div>
       </section>
