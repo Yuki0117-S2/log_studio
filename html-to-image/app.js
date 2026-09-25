@@ -1,67 +1,49 @@
-/* HTML → 이미지 변환 (Log Studio)
- * - 미리보기 iframe(스크립트 실행 안 함)에 HTML을 그리고, 지금 보이는 DOM을 그대로 이미지로 만든다.
- * - <details> 접기는 사용자가 열고 닫을 때 브라우저가 open 속성을 갱신하므로, 캡처 시점의 상태가 그대로 저장된다.
- * - 캡처 엔진: html-to-image (vendor/html-to-image.js, MIT)
+/* HTML → 이미지 변환 (Log Studio) — 1b 교정지 테마
+ * - 원고(CodeMirror) ↔ 교정지(iframe) 위치 연결: source-map.js
+ * - 교정지는 스크립트를 실행하지 않는다(sandbox). 접기 상태는 DOM의 open 속성 그대로 캡처된다.
+ * - 캡처: html-to-image (vendor/html-to-image.js, MIT)
+ * - 다른 서버 그림은 서버가 CORS를 허용해야 캡처된다. 허용하지 않는 그림은 목록으로 알리고 로컬 파일로 대체할 수 있다.
  */
 (function () {
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
+  var CMX = window.CM, SM = window.HtiSourceMap;
   var els = {
-    src: $('src'), file: $('file'), openFile: $('openFile'), clearSrc: $('clearSrc'), drop: $('drop'), apply: $('apply'),
-    width: $('width'), widthOut: $('widthOut'), widthPresets: $('widthPresets'),
-    pad: $('pad'), padOut: $('padOut'),
-    bgSeg: $('bgSeg'), bgColor: $('bgColor'), scaleSeg: $('scaleSeg'), fmtSeg: $('fmtSeg'), fname: $('fname'),
-    expandAll: $('expandAll'), collapseAll: $('collapseAll'), foldCount: $('foldCount'),
-    copyImg: $('copyImg'), save: $('save'),
-    stage: $('stage'), empty: $('empty'), frameBox: $('frameBox'), frame: $('frame'), sizeInfo: $('sizeInfo'), toast: $('toast')
+    desk: $('desk'), editorWrap: $('editorWrap'), editorHost: $('editor'), dropHint: $('dropHint'),
+    file: $('file'), openFile: $('openFile'), clearSrc: $('clearSrc'), crumb: $('crumb'), apply: $('apply'), gutter: $('gutter'),
+    expandAll: $('expandAll'), collapseAll: $('collapseAll'), foldCount: $('foldCount'), zoomBtn: $('zoomBtn'),
+    stage: $('stage'), empty: $('empty'), crop: $('crop'), paper: $('paper'), frame: $('frame'), sizeInfo: $('sizeInfo'),
+    errata: $('errata'), errataTitle: $('errataTitle'), errataList: $('errataList'), errataPick: $('errataPick'),
+    errataToggle: $('errataToggle'), errataFiles: $('errataFiles'), errataOne: $('errataOne'),
+    width: $('width'), widthOut: $('widthOut'), widthPresets: $('widthPresets'), widthCustomBtn: $('widthCustomBtn'),
+    pad: $('pad'), padOut: $('padOut'), bgSeg: $('bgSeg'), bgColor: $('bgColor'), bgColorRow: $('bgColorRow'), customSwatch: $('customSwatch'),
+    scaleSeg: $('scaleSeg'), fmtSeg: $('fmtSeg'), fname: $('fname'), save: $('save'), copyImg: $('copyImg'), toast: $('toast')
   };
 
-  // 캔버스 한계(브라우저마다 다름). 넘으면 배율을 자동으로 낮춘다.
-  var MAX_SIDE = 32000;
-  var MAX_AREA = 120000000;
+  var MAX_SIDE = 32000, MAX_AREA = 120000000;
   var STORE_KEY = 'log_studio.html_to_image.options';
   var STYLE_ID = '__hti_style__';
+  var EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  var FETCH_INIT = { mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' };
 
-  var state = { width: 800, pad: 0, bg: 'transparent', bgColor: '#f4f2f7', scale: 2, fmt: 'png', loaded: false, busy: false };
-  var pollTimer = null;
-  var lastHeight = 0;
+  var state = { width: 800, pad: 0, bg: 'transparent', bgColor: '#f2eee5', scale: 2, fmt: 'png', fit: true, msW: 460,
+                customWidth: false, loaded: false, busy: false, dirty: false };
+  var model = null;          // 현재 교정지에 앉힌 원고의 위치 정보
+  var selId = null, hoverId = null;
+  var viewScale = 1, lastHeight = 0, pollTimer = null, renderTimer = null, loadWaiters = [];
+  var imgStatus = new Map();   // url -> 'pending' | 'ok' | 'fail'
+  var replacements = new Map(); // url -> { data, name }
+  var failList = [];           // 이번 원고에서 캡처할 수 없는 그림 url(순서대로)
+  var errataTarget = null;
 
-  /* ---------- 옵션 저장/복원 (실패해도 동작에는 영향 없음) ---------- */
-  function loadOptions() {
-    try {
-      var saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-      if (saved && typeof saved === 'object') {
-        ['width', 'pad', 'scale'].forEach(function (k) { if (typeof saved[k] === 'number') state[k] = saved[k]; });
-        ['bg', 'bgColor', 'fmt'].forEach(function (k) { if (typeof saved[k] === 'string') state[k] = saved[k]; });
-      }
-    } catch (e) { /* 저장소 사용 불가 */ }
-  }
-  function saveOptions() {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({
-        width: state.width, pad: state.pad, bg: state.bg, bgColor: state.bgColor, scale: state.scale, fmt: state.fmt
-      }));
-    } catch (e) { /* 무시 */ }
-  }
-
-  /* ---------- 공통 ---------- */
+  /* ================= 공통 ================= */
   var toastTimer = null;
   function toast(msg, ms) {
     els.toast.textContent = msg;
     els.toast.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, ms || 2400);
-  }
-  function setSeg(seg, attr, value) {
-    Array.prototype.forEach.call(seg.querySelectorAll('button'), function (b) {
-      b.classList.toggle('on', b.getAttribute(attr) === String(value));
-    });
-  }
-  function bgValue() {
-    if (state.bg === 'transparent') return null;
-    if (state.bg === 'custom') return state.bgColor;
-    return state.bg;
+    toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, ms || 2600);
   }
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
   function defaultName() {
@@ -72,35 +54,137 @@
     s = (s || '').trim().replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').replace(/\.(png|jpe?g)$/i, '');
     return s || defaultName();
   }
-  function doc() {
-    try { return els.frame.contentDocument; } catch (e) { return null; }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function doc() { try { return els.frame.contentDocument; } catch (e) { return null; } }
+  function bgValue() { return state.bg === 'transparent' ? null : state.bg === 'custom' ? state.bgColor : state.bg; }
+
+  function loadOptions() {
+    try {
+      var s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (s && typeof s === 'object') {
+        ['width', 'pad', 'scale', 'msW'].forEach(function (k) { if (typeof s[k] === 'number' && isFinite(s[k])) state[k] = s[k]; });
+        ['bg', 'bgColor', 'fmt'].forEach(function (k) { if (typeof s[k] === 'string') state[k] = s[k]; });
+        if (typeof s.fit === 'boolean') state.fit = s.fit;
+      }
+    } catch (e) { /* 저장소 사용 불가 */ }
+  }
+  function saveOptions() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ width: state.width, pad: state.pad, bg: state.bg, bgColor: state.bgColor,
+        scale: state.scale, fmt: state.fmt, fit: state.fit, msW: state.msW }));
+    } catch (e) { /* 무시 */ }
   }
 
-  /* ---------- UI 반영 ---------- */
-  function syncUI() {
-    els.width.value = state.width;
-    els.widthOut.textContent = state.width + 'px';
-    setSeg(els.widthPresets, 'data-w', state.width);
-    els.pad.value = state.pad;
-    els.padOut.textContent = state.pad + 'px';
-    setSeg(els.bgSeg, 'data-bg', state.bg);
-    els.bgColor.value = state.bgColor;
-    els.bgColor.hidden = state.bg !== 'custom';
-    setSeg(els.scaleSeg, 'data-s', state.scale);
-    setSeg(els.fmtSeg, 'data-f', state.fmt);
-    var disabled = !state.loaded || state.busy;
-    els.save.disabled = disabled;
-    els.copyImg.disabled = disabled || state.fmt !== 'png';
-    els.copyImg.title = state.fmt !== 'png' ? '클립보드 복사는 PNG만 지원합니다' : '';
-    els.expandAll.disabled = !state.loaded;
-    els.collapseAll.disabled = !state.loaded;
+  /* ================= 원고 편집기 (CodeMirror) ================= */
+  var setMarks = CMX.StateEffect.define();
+  var markField = CMX.StateField.define({
+    create: function () { return CMX.Decoration.none; },
+    update: function (v, tr) {
+      v = v.map(tr.changes);
+      for (var i = 0; i < tr.effects.length; i++) if (tr.effects[i].is(setMarks)) v = tr.effects[i].value;
+      return v;
+    },
+    provide: function (f) { return CMX.EditorView.decorations.from(f); }
+  });
+
+  var paperHighlight = CMX.HighlightStyle.define([
+    { tag: CMX.tags.tagName, color: '#2f6b55', fontWeight: '500' },
+    { tag: CMX.tags.attributeName, color: '#8a5a2b' },
+    { tag: CMX.tags.attributeValue, color: '#b04a3a' },
+    { tag: CMX.tags.string, color: '#b04a3a' },
+    { tag: CMX.tags.comment, color: '#a79d8c', fontStyle: 'italic' },
+    { tag: [CMX.tags.angleBracket, CMX.tags.punctuation, CMX.tags.separator], color: '#8a8176' },
+    { tag: [CMX.tags.propertyName, CMX.tags.variableName], color: '#8a5a2b' },
+    { tag: [CMX.tags.number, CMX.tags.unit, CMX.tags.color], color: '#884499' },
+    { tag: [CMX.tags.keyword, CMX.tags.processingInstruction, CMX.tags.documentMeta], color: '#5b544b', fontWeight: '600' },
+    { tag: CMX.tags.invalid, color: '#ee1166' }
+  ]);
+
+  var paperTheme = CMX.EditorView.theme({
+    '&': { height: '100%', backgroundColor: '#fbf9f4', color: '#4a443c', fontSize: '12.5px' },
+    '&.cm-focused': { outline: 'none' },
+    '.cm-scroller': { fontFamily: '"JetBrains Mono", ui-monospace, Consolas, monospace', lineHeight: '22px' },
+    '.cm-content': { padding: '12px 0 90px', caretColor: '#27231f',
+      backgroundImage: 'repeating-linear-gradient(transparent 0 21px, #ece6d9 21px 22px)', backgroundPosition: '0 12px' },
+    '.cm-line': { padding: '0 14px 0 10px' },
+    '.cm-gutters': { backgroundColor: '#f2eee5', color: '#a79d8c', borderRight: '1px solid #d9d2c4' },
+    '.cm-activeLineGutter': { backgroundColor: '#e6e0d3', color: '#27231f' },
+    '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#27231f', borderLeftWidth: '2px' },
+    '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': { backgroundColor: 'rgba(47,107,85,.22) !important' },
+    '.cm-selectionMatch': { backgroundColor: 'rgba(204,170,136,.35)' },
+    '.cm-matchingBracket': { backgroundColor: 'rgba(47,107,85,.18)', outline: 'none' },
+    '.cm-placeholder': { color: '#a79d8c', fontStyle: 'italic' },
+    '.cm-hti-range': { backgroundColor: 'rgba(47,107,85,.09)' },
+    '.cm-hti-tag': { backgroundColor: 'rgba(47,107,85,.24)', borderRadius: '2px', boxShadow: 'inset 0 -2px 0 #2f6b55' },
+    '.cm-hti-hover': { backgroundColor: 'rgba(204,170,136,.28)', borderRadius: '2px' },
+    '.cm-panels': { backgroundColor: '#f2eee5', color: '#27231f', borderColor: '#d9d2c4' },
+    '.cm-searchMatch': { backgroundColor: 'rgba(221,170,204,.45)' },
+    '.cm-searchMatch-selected': { backgroundColor: 'rgba(187,102,136,.45)' }
+  });
+
+  var editor = new CMX.EditorView({
+    parent: els.editorHost,
+    state: CMX.EditorState.create({
+      doc: '',
+      extensions: [
+        CMX.lineNumbers(), CMX.highlightActiveLineGutter(), CMX.history(), CMX.drawSelection(),
+        CMX.indentOnInput(), CMX.bracketMatching(), CMX.highlightSelectionMatches(),
+        CMX.html(), CMX.syntaxHighlighting(paperHighlight), paperTheme, CMX.EditorView.lineWrapping,
+        CMX.placeholder('여기에 HTML을 붙여넣으세요…'),
+        CMX.keymap.of([{ key: 'Mod-Enter', run: function () { renderNow(); return true; } }, { key: 'Escape', run: function () { clearSelection(); return false; } }]
+          .concat([CMX.indentWithTab], CMX.defaultKeymap, CMX.historyKeymap, CMX.searchKeymap)),
+        markField,
+        CMX.EditorView.updateListener.of(onEditorUpdate)
+      ]
+    })
+  });
+
+  function source() { return editor.state.doc.toString(); }
+  function setSource(text) {
+    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: text } });
   }
 
-  /* ---------- 미리보기 ---------- */
+  function onEditorUpdate(u) {
+    if (u.docChanged) {
+      state.dirty = true;
+      els.dropHint.hidden = u.state.doc.length > 0;
+      clearTimeout(renderTimer);
+      renderTimer = setTimeout(renderNow, 450);
+      return;
+    }
+    if (u.selectionSet && !state.dirty) {
+      var byUser = u.transactions.some(function (tr) { return tr.isUserEvent('select'); });
+      if (byUser) {
+        var rec = model ? model.atOffset(u.state.selection.main.head) : null;
+        select(rec, 'code');
+      }
+    }
+  }
+
+  function markRange(list, from, to, cls) {
+    var len = editor.state.doc.length;
+    from = Math.max(0, Math.min(from, len)); to = Math.max(0, Math.min(to, len));
+    if (to > from) list.push(CMX.Decoration.mark({ class: cls }).range(from, to));
+  }
+  function refreshCodeMarks() {
+    var list = [];
+    if (model && !state.dirty) {
+      var s = selId != null ? model.byId(selId) : null;
+      var h = hoverId != null && hoverId !== selId ? model.byId(hoverId) : null;
+      if (s) {
+        markRange(list, s.start, s.end, 'cm-hti-range');
+        markRange(list, s.start, s.openEnd, 'cm-hti-tag');
+        if (!s.implicit && s.closeStart < s.end) markRange(list, s.closeStart, s.end, 'cm-hti-tag');
+      }
+      if (h) markRange(list, h.start, h.openEnd, 'cm-hti-hover');
+    }
+    editor.dispatch({ effects: setMarks.of(CMX.Decoration.set(list, true)) });
+  }
+
+  /* ================= 교정지 ================= */
   function buildDoc(html) {
-    var isFull = /<!doctype|<html[\s>]|<body[\s>]|<head[\s>]/i.test(html);
-    var guard = '<base target="_blank">'; // sandbox에서 팝업이 막혀 있으므로 링크를 눌러도 이동하지 않음
-    if (isFull) {
+    var guard = '<base target="_blank">'; // sandbox에서 팝업이 막혀 있어 링크를 눌러도 이동하지 않음
+    if (/<!doctype|<html[\s>]|<body[\s>]|<head[\s>]/i.test(html)) {
       if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, function (m) { return m + guard; });
       return html.replace(/<html[^>]*>/i, function (m) { return m + '<head>' + guard + '</head>'; });
     }
@@ -110,22 +194,16 @@
   function injectStyle(d) {
     if (!d || !d.documentElement) return;
     var st = d.getElementById(STYLE_ID);
-    if (!st) {
-      st = d.createElement('style');
-      st.id = STYLE_ID;
-      (d.head || d.documentElement).appendChild(st);
-    }
+    if (!st) { st = d.createElement('style'); st.id = STYLE_ID; (d.head || d.documentElement).appendChild(st); }
     var bg = bgValue();
     st.textContent =
       ':root{color-scheme:light;background:' + (bg || 'transparent') + ' !important;}' +
-      'body{margin:0 !important;padding:' + state.pad + 'px !important;display:flow-root !important;' +
-      'min-height:0 !important;box-sizing:border-box !important;width:100% !important;}' +
-      'summary{cursor:pointer;}';
-  }
-
-  function applyWidth() {
-    els.frame.style.width = state.width + 'px';
-    fitHeight(true);
+      'body{margin:0 !important;padding:' + state.pad + 'px !important;display:flow-root !important;min-height:0 !important;' +
+      'box-sizing:border-box !important;width:100% !important;}' +
+      'summary{cursor:pointer;}' +
+      '[data-hti-hover]{outline:1px dashed #2f6b55 !important;outline-offset:1px !important;}' +
+      '[data-hti-sel]{outline:2px solid #2f6b55 !important;outline-offset:2px !important;}' +
+      'html[data-hti-sel],body[data-hti-sel]{outline-offset:-2px !important;}';
   }
 
   function contentHeight(d) {
@@ -133,27 +211,41 @@
     return Math.ceil(Math.max(d.body.scrollHeight, d.body.getBoundingClientRect().height));
   }
 
+  function layout() {
+    var d = doc();
+    if (!state.loaded || !d) return;
+    var cs = getComputedStyle(els.stage);
+    var avail = els.stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 4;
+    viewScale = state.fit ? Math.min(1, Math.max(0.1, avail / state.width)) : 1;
+    var h = lastHeight || contentHeight(d);
+    els.frame.style.width = state.width + 'px';
+    els.frame.style.height = Math.max(h, 40) + 'px';
+    els.frame.style.transform = viewScale === 1 ? '' : 'scale(' + viewScale + ')';
+    els.paper.style.width = Math.round(state.width * viewScale) + 'px';
+    els.paper.style.height = Math.round(Math.max(h, 40) * viewScale) + 'px';
+    els.zoomBtn.textContent = state.fit ? '맞춤 ' + Math.round(viewScale * 100) + '%' : '실제 크기';
+  }
+
   function fitHeight(force) {
     var d = doc();
     if (!d || !d.body) return;
-    // 한 번 작게 만든 뒤 재야 접었을 때 줄어든 높이가 반영된다
     if (force) els.frame.style.height = '0px';
     var h = contentHeight(d);
     if (force || h !== lastHeight) {
       lastHeight = h;
-      els.frame.style.height = Math.max(h, 40) + 'px';
+      layout();
       updateInfo();
     }
   }
 
   function updateFolds() {
     var d = doc();
-    if (!d) { els.foldCount.textContent = ''; return; }
+    if (!state.loaded || !d) { els.foldCount.textContent = ''; return; }
     var all = d.querySelectorAll('details');
-    if (!all.length) { els.foldCount.textContent = '접기 블록 없음'; return; }
+    if (!all.length) { els.foldCount.textContent = '접기 없음'; return; }
     var open = 0;
     Array.prototype.forEach.call(all, function (x) { if (x.open) open++; });
-    els.foldCount.textContent = '접기 ' + all.length + '개 · 펼침 ' + open + '개';
+    els.foldCount.textContent = '접기 ' + all.length + ' · 펼침 ' + open;
   }
 
   function plannedScale(w, h) {
@@ -166,174 +258,444 @@
 
   function updateInfo() {
     var d = doc();
-    if (!state.loaded || !d || !d.body) { els.sizeInfo.textContent = ''; return; }
-    var w = d.body.offsetWidth, h = contentHeight(d);
-    var s = plannedScale(w, h);
-    var W = Math.round(w * s), H = Math.round(h * s);
-    var text = '저장 크기: ' + W.toLocaleString() + ' × ' + H.toLocaleString() + ' px';
-    if (s < state.scale) {
-      els.sizeInfo.innerHTML = text + ' — <span class="warn">내용이 길어 배율을 ' + s.toFixed(2) + 'x로 낮춰 저장합니다.</span>';
-    } else {
-      els.sizeInfo.textContent = text + ' (배율 ' + state.scale + 'x)';
+    if (!state.loaded || !d || !d.body) { els.sizeInfo.textContent = '그림 1. 원고를 기다리는 중'; return; }
+    var w = d.body.offsetWidth, h = contentHeight(d), s = plannedScale(w, h);
+    var text = '그림 1. 저장 크기 ' + Math.round(w * s).toLocaleString() + ' × ' + Math.round(h * s).toLocaleString() + ' px';
+    if (s < state.scale) els.sizeInfo.innerHTML = esc(text) + ' <span class="warn">— 길어서 배율을 ' + s.toFixed(2) + 'x로 낮춤</span>';
+    else els.sizeInfo.textContent = text + ' (배율 ' + state.scale + 'x)';
+  }
+
+  function isOpenInSource(m, rec) {
+    return /\sopen(?=[\s=>\/]|$)/i.test(m.source.slice(rec.start, rec.openEnd));
+  }
+  function summaryKey(el) {
+    var s = el.querySelector(':scope > summary');
+    return s ? s.textContent.replace(/\s+/g, ' ').trim() : '';
+  }
+  // 다시 앉힐 때 사용자가 열고 닫아 둔 접기 상태를 이어받는다
+  function captureFolds() {
+    var d = doc();
+    if (!state.loaded || !d || !model) return null;
+    return Array.prototype.map.call(d.querySelectorAll('details'), function (el) {
+      var rec = model.byId(el.getAttribute(model.attr));
+      return { key: summaryKey(el), open: el.open, sourceOpen: rec ? isOpenInSource(model, rec) : el.hasAttribute('open') };
+    });
+  }
+  function restoreFolds(d, saved) {
+    if (!saved || !saved.length) return;
+    var list = Array.prototype.slice.call(d.querySelectorAll('details'));
+    var used = [];
+    list.forEach(function (el, i) {
+      var key = summaryKey(el), match = -1;
+      if (key) {
+        var cands = [];
+        saved.forEach(function (s, j) { if (!used[j] && s.key === key) cands.push(j); });
+        var same = list.filter(function (x) { return summaryKey(x) === key; }).length;
+        if (cands.length === 1 && same === 1) match = cands[0];
+        else if (cands.length) {
+          var nth = list.slice(0, i).filter(function (x) { return summaryKey(x) === key; }).length;
+          var all = []; saved.forEach(function (s, j) { if (s.key === key) all.push(j); });
+          if (all[nth] != null && !used[all[nth]]) match = all[nth];
+        }
+      }
+      if (match < 0 && saved.length === list.length && !used[i]) match = i;
+      if (match < 0) return;
+      used[match] = true;
+      var rec = model.byId(el.getAttribute(model.attr));
+      var nowSourceOpen = rec ? isOpenInSource(model, rec) : el.hasAttribute('open');
+      if (nowSourceOpen === saved[match].sourceOpen) el.open = saved[match].open; // 원고에서 open을 직접 바꿨다면 원고를 따른다
+    });
+  }
+
+  function renderNow() {
+    clearTimeout(renderTimer);
+    var src = source();
+    var p = new Promise(function (res) { loadWaiters.push(res); });
+    if (!src.trim()) {
+      state.loaded = false; state.dirty = false; model = null; selId = hoverId = null;
+      els.empty.hidden = false; els.crop.hidden = true; els.frame.removeAttribute('srcdoc');
+      failList = []; renderErrata(); updateFolds(); updateInfo(); refreshCodeMarks(); syncUI();
+      setCrumb(null);
+      flushWaiters();
+      return p;
     }
+    var folds = captureFolds();
+    var scrollTop = els.stage.scrollTop;
+    var next = SM.parse(src);
+    els.empty.hidden = true; els.crop.hidden = false;
+    els.frame.onload = function () { bindFrame(next, folds, scrollTop); };
+    els.frame.srcdoc = buildDoc(next.annotated);
+    return p;
   }
+  function flushWaiters() { var w = loadWaiters; loadWaiters = []; w.forEach(function (f) { f(); }); }
 
-  function startWatch() {
-    clearInterval(pollTimer);
-    // 이미지 로딩·접기 전환 등으로 높이가 바뀌는 것을 따라간다
-    pollTimer = setInterval(function () { fitHeight(false); updateFolds(); }, 400);
-  }
+  function bindFrame(next, folds, scrollTop) {
+    var d = doc();
+    if (!d || !d.body) { flushWaiters(); return; }
+    model = next;
+    state.dirty = source() !== next.source;
+    state.loaded = true;
+    selId = hoverId = null;
+    injectStyle(d);
+    restoreFolds(d, folds);
+    applyReplacements(d);
 
-  function load(html) {
-    html = (html || '').trim();
-    if (!html) { toast('먼저 HTML을 넣어주세요.'); return; }
-    state.loaded = false;
+    d.addEventListener('mouseover', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('[' + model.attr + ']') : null;
+      setHover(el ? el.getAttribute(model.attr) : null);
+    }, true);
+    d.addEventListener('mouseleave', function () { setHover(null); }, true);
+    d.documentElement.addEventListener('mouseleave', function () { setHover(null); });
+    d.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (a) e.preventDefault();
+      var el = e.target && e.target.closest ? e.target.closest('[' + model.attr + ']') : null;
+      if (el) select(model.byId(el.getAttribute(model.attr)), 'preview');
+    }, true);
+    d.addEventListener('toggle', function () { setTimeout(function () { fitHeight(true); updateFolds(); }, 0); }, true);
+    d.addEventListener('load', function () { fitHeight(false); }, true);
+
     syncUI();
-    els.empty.hidden = true;
-    els.frameBox.hidden = false;
-    els.frame.style.width = state.width + 'px';
-    els.frame.onload = function () {
-      var d = doc();
-      if (!d) { toast('미리보기를 열지 못했습니다.'); return; }
-      injectStyle(d);
-      d.addEventListener('toggle', function () { setTimeout(function () { fitHeight(true); updateFolds(); }, 0); }, true);
-      d.addEventListener('click', function (e) {
-        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-        if (a) e.preventDefault();
-      }, true);
-      state.loaded = true;
-      syncUI();
-      fitHeight(true);
-      updateFolds();
-      startWatch();
-      if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { fitHeight(true); });
-    };
-    els.frame.srcdoc = buildDoc(html);
+    lastHeight = 0;
+    fitHeight(true);
+    updateFolds();
+    els.stage.scrollTop = scrollTop;
+    clearInterval(pollTimer);
+    pollTimer = setInterval(function () { fitHeight(false); updateFolds(); }, 500);
+    if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { fitHeight(true); });
+    refreshCodeMarks();
+    probeImages(d);
+    // 원고에 커서가 있으면 그 위치를 다시 표시
+    if (editor.hasFocus) select(model.atOffset(editor.state.selection.main.head), 'code-quiet');
+    else setCrumb(null);
+    flushWaiters();
   }
 
-  /* ---------- 캡처 ---------- */
+  /* ================= 선택 / 표시 ================= */
+  function elById(id) {
+    var d = doc();
+    return d && model && id != null ? d.querySelector('[' + model.attr + '="' + id + '"]') : null;
+  }
+  function clearAttr(name) {
+    var d = doc();
+    if (!d) return;
+    Array.prototype.forEach.call(d.querySelectorAll('[' + name + ']'), function (x) { x.removeAttribute(name); });
+  }
+  function closedAncestor(el) {
+    var hidden = null;
+    for (var p = el.parentElement; p; p = p.parentElement) {
+      if (p.localName === 'details' && !p.open) {
+        var sum = p.querySelector(':scope > summary');
+        if (!(sum && (sum === el || sum.contains(el)))) hidden = p;
+      }
+    }
+    return hidden;
+  }
+
+  function setHover(id) {
+    if (id === hoverId) return;
+    hoverId = id;
+    clearAttr('data-hti-hover');
+    var el = elById(id);
+    if (el && id !== selId) el.setAttribute('data-hti-hover', '');
+    refreshCodeMarks();
+    setCrumb(id != null ? id : selId, id != null);
+  }
+
+  function select(rec, from) {
+    if (state.dirty) return;
+    selId = rec ? rec.id : null;
+    clearAttr('data-hti-sel');
+    clearAttr('data-hti-hover');
+    var el = elById(selId), hiddenIn = null;
+    if (el) {
+      hiddenIn = closedAncestor(el);
+      var mark = hiddenIn ? (hiddenIn.querySelector(':scope > summary') || hiddenIn) : el;
+      mark.setAttribute('data-hti-sel', '');
+      if (from === 'code') scrollPreviewTo(mark);
+    }
+    refreshCodeMarks();
+    if (rec && from === 'preview') {
+      editor.dispatch({
+        selection: { anchor: rec.start },
+        effects: CMX.EditorView.scrollIntoView(rec.start, { y: 'center' })
+      });
+    }
+    setCrumb(selId);
+  }
+  function clearSelection() { if (selId != null) select(null, 'none'); }
+
+  function scrollPreviewTo(el) {
+    var r = el.getBoundingClientRect();
+    var fr = els.frame.getBoundingClientRect(), st = els.stage.getBoundingClientRect();
+    var top = fr.top - st.top + r.top * viewScale, bottom = top + r.height * viewScale;
+    var left = fr.left - st.left + r.left * viewScale;
+    if (top < 24 || bottom > els.stage.clientHeight - 24) els.stage.scrollTop += top - Math.min(80, els.stage.clientHeight / 4);
+    if (left < 0 || left > els.stage.clientWidth - 40) els.stage.scrollLeft += left - 40;
+  }
+
+  function setCrumb(id, isHover) {
+    var el = elById(id), rec = model && id != null ? model.byId(id) : null;
+    if (!el || !rec) {
+      els.crumb.textContent = state.loaded ? '교정지를 누르거나 원고에 커서를 두면 서로의 위치가 표시됩니다.' : '원고를 넣으면 교정지와 위치가 연결됩니다.';
+      return;
+    }
+    var chain = [];
+    for (var p = el; p && p.nodeType === 1; p = p.parentElement) {
+      if (p.localName === 'html' || p.localName === 'head') break;
+      chain.unshift(p.localName);
+      if (p.localName === 'body') break;
+    }
+    if (chain.length > 5) chain = ['…'].concat(chain.slice(-4));
+    var html = chain.map(function (t, i) { return i === chain.length - 1 ? '<b>' + esc(t) + '</b>' : esc(t); }).join('<span class="sep">›</span>');
+    var line = model.lineAt(rec.start), endLine = model.lineAt(Math.max(rec.start, rec.end - 1));
+    html += ' · 원고 ' + line + (endLine > line ? '–' + endLine : '') + '행';
+    if (isHover) html = '가리킴: ' + html;
+    else if (closedAncestor(el)) html += ' <span class="warn">— 접힌 블록 안에 있어 제목에 표시했어요</span>';
+    els.crumb.innerHTML = html;
+  }
+
+  /* ================= 그림 점검 (CORS) ================= */
+  function imgKey(el) { return el.getAttribute('data-hti-src') || el.currentSrc || el.src || ''; }
+  function isRemote(url) { return /^https?:/i.test(url); }
+  function bgUrls(el) {
+    var out = [], re = /url\(\s*(['"]?)(.*?)\1\s*\)/g, m, v = el.style && el.style.backgroundImage;
+    while (v && (m = re.exec(v))) out.push(m[2]);
+    return out;
+  }
+  function collectImages(d) {
+    var urls = [], seen = {};
+    function add(u) {
+      try { u = new URL(u, d.baseURI).href; } catch (e) { return; }
+      if (isRemote(u) && !seen[u]) { seen[u] = 1; urls.push(u); }
+    }
+    Array.prototype.forEach.call(d.querySelectorAll('img'), function (img) { var u = imgKey(img); if (u) add(u); });
+    Array.prototype.forEach.call(d.querySelectorAll('[style*="url("]'), function (el) {
+      el.hasAttribute('data-hti-bg') ? JSON.parse(el.getAttribute('data-hti-bg')).forEach(add) : bgUrls(el).forEach(add);
+    });
+    return urls;
+  }
+  function probe(url) {
+    if (imgStatus.has(url) && imgStatus.get(url) !== 'fail-retry') return Promise.resolve();
+    imgStatus.set(url, 'pending');
+    return fetch(url, FETCH_INIT).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.blob();
+    }).then(function (b) {
+      imgStatus.set(url, b && b.size ? 'ok' : 'fail');
+    }).catch(function () { imgStatus.set(url, 'fail'); });
+  }
+  function probeImages(d) {
+    var urls = collectImages(d);
+    failList = urls.filter(function (u) { return imgStatus.get(u) === 'fail'; });
+    renderErrata();
+    Promise.all(urls.map(probe)).then(function () {
+      if (doc() !== d) return;
+      failList = urls.filter(function (u) { return imgStatus.get(u) === 'fail'; });
+      renderErrata();
+    });
+  }
+
+  function applyReplacements(d) {
+    d = d || doc();
+    if (!d) return;
+    Array.prototype.forEach.call(d.querySelectorAll('img'), function (img) {
+      var key = imgKey(img), abs = key;
+      try { abs = new URL(key, d.baseURI).href; } catch (e) { /* 그대로 */ }
+      var rep = replacements.get(abs);
+      if (rep) {
+        if (!img.hasAttribute('data-hti-src')) img.setAttribute('data-hti-src', abs);
+        if (img.getAttribute('src') !== rep.data) { img.removeAttribute('srcset'); img.setAttribute('src', rep.data); }
+      } else if (img.hasAttribute('data-hti-src')) {
+        img.setAttribute('src', img.getAttribute('data-hti-src'));
+        img.removeAttribute('data-hti-src');
+      }
+    });
+    Array.prototype.forEach.call(d.querySelectorAll('[style*="url("]'), function (el) {
+      var orig = el.hasAttribute('data-hti-bg') ? JSON.parse(el.getAttribute('data-hti-bg')) : bgUrls(el);
+      var bg = el.style.backgroundImage, changed = false;
+      if (el.hasAttribute('data-hti-bg')) {
+        bg = el.getAttribute('data-hti-bgv');
+      }
+      var nextBg = bg.replace(/url\(\s*(['"]?)(.*?)\1\s*\)/g, function (m, q, u) {
+        var abs = u; try { abs = new URL(u, d.baseURI).href; } catch (e) { /* 그대로 */ }
+        var rep = replacements.get(abs);
+        if (rep) { changed = true; return 'url("' + rep.data + '")'; }
+        return m;
+      });
+      if (changed) {
+        if (!el.hasAttribute('data-hti-bg')) { el.setAttribute('data-hti-bg', JSON.stringify(orig)); el.setAttribute('data-hti-bgv', bg); }
+        el.style.backgroundImage = nextBg;
+      } else if (el.hasAttribute('data-hti-bg')) {
+        el.style.backgroundImage = el.getAttribute('data-hti-bgv');
+        el.removeAttribute('data-hti-bg'); el.removeAttribute('data-hti-bgv');
+      }
+    });
+    setTimeout(function () { fitHeight(true); }, 60);
+  }
+
+  function hostOf(u) { try { return new URL(u).host; } catch (e) { return u; } }
+  function tailOf(u) { try { var p = new URL(u).pathname.split('/'); return decodeURIComponent(p[p.length - 1] || '') || u; } catch (e) { return u; } }
+  function expiresText(u) {
+    var m = /[?&]expires=(\d{9,11})/.exec(u);
+    if (!m) return '';
+    var t = new Date(+m[1] * 1000);
+    var left = t - Date.now();
+    var hhmm = pad2(t.getHours()) + ':' + pad2(t.getMinutes());
+    return left <= 0 ? ' · 주소 만료됨(' + hhmm + ')' : ' · 주소 만료 ' + (t.getMonth() + 1) + '/' + t.getDate() + ' ' + hhmm;
+  }
+  function brokenInPreview(u) {
+    var d = doc();
+    if (!d) return false;
+    var hit = Array.prototype.filter.call(d.querySelectorAll('img'), function (img) { return imgKey(img) === u || img.src === u; });
+    return hit.length > 0 && hit.every(function (img) { return img.complete && img.naturalWidth === 0; });
+  }
+
+  function renderErrata() {
+    if (!failList.length) { els.errata.hidden = true; els.errataList.innerHTML = ''; return; }
+    var left = failList.filter(function (u) { return !replacements.has(u); }).length;
+    els.errata.hidden = false;
+    els.errataTitle.textContent = left
+      ? '교정 메모 — 저장하면 빠지는 그림 ' + left + '개' + (left < failList.length ? ' (대체 ' + (failList.length - left) + '개)' : '')
+      : '교정 메모 — 그림 ' + failList.length + '개 모두 파일로 대체됨';
+    els.errataList.innerHTML = failList.map(function (u, i) {
+      var rep = replacements.get(u);
+      var status = rep ? '<span class="ok">대체됨 · ' + esc(rep.name) + '</span>'
+        : (brokenInPreview(u) ? '미리보기에서도 안 보임(주소 만료·삭제 가능)' : '서버가 읽기를 허용하지 않음') + esc(expiresText(u));
+      return '<li data-i="' + i + '" class="' + (rep ? 'done' : '') + '">' +
+        '<img alt="" referrerpolicy="no-referrer" src="' + esc(rep ? rep.data : u) + '">' +
+        '<div class="meta"><b title="' + esc(u) + '">' + esc(hostOf(u)) + ' / ' + esc(tailOf(u)) + '</b>' + status + '</div>' +
+        '<div class="acts"><button type="button" class="text-btn accent" data-act="pick">' + (rep ? '다시 고르기' : '파일로 대체') + '</button>' +
+        (rep ? '<button type="button" class="text-btn" data-act="undo">되돌리기</button>' : '') + '</div></li>';
+    }).join('');
+  }
+
+  function readAsDataURL(f) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(String(r.result || '')); };
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
+  }
+  function replaceWith(urls, files) {
+    files = Array.prototype.filter.call(files || [], function (f) { return /^image\//.test(f.type); });
+    if (!files.length) { toast('그림 파일을 골라주세요.'); return; }
+    var pairs = [];
+    for (var i = 0; i < urls.length && i < files.length; i++) pairs.push([urls[i], files[i]]);
+    Promise.all(pairs.map(function (p) {
+      return readAsDataURL(p[1]).then(function (data) { replacements.set(p[0], { data: data, name: p[1].name }); });
+    })).then(function () {
+      applyReplacements();
+      renderErrata();
+      toast('그림 ' + pairs.length + '개를 파일로 대체했습니다.' + (files.length > pairs.length ? ' (남는 파일 ' + (files.length - pairs.length) + '개는 쓰지 않음)' : ''));
+    }).catch(function () { toast('파일을 읽지 못했습니다.'); });
+  }
+  function unresolved() { return failList.filter(function (u) { return !replacements.has(u); }); }
+
+  /* ================= 캡처 ================= */
   function capture(asBlob) {
     var d = doc();
-    if (!d || !d.body || !window.htmlToImage) return Promise.reject(new Error('미리보기가 준비되지 않았습니다.'));
+    if (!d || !d.body || !window.htmlToImage) return Promise.reject(new Error('교정지가 준비되지 않았습니다.'));
+    clearAttr('data-hti-sel'); clearAttr('data-hti-hover');
     fitHeight(true);
-    var node = d.body;
-    var w = node.offsetWidth, h = contentHeight(d);
-    var s = plannedScale(w, h);
-    var bg = bgValue();
-    var isJpg = state.fmt === 'jpg';
+    var node = d.body, w = node.offsetWidth, h = contentHeight(d), s = plannedScale(w, h), bg = bgValue(), isJpg = state.fmt === 'jpg';
     var opts = {
-      width: w,
-      height: h,
-      pixelRatio: s,
-      skipAutoScale: true,
-      cacheBust: false,
+      width: w, height: h, pixelRatio: s, skipAutoScale: true, cacheBust: false,
       backgroundColor: bg || (isJpg ? '#ffffff' : undefined),
-      imagePlaceholder: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      filter: function (n) { return !(n && n.id === STYLE_ID); },
+      imagePlaceholder: EMPTY_GIF,
+      fetchRequestInit: FETCH_INIT,
       style: { margin: '0' }
     };
     var lib = window.htmlToImage;
-    if (asBlob) return lib.toBlob(node, opts);
-    return isJpg ? lib.toJpeg(node, Object.assign({ quality: 0.92 }, opts)) : lib.toPng(node, opts);
+    var job = asBlob ? lib.toBlob(node, opts) : isJpg ? lib.toJpeg(node, Object.assign({ quality: 0.92 }, opts)) : lib.toPng(node, opts);
+    return job.then(function (r) { restoreMarks(); return r; }, function (e) { restoreMarks(); throw e; });
+  }
+  function restoreMarks() {
+    if (selId != null) {
+      var el = elById(selId);
+      if (el) { var hid = closedAncestor(el); ((hid && (hid.querySelector(':scope > summary') || hid)) || el).setAttribute('data-hti-sel', ''); }
+    }
+  }
+  function ready() { return state.dirty ? renderNow() : Promise.resolve(); }
+  function afterSaveNote() {
+    var n = unresolved().length;
+    return n ? ' 그림 ' + n + '개는 서버가 막아 빠졌습니다 — 교정 메모에서 파일로 대체할 수 있어요.' : '';
   }
 
   function setBusy(b, label) {
     state.busy = b;
-    els.save.textContent = b ? (label || '만드는 중…') : '이미지 저장';
+    els.save.textContent = b ? (label || '인쇄 중…') : '이미지로 인쇄하기';
     syncUI();
   }
-
   function doSave() {
     if (!state.loaded || state.busy) return;
     setBusy(true);
-    capture(false).then(function (dataUrl) {
+    ready().then(function () { return capture(false); }).then(function (dataUrl) {
       var a = document.createElement('a');
       a.href = dataUrl;
       a.download = safeName(els.fname.value) + (state.fmt === 'jpg' ? '.jpg' : '.png');
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      toast('이미지를 저장했습니다.');
+      document.body.appendChild(a); a.click(); a.remove();
+      toast('이미지를 저장했습니다.' + afterSaveNote(), unresolved().length ? 5200 : 2400);
     }).catch(function (err) {
       console.error(err);
-      toast('이미지를 만들지 못했습니다. 외부 이미지·폰트가 막혔거나 내용이 너무 길 수 있습니다.', 4200);
+      toast('이미지를 만들지 못했습니다. 내용이 너무 길거나 브라우저가 막았을 수 있습니다.', 4200);
     }).then(function () { setBusy(false); });
   }
-
   function doCopy() {
     if (!state.loaded || state.busy) return;
-    if (!navigator.clipboard || typeof window.ClipboardItem === 'undefined') {
-      toast('이 브라우저는 이미지 복사를 지원하지 않습니다. 저장을 이용해주세요.', 3600);
-      return;
-    }
+    if (!navigator.clipboard || typeof window.ClipboardItem === 'undefined') { toast('이 브라우저는 이미지 복사를 지원하지 않습니다. 인쇄하기를 이용해주세요.', 3600); return; }
     setBusy(true, '복사 중…');
-    // Safari 호환을 위해 Promise를 그대로 넘긴다
-    var item = new ClipboardItem({ 'image/png': capture(true) });
+    var item = new ClipboardItem({ 'image/png': ready().then(function () { return capture(true); }) });
     navigator.clipboard.write([item]).then(function () {
-      toast('클립보드에 복사했습니다.');
-    }).catch(function (err) {
-      console.error(err);
-      toast('복사하지 못했습니다. 저장을 이용해주세요.', 3600);
-    }).then(function () { setBusy(false); });
+      toast('클립보드에 복사했습니다.' + afterSaveNote(), unresolved().length ? 5200 : 2400);
+    }).catch(function (err) { console.error(err); toast('복사하지 못했습니다. 인쇄하기를 이용해주세요.', 3600); })
+      .then(function () { setBusy(false); });
   }
 
-  /* ---------- 파일 불러오기 ---------- */
-  function readFile(f) {
-    if (!f) return;
-    var r = new FileReader();
-    r.onload = function () {
-      els.src.value = String(r.result || '');
-      if (!els.fname.value) els.fname.value = f.name.replace(/\.(html?|txt)$/i, '');
-      load(els.src.value);
-    };
-    r.onerror = function () { toast('파일을 읽지 못했습니다.'); };
-    r.readAsText(f, 'utf-8');
+  /* ================= 인쇄 사양 UI ================= */
+  function setOn(box, attr, value) {
+    Array.prototype.forEach.call(box.querySelectorAll('[' + attr + ']'), function (b) { b.classList.toggle('on', b.getAttribute(attr) === String(value)); });
   }
-
-  /* ---------- 이벤트 ---------- */
-  els.apply.addEventListener('click', function () { load(els.src.value); });
-  els.src.addEventListener('keydown', function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); load(els.src.value); }
-  });
-  els.openFile.addEventListener('click', function () { els.file.click(); });
-  els.file.addEventListener('change', function () { readFile(els.file.files[0]); els.file.value = ''; });
-  els.clearSrc.addEventListener('click', function () { els.src.value = ''; els.src.focus(); });
-
-  ['dragenter', 'dragover'].forEach(function (t) {
-    els.drop.addEventListener(t, function (e) {
-      if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0) {
-        e.preventDefault();
-        els.drop.classList.add('over');
-      }
-    });
-  });
-  ['dragleave', 'drop'].forEach(function (t) {
-    els.drop.addEventListener(t, function () { els.drop.classList.remove('over'); });
-  });
-  els.drop.addEventListener('drop', function (e) {
-    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-      e.preventDefault();
-      readFile(e.dataTransfer.files[0]);
-    }
-  });
+  function syncUI() {
+    els.width.value = state.width;
+    els.widthOut.textContent = state.width + ' px';
+    setOn(els.widthPresets, 'data-w', state.customWidth ? '' : state.width);
+    var preset = [420, 640, 800, 1000].indexOf(state.width) >= 0;
+    els.widthCustomBtn.classList.toggle('on', state.customWidth || !preset);
+    els.width.hidden = !(state.customWidth || !preset);
+    els.pad.value = state.pad;
+    els.padOut.textContent = state.pad + ' px';
+    setOn(els.bgSeg, 'data-bg', state.bg);
+    els.bgColor.value = state.bgColor;
+    els.customSwatch.style.background = state.bgColor;
+    els.bgColorRow.hidden = state.bg !== 'custom';
+    setOn(els.scaleSeg, 'data-s', state.scale);
+    setOn(els.fmtSeg, 'data-f', state.fmt);
+    var off = !state.loaded || state.busy;
+    els.save.disabled = off;
+    els.copyImg.disabled = off || state.fmt !== 'png';
+    els.copyImg.title = state.fmt !== 'png' ? '클립보드 복사는 PNG만 지원합니다' : '';
+    els.expandAll.disabled = els.collapseAll.disabled = !state.loaded;
+    els.zoomBtn.disabled = !state.loaded;
+  }
 
   els.widthPresets.addEventListener('click', function (e) {
-    var b = e.target.closest('button[data-w]');
+    var b = e.target.closest('button');
     if (!b) return;
+    if (b === els.widthCustomBtn) { state.customWidth = true; syncUI(); els.width.focus(); els.width.select(); return; }
+    state.customWidth = false;
     state.width = +b.getAttribute('data-w');
-    syncUI(); saveOptions(); applyWidth();
+    syncUI(); saveOptions(); layout(); fitHeight(true);
   });
   els.width.addEventListener('change', function () {
     var v = Math.round(+els.width.value);
     if (!isFinite(v) || v < 200) v = 200;
     if (v > 3000) v = 3000;
     state.width = v;
-    syncUI(); saveOptions(); applyWidth();
+    syncUI(); saveOptions(); layout(); fitHeight(true);
   });
-  els.pad.addEventListener('input', function () {
-    state.pad = +els.pad.value;
-    syncUI(); injectStyle(doc()); fitHeight(true);
-  });
+  els.pad.addEventListener('input', function () { state.pad = +els.pad.value; syncUI(); injectStyle(doc()); fitHeight(true); });
   els.pad.addEventListener('change', saveOptions);
   els.bgSeg.addEventListener('click', function (e) {
     var b = e.target.closest('button[data-bg]');
@@ -341,36 +703,146 @@
     state.bg = b.getAttribute('data-bg');
     syncUI(); saveOptions(); injectStyle(doc());
   });
-  els.bgColor.addEventListener('input', function () {
-    state.bgColor = els.bgColor.value;
-    injectStyle(doc());
-  });
+  els.bgColor.addEventListener('input', function () { state.bgColor = els.bgColor.value; els.customSwatch.style.background = state.bgColor; injectStyle(doc()); });
   els.bgColor.addEventListener('change', saveOptions);
   els.scaleSeg.addEventListener('click', function (e) {
     var b = e.target.closest('button[data-s]');
     if (!b) return;
-    state.scale = +b.getAttribute('data-s');
-    syncUI(); saveOptions(); updateInfo();
+    state.scale = +b.getAttribute('data-s'); syncUI(); saveOptions(); updateInfo();
   });
   els.fmtSeg.addEventListener('click', function (e) {
     var b = e.target.closest('button[data-f]');
     if (!b) return;
-    state.fmt = b.getAttribute('data-f');
-    syncUI(); saveOptions();
+    state.fmt = b.getAttribute('data-f'); syncUI(); saveOptions();
   });
+  els.zoomBtn.addEventListener('click', function () { state.fit = !state.fit; saveOptions(); layout(); });
 
   function setAllFolds(open) {
     var d = doc();
     if (!d) return;
     Array.prototype.forEach.call(d.querySelectorAll('details'), function (x) { x.open = open; });
-    setTimeout(function () { fitHeight(true); updateFolds(); }, 0);
+    setTimeout(function () { fitHeight(true); updateFolds(); if (selId != null) select(model.byId(selId), 'none'); }, 0);
   }
   els.expandAll.addEventListener('click', function () { setAllFolds(true); });
   els.collapseAll.addEventListener('click', function () { setAllFolds(false); });
   els.save.addEventListener('click', doSave);
   els.copyImg.addEventListener('click', doCopy);
+  els.apply.addEventListener('click', function () { renderNow(); });
 
+  /* ================= 원고 파일 ================= */
+  function readFile(f) {
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      setSource(String(r.result || ''));
+      if (!els.fname.value) els.fname.value = f.name.replace(/\.(html?|txt)$/i, '');
+      renderNow();
+    };
+    r.onerror = function () { toast('파일을 읽지 못했습니다.'); };
+    r.readAsText(f, 'utf-8');
+  }
+  els.openFile.addEventListener('click', function () { els.file.click(); });
+  els.file.addEventListener('change', function () { readFile(els.file.files[0]); els.file.value = ''; });
+  els.clearSrc.addEventListener('click', function () { setSource(''); editor.focus(); });
+
+  function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
+  ['dragenter', 'dragover'].forEach(function (t) {
+    els.editorWrap.addEventListener(t, function (e) { if (hasFiles(e)) { e.preventDefault(); e.stopPropagation(); els.editorWrap.classList.add('over'); } }, true);
+  });
+  els.editorWrap.addEventListener('dragleave', function (e) { if (!els.editorWrap.contains(e.relatedTarget)) els.editorWrap.classList.remove('over'); }, true);
+  els.editorWrap.addEventListener('drop', function (e) {
+    els.editorWrap.classList.remove('over');
+    if (hasFiles(e) && e.dataTransfer.files.length) { e.preventDefault(); e.stopPropagation(); readFile(e.dataTransfer.files[0]); }
+  }, true);
+
+  /* ================= 교정 메모(빠진 그림) ================= */
+  els.errataPick.addEventListener('click', function () { els.errataFiles.click(); });
+  els.errataFiles.addEventListener('change', function () {
+    var targets = unresolved();
+    if (!targets.length) targets = failList.slice();
+    replaceWith(targets, els.errataFiles.files);
+    els.errataFiles.value = '';
+  });
+  els.errataOne.addEventListener('change', function () {
+    if (errataTarget) replaceWith([errataTarget], els.errataOne.files);
+    els.errataOne.value = ''; errataTarget = null;
+  });
+  els.errataToggle.addEventListener('click', function () {
+    var f = els.errata.classList.toggle('folded');
+    els.errataToggle.textContent = f ? '펼치기' : '접기';
+  });
+  els.errataList.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-act]'), li = e.target.closest('li[data-i]');
+    if (!b || !li) return;
+    var u = failList[+li.getAttribute('data-i')];
+    if (b.getAttribute('data-act') === 'pick') { errataTarget = u; els.errataOne.click(); }
+    else { replacements.delete(u); applyReplacements(); renderErrata(); }
+  });
+  ['dragenter', 'dragover'].forEach(function (t) {
+    els.errata.addEventListener(t, function (e) {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      var li = e.target.closest('li[data-i]');
+      Array.prototype.forEach.call(els.errataList.children, function (x) { x.classList.toggle('over', x === li); });
+    });
+  });
+  els.errata.addEventListener('dragleave', function (e) {
+    if (!els.errata.contains(e.relatedTarget)) Array.prototype.forEach.call(els.errataList.children, function (x) { x.classList.remove('over'); });
+  });
+  els.errata.addEventListener('drop', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    Array.prototype.forEach.call(els.errataList.children, function (x) { x.classList.remove('over'); });
+    var li = e.target.closest('li[data-i]'), files = e.dataTransfer.files;
+    if (li && files.length === 1) replaceWith([failList[+li.getAttribute('data-i')]], files);
+    else {
+      var start = li ? +li.getAttribute('data-i') : 0;
+      var targets = li ? failList.slice(start) : (unresolved().length ? unresolved() : failList.slice());
+      replaceWith(targets, files);
+    }
+  });
+
+  /* ================= 원고 칸 너비 조절 ================= */
+  function setMsW(px) {
+    var deskW = els.desk.clientWidth;
+    var specW = window.innerWidth > 1180 ? 290 + 20 : 0;
+    var max = Math.max(300, deskW - specW - 16 - 20 * 2 - 320);
+    state.msW = Math.round(Math.max(280, Math.min(px, max)));
+    els.desk.style.setProperty('--ms-w', state.msW + 'px');
+    layout();
+  }
+  var dragging = false;
+  els.gutter.addEventListener('pointerdown', function (e) {
+    dragging = true; els.gutter.classList.add('drag'); els.gutter.setPointerCapture(e.pointerId);
+    els.frame.style.pointerEvents = 'none';
+  });
+  els.gutter.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    setMsW(e.clientX - els.desk.getBoundingClientRect().left);
+  });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false; els.gutter.classList.remove('drag'); els.frame.style.pointerEvents = '';
+    saveOptions();
+  }
+  els.gutter.addEventListener('pointerup', endDrag);
+  els.gutter.addEventListener('pointercancel', endDrag);
+  els.gutter.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault(); setMsW(state.msW + (e.key === 'ArrowLeft' ? -24 : 24)); saveOptions();
+    }
+  });
+
+  if (window.ResizeObserver) new ResizeObserver(function () { layout(); }).observe(els.stage);
+  window.addEventListener('resize', function () { setMsW(state.msW); });
+  window.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !editor.hasFocus) { e.preventDefault(); renderNow(); }
+  });
+
+  /* ================= 시작 ================= */
   loadOptions();
   els.fname.placeholder = defaultName();
+  setMsW(state.msW);
   syncUI();
+  setCrumb(null);
 })();
