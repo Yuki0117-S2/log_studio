@@ -82,7 +82,7 @@
     $('mobileImageActions').hidden=multi||!(selected?.tag==='img'&&selected.el?.getAttribute('src'));
     if(!selected){$('selectionPath').textContent='미리보기에서 고칠 부분을 선택하세요';$('selectionLine').textContent='';return;}
     const path=[];let r=selected;while(r){path.unshift(r.tag);r=model.byId.get(r.parentId);}
-    $('selectionPath').textContent=multi?`${selectedIds.size}개 요소 선택 · 색상 일괄 변경`:path.join(' › ');$('selectionLine').textContent=multi?'Ctrl+클릭으로 추가·해제 · Esc 전체 해제':`${model.lineAt(selected.start)}–${model.lineAt(selected.end)}줄 선택`;
+    $('selectionPath').textContent=multi?`${selectedIds.size}개 요소 선택 · 글씨체·색상 변경`:path.join(' › ');$('selectionLine').textContent=multi?'Ctrl+클릭으로 추가·해제 · Esc 전체 해제':`${model.lineAt(selected.start)}–${model.lineAt(selected.end)}줄 선택`;
     const inFields=$('inspector').contains(document.activeElement)&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if(force||!inFields)renderInspector();else if(!multi&&selected.tag==='img')refreshImageInspector();
     if(document.activeElement!==code){code.setSelectionRange(selected.start,selected.end);code.scrollTop=Math.max(0,(model.lineAt(selected.start)-3)*21);$('lineNumbers').scrollTop=code.scrollTop;}
@@ -132,6 +132,16 @@
     frameObserver?.disconnect();frameObserver=new ResizeObserver(()=>measureFrame());frameObserver.observe(doc.body);
     doc.addEventListener('load',measureFrame,true);doc.addEventListener('toggle',measureFrame,true);
     measureFrame();highlight(false);
+    if(selected){
+      const active=document.activeElement;
+      if(!$('inspector').contains(active)||!active.matches('input,select,textarea'))renderInspector();
+      else if(selectedIds.size===1){
+        const live=doc.querySelector(`[${model.attr}="${selected.id}"]`);
+        const shell=document.createElement('div');shell.innerHTML=window.ArcaVisual.spacing(selected,model,live);
+        const current=$('inspectorFields').querySelector('.space-metrics'),fresh=shell.querySelector('.space-metrics');
+        if(current&&fresh)current.replaceWith(fresh);
+      }
+    }
     if(frameScrollRestore){$('canvasArea').scrollTop=frameScrollRestore.top;$('canvasArea').scrollLeft=frameScrollRestore.left;frameScrollRestore=null;}
     if(pendingPreviewScroll){pendingPreviewScroll=false;highlight(true);}
   }
@@ -182,7 +192,8 @@
     if(!selected?.el)return;const el=selected.el,st=el.style,tag=selected.tag;
     if(selectedIds.size>1){renderBatchInspector();return;}
     $('selectedTag').textContent='<'+tag+'>';$('selectedLabel').textContent=C.label(selected);
-    let html='';
+    const live=frameReady&&renderedModel===model?frame.contentDocument.querySelector(`[${model.attr}="${selected.id}"]`):null;
+    let html=window.ArcaVisual.spacing(selected,model,live)+window.ArcaVisual.fontPanel(selected,live);
     if(!C.VOID.has(tag)&&el.children.length===0)html+=`<label class="field">내용<textarea id="textValue" data-text="true" rows="3">${e(el.textContent)}</textarea><span class="field-help">입력하면 코드와 미리보기에 바로 반영돼요.</span></label>`;
     else if(!C.VOID.has(tag))html+='<p class="muted">안쪽 글자를 바꾸려면 해당 문장을 선택하세요.<br>이 요소 전체는 아래 ‘내부 HTML’에서 편집해요.</p>';
     if(tag==='img')html+=`<div class="inspector-image"><img id="selectedImageThumb" alt="선택 이미지 미리보기"><span id="selectedImageState" class="muted">주소를 확인하는 중…</span><button id="enlargeSelectedImage" class="wide">이미지 크게 보기</button></div>`+(A.idOf(el.getAttribute('src'))?field('게시용 주소','data-arca-publish',el.getAttribute('data-arca-publish'),'text','원본으로 미리봐요. 이 주소는 게시용 HTML에 들어가요.'):field('이미지 주소','src',el.getAttribute('src'),'text','https:// 또는 //로 시작하는 이미지 주소를 넣어주세요.'))+field('이미지 설명','alt',el.getAttribute('alt'));
@@ -197,13 +208,42 @@
   }
   function renderBatchInspector(){
     const records=selectedRecords();
-    $('selectedTag').textContent=records.length+'개 선택';$('selectedLabel').textContent='글자색 · 배경색 일괄 변경';
+    $('selectedTag').textContent=records.length+'개 선택';$('selectedLabel').textContent='글씨체 · 글자색 · 배경색 변경';
     const fields=[['글자색','color'],['배경색','background-color']].map(([label,prop])=>{
       const values=records.map(r=>r.el.style.getPropertyValue(prop)),mixed=new Set(values).size>1;
       return colorField(label,prop,mixed?'':values[0]).replace('placeholder="#8888CC / transparent"',`placeholder="${mixed?'서로 다른 색상':'#8888CC / transparent'}"`);
     }).join('');
     $('inspectorFields').innerHTML=`<p class="muted">선택한 ${records.length}개 요소에 함께 적용해요.<br>Ctrl+클릭으로 추가·해제할 수 있어요. Mac은 ⌘+클릭.</p><details open class="inspector-section"><summary>색상 일괄 변경</summary>${fields}<div class="swatches" aria-label="추천 배경색">${['#8888CC','#DDAACC','#CCAA88','#BB6688'].map(c=>`<button style="background:${c}" data-swatch="${c}" title="배경색 ${c}" aria-label="배경색 ${c}"></button>`).join('')}</div></details><button id="clearSelection" class="wide">선택 모두 해제</button>`;
     $('clearSelection').onclick=()=>select(null);
+    $('inspectorFields').insertAdjacentHTML('afterbegin',window.ArcaVisual.fontPanel(records[0],null,true));
+  }
+  function editVisualStyles(records,properties,message,kind){
+    const edits=[];
+    for(const r of records){
+      const el=r.el.cloneNode(false);
+      for(const [prop,value] of Object.entries(properties))el.style.setProperty(prop,value,el.style.getPropertyPriority(prop));
+      if(el.getAttribute('style')!==r.el.getAttribute('style'))edits.push({r,html:C.openingWith(r,{style:el.getAttribute('style')})});
+    }
+    if(!edits.length)return;
+    let next=source;
+    for(const {r,html} of edits.sort((a,b)=>b.r.start-a.r.start))next=C.patch(next,r.start,r.openEnd,html);
+    if(kind==='command'||kind!==lastEditKind||Date.now()-historyTime>800)backup(message+' 전');
+    commit(next,message,kind,null,100,selectionState());
+  }
+  function quickSpacing(input){
+    const prop=input.dataset.quickStyle,n=Number(input.value);
+    if(input.value===''||!Number.isFinite(n)||(!prop.startsWith('margin')&&n<0))return;
+    flush();if(!selected||selectedIds.size!==1)return;
+    for(const peer of $('inspectorFields').querySelectorAll(`[data-quick-style="${prop}"]`))if(peer!==input){if(peer.type==='range'){peer.max=Math.max(Number(peer.max),n);peer.min=Math.min(Number(peer.min),n);}peer.value=n;}
+    editVisualStyles([selected],{[prop]:n+(prop==='line-height'?'':'px')},'세로 간격 조절','spacing:'+selected.id+':'+prop);
+  }
+  function applyFont(){
+    const choice=window.ArcaVisual.fonts.find(([id])=>id===$('quickFont').value),descendants=$('fontDescendants').checked;
+    if(!choice){toast('먼저 글씨체를 선택해 주세요.');return;}
+    flush();const roots=selectedRecords();
+    const records=descendants?model.records.filter(r=>r.el&&roots.some(root=>root.el===r.el||root.el.contains(r.el))):roots;
+    editVisualStyles(records,{'font-family':choice[2]},'선택 구역 글씨체 변경','command');
+    toast(choice[1]+' 글씨체를 적용했어요.');
   }
   function updateBatchColor(input){
     const prop=input.dataset.style;if(!['color','background-color'].includes(prop))return;
@@ -421,6 +461,14 @@
   code.onclick=codeSelect;code.onkeyup=ev=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(ev.key))codeSelect();};
   code.onkeydown=ev=>{if(ev.key==='Tab'){ev.preventDefault();const start=code.selectionStart,end=code.selectionEnd;code.setRangeText('  ',start,end,'end');code.dispatchEvent(new Event('input'));}};
   $('inspectorFields').addEventListener('input',ev=>{if(ev.target.matches('[data-text],[data-style],[data-attr]')&&ev.target.type!=='checkbox')updateProperty(ev.target);});
+  $('inspectorFields').addEventListener('input',ev=>{if(ev.target.matches('[data-quick-style]'))quickSpacing(ev.target);});
+  $('inspectorFields').addEventListener('change',ev=>{if(ev.target.id==='quickFont'){const font=window.ArcaVisual.fonts.find(([id])=>id===ev.target.value);if(font)$('fontSample').style.fontFamily=font[2];}});
+  $('inspectorFields').addEventListener('click',ev=>{
+    const target=ev.target.closest('[data-space-target]');
+    if(target){flush();select(model.byId.get(target.dataset.spaceTarget),{scrollPreview:true});return;}
+    if(ev.target.closest('[data-apply-font]')){applyFont();return;}
+    if(ev.target.closest('[data-auto-height]')){flush();if(selected&&selectedIds.size===1)editVisualStyles([selected],{height:'auto','min-height':'0'},'고정·최소 높이 풀기','command');}
+  });
   $('inspectorFields').addEventListener('change',ev=>{if(ev.target.matches('[data-check],select[data-style]'))updateProperty(ev.target);});
   $('inspectorFields').addEventListener('click',ev=>{const b=ev.target.closest('[data-swatch]');if(b)updateProperty({dataset:{style:'background-color'},value:b.dataset.swatch});});
   document.querySelectorAll('[data-operation]').forEach(x=>x.onclick=()=>operation(x.dataset.operation));

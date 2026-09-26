@@ -300,8 +300,8 @@
       }
     }
     // The iframe has no script capability, navigation capability, or network APIs.
-    const csp="default-src 'none'; img-src https: http: data:; style-src 'unsafe-inline'; font-src 'none'; frame-src 'none'; media-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'";
-    const headStyles=mode==='edit'?[...doc.head.querySelectorAll('style')].map(x=>x.outerHTML).join(''):'';
+    const csp="default-src 'none'; img-src https: http: data:; style-src 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src https://fonts.gstatic.com https://cdn.jsdelivr.net; frame-src 'none'; media-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'";
+    const headStyles=(window.ArcaVisual?.fontLinks||'')+(mode==='edit'?[...doc.head.querySelectorAll('style')].map(x=>x.outerHTML).join(''):'');
     const bodyAttrs=[...doc.body.attributes].map(a=>' '+a.name+'="'+escape(a.value)+'"').join('');
     return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html{min-height:100%;background:${dark?'#202027':'#fff'}}body{margin:0;padding:0;color:${dark?'#eee':'#24212d'};font-family:Arial,'Malgun Gothic',sans-serif;font-size:15px;line-height:1.7;overflow-wrap:anywhere}img{max-width:100%;height:auto}img[data-editor-empty-image]{display:inline-block;min-width:80px;min-height:70px;background:#8888CC12;border:1px dashed #8888CC;color:#686890;object-fit:contain;box-sizing:border-box}body{min-height:120px}</style>${headStyles}</head><body${bodyAttrs}>${doc.body.innerHTML}</body></html>`;
   }
