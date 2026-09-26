@@ -238,12 +238,17 @@
     editVisualStyles([selected],{[prop]:n+(prop==='line-height'?'':'px')},'세로 간격 조절','spacing:'+selected.id+':'+prop);
   }
   function applyFont(){
-    const choice=window.ArcaVisual.fonts.find(([id])=>id===$('quickFont').value),descendants=$('fontDescendants').checked;
-    if(!choice){toast('먼저 글씨체를 선택해 주세요.');return;}
+    const choice=window.ArcaVisual.fontChoice($('quickFont').value,$('customFontName').value),descendants=$('fontDescendants').checked;
+    if(!choice){toast($('quickFont').value==='custom'?'설치된 글꼴 이름을 입력해 주세요.':'먼저 글씨체를 선택해 주세요.');return;}
     flush();const roots=selectedRecords();
     const records=descendants?model.records.filter(r=>r.el&&roots.some(root=>root.el===r.el||root.el.contains(r.el))):roots;
     editVisualStyles(records,{'font-family':choice[2]},'선택 구역 글씨체 변경','command');
     toast(choice[1]+' 글씨체를 적용했어요.');
+  }
+  function previewFontChoice(){
+    $('customFontField').hidden=$('quickFont').value!=='custom';
+    const font=window.ArcaVisual.fontChoice($('quickFont').value,$('customFontName').value);
+    $('fontSample').style.fontFamily=font?font[2]:'inherit';
   }
   function updateBatchColor(input){
     const prop=input.dataset.style;if(!['color','background-color'].includes(prop))return;
@@ -462,7 +467,8 @@
   code.onkeydown=ev=>{if(ev.key==='Tab'){ev.preventDefault();const start=code.selectionStart,end=code.selectionEnd;code.setRangeText('  ',start,end,'end');code.dispatchEvent(new Event('input'));}};
   $('inspectorFields').addEventListener('input',ev=>{if(ev.target.matches('[data-text],[data-style],[data-attr]')&&ev.target.type!=='checkbox')updateProperty(ev.target);});
   $('inspectorFields').addEventListener('input',ev=>{if(ev.target.matches('[data-quick-style]'))quickSpacing(ev.target);});
-  $('inspectorFields').addEventListener('change',ev=>{if(ev.target.id==='quickFont'){const font=window.ArcaVisual.fonts.find(([id])=>id===ev.target.value);if(font)$('fontSample').style.fontFamily=font[2];}});
+  $('inspectorFields').addEventListener('change',ev=>{if(ev.target.id==='quickFont')previewFontChoice();});
+  $('inspectorFields').addEventListener('input',ev=>{if(ev.target.id==='customFontName')previewFontChoice();});
   $('inspectorFields').addEventListener('click',ev=>{
     const target=ev.target.closest('[data-space-target]');
     if(target){flush();select(model.byId.get(target.dataset.spaceTarget),{scrollPreview:true});return;}

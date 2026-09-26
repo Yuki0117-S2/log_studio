@@ -9,6 +9,17 @@
   ];
   const fontLinks='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&amp;family=Noto+Serif+KR:wght@400;600;700;800&amp;display=swap"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">';
   const round=n=>Math.round(n*10)/10;
+  function firstFont(stack=''){
+    const match=/^\s*(?:"((?:\\.|[^"])*)"|'((?:\\.|[^'])*)'|([^,]+))/.exec(stack);
+    return match?(match[1]??match[2]??match[3]).replace(/\\(.)/g,'$1').trim():'';
+  }
+  function fontChoice(key,name=''){
+    if(key!=='custom')return fonts.find(([id])=>id===key)||null;
+    name=name.trim();
+    if(!name||name.length>200||/[\u0000-\u001f\u007f]/.test(name))return null;
+    const quoted='"'+name.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
+    return ['custom',name,quoted+', sans-serif'];
+  }
   function slider(label,prop,value,max,step=1,unit='px') {
     const n=parseFloat(value),valid=Number.isFinite(n),v=valid?round(n):0;
     return `<div class="space-control"><label for="quick-${prop}">${label}</label><div><input id="quick-${prop}" type="range" data-quick-style="${prop}" min="${Math.min(0,v)}" max="${Math.max(max,v)}" step="${step}" value="${v}" aria-label="${label}"><input type="number" data-quick-style="${prop}" min="${prop.startsWith('margin')?'-10000':'0'}" step="${step}" value="${valid?v:''}" aria-label="${label} 숫자" placeholder="자동"><span>${unit}</span></div></div>`;
@@ -25,8 +36,9 @@
   }
   function fontPanel(record,live,multi=false){
     const current=live?getComputedStyle(live).fontFamily:record.el.style.fontFamily;
-    const key=fonts.find(([, ,stack])=>current?.split(',')[0].replace(/["']/g,'').trim()===stack.split(',')[0].replace(/["']/g,'').trim())?.[0]||'';
-    return `<details open class="inspector-section quick-font"><summary>글씨체 미리보기</summary><p class="field-help">현재: ${e(current||'상위 글씨체 상속')}</p><label class="field">글씨체<select id="quickFont"><option value="">글씨체 선택…</option>${fonts.map(([id,label])=>`<option value="${id}" ${key===id?'selected':''}>${label}</option>`).join('')}</select></label><div id="fontSample" class="font-sample" style="font-family:${e(current||'inherit')}">이야기가 머무는 자리<br>가나다 Aa 0123</div><label class="check-row"><input id="fontDescendants" type="checkbox" checked>선택 구역 안의 글자까지 함께 변경</label><button type="button" data-apply-font class="wide">${multi?'선택한 구역들':'선택 구역'}에 글씨체 적용</button><p class="field-help">선택하면 위 예문을 미리 봐요. 적용 버튼을 누르면 본문도 바뀝니다. 게시판에서 지원하지 않는 글씨체는 대체 글꼴로 보일 수 있어요.</p></details>`;
+    const name=firstFont(current),preset=fonts.find(([, ,stack])=>name.toLowerCase()===firstFont(stack).toLowerCase());
+    const key=preset?.[0]||(name&&!/^(inherit|initial|unset|serif|sans-serif|monospace|system-ui)$/i.test(name)?'custom':'');
+    return `<details open class="inspector-section quick-font"><summary>글씨체 미리보기</summary><p class="field-help">현재: ${e(current||'상위 글씨체 상속')}</p><label class="field">글씨체<select id="quickFont"><option value="">글씨체 선택…</option>${fonts.map(([id,label])=>`<option value="${id}" ${key===id?'selected':''}>${label}</option>`).join('')}<option value="custom" ${key==='custom'?'selected':''}>내 컴퓨터 폰트 · 이름 직접 입력</option></select></label><label id="customFontField" class="field" ${key==='custom'?'':'hidden'}>설치된 글꼴 이름<input id="customFontName" value="${e(key==='custom'?name:'')}" maxlength="200" placeholder="예: Aa 오디너리" autocomplete="off" spellcheck="false"><span class="field-help">파일명이 아닌 글꼴 이름을 그대로 입력하세요. 이 컴퓨터에 설치되어 있으면 업로드 없이 사용해요. 이름이 다르거나 미설치 상태면 대체 글꼴로 보여요.</span></label><div id="fontSample" class="font-sample" style="font-family:${e(current||'inherit')}">이야기가 머무는 자리<br>가나다 Aa 0123</div><label class="check-row"><input id="fontDescendants" type="checkbox" checked>선택 구역 안의 글자까지 함께 변경</label><button type="button" data-apply-font class="wide">${multi?'선택한 구역들':'선택 구역'}에 글씨체 적용</button><p class="field-help">입력하면 위 예문을 미리 봐요. 적용 버튼을 누르면 본문도 바뀝니다. 같은 컴퓨터에서 이미지로 저장하면 표시된 글씨체가 이미지에 남아요.</p></details>`;
   }
-  window.ArcaVisual={fonts,fontLinks,spacing,fontPanel};
+  window.ArcaVisual={fonts,fontLinks,spacing,fontPanel,firstFont,fontChoice};
 })();
