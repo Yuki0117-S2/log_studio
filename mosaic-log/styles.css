@@ -4889,3 +4889,101 @@
 #sidebarNewLogBtn { display:flex; align-items:center; min-height:26px; margin-top:0; padding:0; border:0; background:transparent; color:var(--ink-faint); text-align:left; }
 #sidebarNewLogBtn::before { content:''; flex:none; width:7px; height:7px; margin-right:6px; opacity:.58; background:linear-gradient(currentColor,currentColor) center / 7px 1px no-repeat, linear-gradient(currentColor,currentColor) center / 1px 7px no-repeat; }
 #sidebarNewLogBtn:hover { color:var(--accent); background:transparent; }
+
+/* v1.7.0 additions: existing profile and link styles stay available. */
+.transparentSwatch { margin-top:8px; padding:6px 8px; border-radius:6px; background:repeating-conic-gradient(#e8e7e4 0% 25%,#fff 0% 50%) 0 / 12px 12px; color:#555; font-size:11px; }
+#transparentThemeHint { color:var(--muted, #777); font-size:11px; line-height:1.4; margin:8px 0 0; text-align:center; }
+
+.expressionThemeRow { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 20px; }
+.expressionThemeLabel { color:var(--ink-soft); font-size:12px; font-weight:700; white-space:nowrap; }
+.expressionThemeOptions { display:inline-flex; align-items:center; min-width:0; height:34px; overflow:hidden; border:1px solid var(--line); border-radius:6px; background:var(--bg-panel); }
+.expressionThemeOptions button { display:inline-flex; align-items:center; justify-content:center; width:42px; height:32px; padding:0; border:0; background:transparent; color:var(--ink-soft); }
+.expressionShapeIcon { position:relative; display:block; width:20px; height:17px; border:1.5px solid currentColor; border-radius:5px; }
+.expressionShapeIcon::before, .expressionShapeIcon::after { content:''; position:absolute; left:4px; height:1px; border-radius:1px; background:currentColor; opacity:.55; }
+.expressionShapeIcon::before { top:5px; width:10px; }
+.expressionShapeIcon::after { top:9px; width:7px; }
+.expressionThemeOptions button[data-output-shape="document"] .expressionShapeIcon { border-radius:1px; }
+.expressionThemeOptions button + button { border-left:1px solid var(--line); }
+.expressionThemeOptions button:hover { color:var(--accent); background:color-mix(in srgb,var(--accent) 3%,var(--bg-panel)); }
+.expressionThemeOptions button.active { color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,var(--bg-panel)); }
+.expressionThemeOptions button:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+.expressionTransparentChoice { position:relative; display:inline-flex; align-items:center; gap:7px; min-height:26px; padding-left:14px; color:var(--ink-faint); font-size:11px; font-weight:500; white-space:nowrap; cursor:pointer; }
+.expressionTransparentChoice::before { content:''; position:absolute; left:0; top:50%; width:1px; height:16px; background:var(--line-strong); transform:translateY(-50%); }
+.expressionTransparentChoice input { flex:none; width:14px; height:14px; margin:0; }
+.expressionTransparentChoice input:checked + span { color:var(--accent); }
+#tabTheme > .expressionThemeGroup { margin-top:18px; padding:16px 14px; border-radius:10px; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 7%,var(--line)); }
+#tabTheme > .expressionThemeGroup + .themeFold { padding-top:16px; border-top:0; }
+.paletteUnavailable #comboList { opacity:.4; }
+
+  #tabCover .coverFoldActions {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+  }
+  #tabCover .coverFold[open] .coverFoldActions { margin-left: auto; }
+  #tabCover .coverFoldActions + .foldArrow { margin-left: 0; }
+
+  #tabCover .coverVisibilitySwitch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    min-width: 32px;
+    min-height: 32px;
+    justify-content: center;
+  }
+  #tabCover .coverVisibilitySwitch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+  }
+  #tabCover .coverVisibilitySwitchTrack {
+    position: relative;
+    width: 28px;
+    height: 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--bg-field);
+    transition: border-color .14s ease, background .14s ease;
+  }
+  #tabCover .coverVisibilitySwitchTrack::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    transition: transform .14s ease, background .14s ease;
+  }
+  #tabCover .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack {
+    border-color: color-mix(in srgb, var(--accent) 28%, var(--bg-field));
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-field));
+  }
+  #tabCover .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack::after {
+    transform: translateX(12px);
+    background: color-mix(in srgb, var(--accent) 68%, white);
+  }
+  #tabCover .coverVisibilitySwitch input:focus-visible + .coverVisibilitySwitchTrack {
+    outline: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    outline-offset: 2px;
+  }
+  #tabCover .coverVisibilitySwitch:has(input:disabled) { cursor: default; }
+  #tabCover .coverVisibilitySwitch input:disabled + .coverVisibilitySwitchTrack {
+    border-color: color-mix(in srgb, var(--line-strong) 70%, var(--bg-field));
+    background: var(--bg-muted);
+    opacity: .52;
+  }
+  #tabCover .coverVisibilitySwitch input:disabled + .coverVisibilitySwitchTrack::after {
+    background: color-mix(in srgb, var(--ink-faint) 58%, var(--bg-field));
+  }
+
+#tabCover .segmentedChoiceRow > input[hidden] { display:none; }
+#previewArea #preview { color:#212529; }
+body.previewFullscreen #previewArea.previewArcaDark #preview { color:#dedede; }
+.transparentTextRow { margin-top:12px; }

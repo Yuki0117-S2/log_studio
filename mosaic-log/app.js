@@ -143,20 +143,22 @@ function parallelTranslationHTML(segment, settings, color, requestedMode){
   // 번역 괄호 안의 작은따옴표는 속마음 문법이 아니라 번역 표기의 일부다.
   // 글자로 보존해야 바깥 병행 번역의 보조색·축소 크기를 그대로 유지한다.
   const content = processInline(segment.translationGroup, settings.emphasisColor, { literalSingleQuotes:true });
-  const textColor = parallelTranslationTextColor(settings, color);
+  const thoughtColor = /^#[0-9A-Fa-f]{6}$/.test(settings.emphasisColor || '') ? settings.emphasisColor : '#747474';
+  const textColor = parallelTranslationTextColor(settings, thoughtParallel ? thoughtColor : color);
+  const thoughtAttribute = thoughtParallel ? ' data-mosaic-thought="true"' : '';
   if(mode === 'inline'){
-    return `${segment.betweenOriginalAndGroup}<span data-mosaic-parallel-translation="true" data-mosaic-parallel-translation-mode="inline" style="color:${textColor} !important; -webkit-text-fill-color:${textColor} !important; font-size:${size}px !important; font-weight:400; line-height:inherit; letter-spacing:-0.1px;">${content}</span>`;
+    return `${segment.betweenOriginalAndGroup}<span data-mosaic-parallel-translation="true"${thoughtAttribute} data-mosaic-parallel-translation-mode="inline" style="color:${textColor} !important; -webkit-text-fill-color:${textColor} !important; font-size:${size}px !important; font-weight:400; line-height:inherit; letter-spacing:-0.1px;">${content}</span>`;
   }
-  return `<span data-mosaic-parallel-translation="true" data-mosaic-parallel-translation-mode="stack" style="display:block; margin:4px 0 0 0; padding:0; color:${textColor} !important; -webkit-text-fill-color:${textColor} !important; font-size:${size}px !important; font-weight:400; line-height:${settings.dlgLine}; letter-spacing:-0.1px;">${content}</span>`;
+  return `<span data-mosaic-parallel-translation="true"${thoughtAttribute} data-mosaic-parallel-translation-mode="stack" style="display:block; margin:4px 0 0 0; padding:0; color:${textColor} !important; -webkit-text-fill-color:${textColor} !important; font-size:${size}px !important; font-weight:400; line-height:${settings.dlgLine}; letter-spacing:-0.1px;">${content}</span>`;
 }
 
 // 서술 혼합 문단에서는 번역 부분을 임시 토큰으로 보호한 뒤 원문의 서식을 적용한다.
 // 완성된 강조 HTML에 나중에 번역 span을 복원해 속성 따옴표가 대사로 오인되는 것을 방지한다.
-function prepareMixedParallelTranslations(line, settings, color){
+function prepareMixedParallelTranslations(line, settings, color, thoughtsOnly = false){
   if(!settings.parallelTranslationSoft) return { line:String(line), tokens:[] };
   const mode = resolvedParallelTranslationMode(settings);
   const source = String(line);
-  const segments = parallelDialogueSegments(source);
+  const segments = parallelDialogueSegments(source).filter(segment => !thoughtsOnly || segment.original.startsWith("'"));
   if(!segments.length) return { line:source, tokens:[] };
   const tokens = [];
   let prepared = '';
@@ -438,40 +440,6 @@ function syncCardLayoutCheckbox(){
   checkbox.checked = normalizeCardLayout(select.value) === 'unified';
 }
 
-function hasVisibleCommentOutput(){
-  return Array.from(document.querySelectorAll('#cardEditors .cardEditor[data-block-type="comment"]'))
-    .some(editor => {
-      const textarea = editor.querySelector('textarea');
-      return editor.dataset.outputVisible !== 'false' && textarea && textarea.value.trim();
-    });
-}
-
-// 코멘트가 있어도 통합 카드를 사용할 수 있다. 이 조합에서는 코멘트를 통합 본문 아래에
-// 모으고 크레딧으로 문서를 닫으므로, 크레딧 배치만 결과와 일치하게 최하단으로 고정한다.
-function syncCardLayoutAvailability(){
-  const select = document.getElementById('cardLayout');
-  if(!select) return false;
-  const unifiedOption = Array.from(select.options).find(option => option.value === 'unified');
-  if(unifiedOption){
-    unifiedOption.disabled = false;
-    unifiedOption.title = '';
-  }
-  select.title = '';
-  syncCardLayoutCheckbox();
-  const forceCreditBottom = select.value === 'unified' && hasVisibleCommentOutput();
-  const creditPlacement = document.getElementById('creditPlacement');
-  if(creditPlacement){
-    const creditOn = document.getElementById('creditOn');
-    creditPlacement.disabled = !(creditOn && creditOn.checked) || forceCreditBottom;
-    creditPlacement.dataset.forcedValue = forceCreditBottom ? 'bottom' : '';
-    creditPlacement.title = forceCreditBottom
-      ? '카드 이어보기에서는 코멘트 아래에서 크레딧이 문서를 마무리합니다.'
-      : '';
-    if(typeof syncSegmentedChoiceControl === 'function') syncSegmentedChoiceControl('creditPlacement');
-  }
-  return forceCreditBottom;
-}
-
 // 카드 좌우 여백은 선택 항목을 늘리지 않고 모바일부터 데스크톱까지 한 기본값으로 쓴다.
 const CARD_INLINE_PADDING = 'clamp(16px,4vw,22px)';
 
@@ -552,6 +520,39 @@ function parseBodyHeading(line){
   const match = String(line).match(/^(#{1,4})\s+(.+)$/);
   if(!match) return null;
   return { level:match[1].length, title:match[2] };
+}
+
+// 인용 내부의 줄에도 본문과 동일한 #~#### 소제목 문법을 적용한다.
+function renderQuoteContent(text, settings){
+  const renderInline = value => {
+    const prepared = prepareMixedParallelTranslations(value, settings, settings.emphasisColor, true);
+    return restoreMixedParallelTranslations(
+      processBodyInline(prepared.line, settings.emphasisColor, { softBreakSpacing:settings.softBreakSpacing }),
+      prepared.tokens
+    );
+  };
+  const lines = String(text).split(SOFT_BREAK_TOKEN);
+  if(!lines.some(line => parseBodyHeading(line.trim()))){
+    return renderInline(text);
+  }
+  const parts = [];
+  let plain = [];
+  const flush = () => {
+    if(plain.length){
+      parts.push(renderInline(plain.join(SOFT_BREAK_TOKEN)));
+      plain = [];
+    }
+  };
+  lines.forEach((line, index) => {
+    const heading = parseBodyHeading(line.trim());
+    if(!heading){ plain.push(line); return; }
+    flush();
+    const spec = headingSpec(heading.level);
+    const gap = paragraphGapPx(settings);
+    parts.push(`<div data-mosaic-quote-heading="${heading.level}" data-mosaic-quote-line="${index}" style="margin:${index ? gap : 0}px 0 ${index < lines.length - 1 ? gap : 0}px; font-size:${spec.size}px !important; font-weight:${spec.weight} !important; line-height:1.4 !important; color:inherit !important; -webkit-text-fill-color:inherit !important;">${renderInline(heading.title)}</div>`);
+  });
+  flush();
+  return parts.join('');
 }
 
 function headingSpec(level){
@@ -708,8 +709,9 @@ function buildParagraph(rawLine, settings, opts){
     const qSize = Math.max(9, (parseFloat(settings.narrSize) || 13.5) - 0.5);
     // 인용은 앞뒤로 넉넉히 띄워 본문과 확실히 분리 (구분선 인접 시엔 HR 여백 우선)
     const quoteNarrationGap = baseParagraphGap + Math.round(6 * sm);
-    // 아래 내용이 대사·상태창이어도 같은 여백을 확보한다.
-    const qMb = opts.extraBottom ? Math.round(36*sm) : baseParagraphGap + Math.round(8 * sm);
+    // 카드의 마지막 인용문은 카드 자체의 아래 패딩만 남겨 여백이 중복되지 않게 한다.
+    // 뒤에 다른 내용이 있으면 기존 문단 간격을 유지한다.
+    const qMb = opts.isLast ? 0 : (opts.extraBottom ? Math.round(36*sm) : baseParagraphGap + Math.round(8 * sm));
     const qMt = opts.extraTop ? Math.round(36*sm) : (opts.isFirst ? 0 : (opts.prevIsNarration ? quoteNarrationGap : baseParagraphGap));
     const quoteAlign = (forceCenter || settings.quoteCenter) ? 'center' : 'left';
     const sourceColor = safeHexColor(settings.narrColor, pal.caption);
@@ -721,7 +723,7 @@ function buildParagraph(rawLine, settings, opts){
       ? mixHex(pal.cardBg, darkBackground ? '#ffffff' : '#000000', darkBackground ? 0.12 : 0.08)
       : pal.boxBg;
     const quoteText = strongerQuote ? mixHex(softQuoteText, sourceColor, 0.25) : softQuoteText;
-    return `    <div style="margin:${qMt}px 0 ${qMb}px 0; padding:13px 16px; background-color:${quoteBg}; border-radius:8px; text-align:${quoteAlign}; color:${quoteText}; font-size:${qSize}px; font-weight:400; line-height:${settings.narrLine}; letter-spacing:0.1px; font-family:${fontStack(settings.narrFont)};">${processBodyInline(qInner, settings.emphasisColor, { softBreakSpacing:settings.softBreakSpacing })}</div>\n`;
+    return `    <div data-mosaic-quote="true" style="margin:${qMt}px 0 ${qMb}px 0; padding:13px 16px; background-color:${quoteBg}; border-radius:8px; text-align:${quoteAlign}; color:${quoteText}; font-size:${qSize}px; font-weight:400; line-height:${settings.narrLine}; letter-spacing:0.1px; font-family:${fontStack(settings.narrFont)};">${renderQuoteContent(qInner, settings)}</div>\n`;
   }
 
   let overrideColor = null;
@@ -811,7 +813,7 @@ function buildParagraph(rawLine, settings, opts){
       const soft = settings.dlgStyle === 'softlight';
       const bgColor = soft ? pal.boxBg : accentTint(settings.bgColor, color);
       const txtColor = soft ? color : textColorFor(bgColor);
-      return wrapDialogue(`      <p data-mosaic-dialogue="true" style="margin:${mtEff}px 0 ${mb}px 0; ${dialogueAlign}font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; font-family:${fontStack(settings.dlgFont)};"><span style="background-color:${bgColor}; color:${txtColor} !important; -webkit-text-fill-color:${txtColor} !important; padding:2px 8px; border-radius:4px; box-decoration-break:clone; -webkit-box-decoration-break:clone;">${processBodyInline(dialogueSource, settings.emphasisColor, { softBreakSpacing:settings.softBreakSpacing })}</span>${parallelTranslationHtml}</p>\n`);
+      return wrapDialogue(`      <p data-mosaic-dialogue="true" data-mosaic-dialogue-side="${speaker === 'user' ? 'right' : 'left'}" style="margin:${mtEff}px 0 ${mb}px 0; ${dialogueAlign}font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; font-family:${fontStack(settings.dlgFont)};"><span style="background-color:${bgColor}; color:${txtColor} !important; -webkit-text-fill-color:${txtColor} !important; padding:2px 8px; border-radius:4px; box-decoration-break:clone; -webkit-box-decoration-break:clone;">${processBodyInline(dialogueSource, settings.emphasisColor, { softBreakSpacing:settings.softBreakSpacing })}</span>${parallelTranslationHtml}</p>\n`);
     }
 
     const dialogueHtml = processBodyInline(dialogueSource, settings.emphasisColor, { softBreakSpacing:settings.softBreakSpacing });
@@ -825,16 +827,23 @@ function buildParagraph(rawLine, settings, opts){
       const badgeLabel = speakerNameHtml
         ? `<span data-mosaic-speaker-label="true" style="display:inline-block; margin:0 0 7px 0; padding:2px 7px; border-radius:999px; background-color:${badgeBg}; color:${textColorFor(badgeBg)} !important; -webkit-text-fill-color:${textColorFor(badgeBg)} !important; font-size:10px !important; font-weight:700; line-height:1.35; letter-spacing:0.3px;">${speakerNameHtml}</span>`
         : '';
-      return `    <p data-mosaic-dialogue="true" style="margin:${mt}px 0 ${mb}px 0; ${dialogueAlign}color:${color} !important; -webkit-text-fill-color:${color} !important; font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; font-family:${fontStack(settings.dlgFont)};">${badgeLabel}${dialogueBodyHtml}</p>\n`;
+      return `    <p data-mosaic-dialogue="true" data-mosaic-dialogue-side="${speaker === 'user' ? 'right' : 'left'}" style="margin:${mt}px 0 ${mb}px 0; ${dialogueAlign}color:${color} !important; -webkit-text-fill-color:${color} !important; font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; font-family:${fontStack(settings.dlgFont)};">${badgeLabel}${dialogueBodyHtml}</p>\n`;
     }
 
     // 옵션4: 왼쪽에서 오른쪽으로 자연스럽게 사라지는 연한 색면
     if(settings.dlgStyle === 'gradient'){
-      return `    <p data-mosaic-dialogue="true" style="margin:${mt}px 0 ${mb}px 0; ${dialogueAlign}padding:10px 14px; border-radius:6px; background:linear-gradient(90deg, ${pal.boxBg} 0%, ${pal.boxBg} 52%, transparent 100%); color:${color} !important; -webkit-text-fill-color:${color} !important; font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; font-family:${fontStack(settings.dlgFont)};">${embeddedLabel}${dialogueBodyHtml}</p>\n`;
+      return `    <p data-mosaic-dialogue="true" data-mosaic-dialogue-side="${speaker === 'user' ? 'right' : 'left'}" style="margin:${mt}px 0 ${mb}px 0; ${dialogueAlign}padding:10px 14px; border-radius:6px; background:linear-gradient(90deg, ${pal.boxBg} 0%, ${pal.boxBg} 52%, transparent 100%); color:${color} !important; -webkit-text-fill-color:${color} !important; font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; font-family:${fontStack(settings.dlgFont)};">${embeddedLabel}${dialogueBodyHtml}</p>\n`;
+    }
+
+    // 옵션6: 화자별 말풍선. 기존 대사·이름표·번역 처리를 그대로 사용한다.
+    if(settings.dlgStyle === 'messenger'){
+      const userSide = speaker === 'user';
+      const bubbleBg = accentTint(settings.bgColor, color);
+      return `    <p data-mosaic-dialogue="true" data-mosaic-dialogue-side="${userSide ? 'right' : 'left'}" style="box-sizing:border-box; width:fit-content; max-width:88%; margin:${mt}px ${userSide ? '0' : 'auto'} ${mb}px ${userSide ? 'auto' : '0'}; padding:12px 16px; border:0; border-radius:${userSide ? '16px 16px 4px 16px' : '16px 16px 16px 4px'}; background-color:${bubbleBg}; text-align:left; color:${color} !important; -webkit-text-fill-color:${color} !important; font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; overflow-wrap:anywhere; font-family:${fontStack(settings.dlgFont)};">${embeddedLabel}${dialogueBodyHtml}</p>\n`;
     }
 
     // 옵션5: 배경이 있는 인용박스. 저장된 quote 값도 같은 형태로 표시한다.
-    return `    <p data-mosaic-dialogue="true" style="margin:${mt}px 0 ${mb}px 0; ${dialogueAlign}padding:13px 18px; border-left:3px solid ${color}; background-color:${pal.boxBg}; color:${color} !important; -webkit-text-fill-color:${color} !important; font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; font-family:${fontStack(settings.dlgFont)};">${embeddedLabel}${dialogueBodyHtml}</p>\n`;
+    return `    <p data-mosaic-dialogue="true" data-mosaic-dialogue-side="${speaker === 'user' ? 'right' : 'left'}" style="margin:${mt}px 0 ${mb}px 0; ${dialogueAlign}padding:13px 18px; border-left:2px solid ${color}; background-color:${pal.boxBg}; color:${color} !important; -webkit-text-fill-color:${color} !important; font-size:${settings.dlgSize}px !important; font-weight:600; line-height:${settings.dlgLine}; letter-spacing:-0.2px; font-family:${fontStack(settings.dlgFont)};">${embeddedLabel}${dialogueBodyHtml}</p>\n`;
   } else {
     const mb = opts.extraBottom ? HR_GAP : baseParagraphGap;
     const baseColor = overrideColor
@@ -1329,6 +1338,8 @@ function getSettings(){
     profileSituation: document.getElementById('profileSituation').value,
     paragraphGap: document.getElementById('paragraphGap').value,
     softBreakSpacing: normalizeSoftBreakSpacing(document.getElementById('softBreakSpacing').value),
+    outputTheme: document.getElementById('outputTheme').value,
+    transparentTextMode: document.getElementById('transparentTextMode').value,
     cardLayout: normalizeCardLayout(document.getElementById('cardLayout').value),
     spacingMode: document.getElementById('spacingMode').value,
     cardWidth: document.getElementById('cardWidth').value,
@@ -1439,10 +1450,10 @@ function isPureDialogueLine(line, settings){
     || Boolean(parallel && parallel.original.startsWith('"'));
 }
 
-// 옵션 3·4·5는 입력값을 바꾸지 않고 출력용 줄 배열에서만
+// 옵션 3~6은 입력값을 바꾸지 않고 출력용 줄 배열에서만
 // 문장 속 대사를 독립 문단으로 분리한다.
 function usesSeparatedDialogueOutput(settings){
-  return ['badge', 'gradient', 'box'].includes(settings.dlgStyle);
+  return ['badge', 'gradient', 'box', 'messenger'].includes(settings.dlgStyle);
 }
 
 function isStructuralBodyLine(line){
@@ -2091,14 +2102,22 @@ function buildCredit(settings){
     const labelText = escapeTextHTML(item.label);
     const valueText = escapeTextHTML(item.value);
     const linkedValue = item.url
-      ? buildCreditLink(valueText || labelText, item.url, valueColor)
-      : buildCreditText(valueText || labelText, valueColor);
+      ? buildCreditLink(valueText, item.url, valueColor)
+      : buildCreditText(valueText, valueColor);
     const divider = renderedIndex > 0 && settingFlagOn(item.dividerBefore)
       ? `<div data-mosaic-generated="true" data-mosaic-credit-divider-before="${item.sourceIndex}" aria-hidden="true" style="box-sizing:border-box; width:100%; height:1px; margin:7px 0 9px; padding:0; border:0; background-color:${creditDivider} !important;"></div>`
       : '';
     if(!item.label || !item.value){
-      const field = item.value ? 'value' : 'label';
-      return `${divider}<div data-mosaic-credit-row="${item.sourceIndex}" data-mosaic-credit-index="${item.sourceIndex}" data-mosaic-credit-field="${field}" style="box-sizing:border-box; width:100%; margin:0 0 6px; color:${valueColor} !important; -webkit-text-fill-color:${valueColor} !important; font-size:10.5px !important; font-weight:400; line-height:1.55 !important; letter-spacing:-0.05px; overflow-wrap:anywhere; word-break:break-word;">${linkedValue}</div>`;
+      const labelOnly = Boolean(item.label);
+      const field = labelOnly ? 'label' : 'value';
+      const color = labelOnly ? labelColor : valueColor;
+      const content = labelOnly
+        ? (item.url ? buildCreditLink(labelText, item.url, labelColor) : buildCreditText(labelText, labelColor))
+        : linkedValue;
+      const textStyle = labelOnly
+        ? 'text-align:left; font-size:9.5px !important; font-weight:600; letter-spacing:0.35px;'
+        : 'text-align:right; font-size:10.5px !important; font-weight:400; letter-spacing:-0.05px;';
+      return `${divider}<div data-mosaic-credit-row="${item.sourceIndex}" data-mosaic-credit-index="${item.sourceIndex}" data-mosaic-credit-field="${field}" style="box-sizing:border-box; width:100%; margin:0 0 6px; color:${color} !important; -webkit-text-fill-color:${color} !important; ${textStyle} line-height:1.55 !important; overflow-wrap:anywhere; word-break:break-word;">${content}</div>`;
     }
     return `${divider}<div data-mosaic-credit-row="${item.sourceIndex}" style="display:table; table-layout:fixed; box-sizing:border-box; width:100%; margin:0 0 6px;"><div style="display:table-row;"><div data-mosaic-credit-index="${item.sourceIndex}" data-mosaic-credit-field="label" style="display:table-cell; width:34%; padding:0 12px 0 0; vertical-align:top; color:${labelColor} !important; -webkit-text-fill-color:${labelColor} !important; font-size:9.5px !important; font-weight:600; line-height:1.55 !important; letter-spacing:0.35px; overflow-wrap:anywhere; word-break:break-word;">${buildCreditText(labelText, labelColor)}</div><div data-mosaic-credit-index="${item.sourceIndex}" data-mosaic-credit-field="value" style="display:table-cell; width:66%; padding:0; vertical-align:top; text-align:right; color:${valueColor} !important; -webkit-text-fill-color:${valueColor} !important; font-size:10.5px !important; font-weight:400; line-height:1.55 !important; letter-spacing:-0.05px; overflow-wrap:anywhere; word-break:break-word;">${linkedValue}</div></div></div>`;
   }).join('');
@@ -2341,7 +2360,7 @@ function lockOutputTypographyForArca(html){
   // 모바일 게시판이 제목 div/summary와 내부 span/strong에 별도 스타일을 강제해도
   // 일반 카드와 접기 카드 제목의 설정값은 유지한다. 장식처럼 자체 크기·색이 있는 자식은 그 값을
   // 우선하므로 제목 크기가 커져도 장식까지 함께 커지지 않는다.
-  const foldTitleProperties = ['color', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'font-family'];
+  const foldTitleProperties = ['color', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'font-family'];
   const foldTitleRootProperties = ['display', 'align-items', 'justify-content', 'column-gap', 'list-style', 'padding', 'text-align'];
   const isCssWideKeyword = value => !value || /^(?:inherit|initial|unset|revert(?:-layer)?)$/i.test(value);
   const lockFoldTitleTree = (element, inherited = {}) => {
@@ -2403,6 +2422,11 @@ function lockOutputTypographyForArca(html){
         if(value) title.style.setProperty(property, value, 'important');
       });
     });
+    // 프로필·관계·상황 및 표지 부제의 무스타일 span까지 실제 상속값을 고정한다.
+    const profileSelector = '[data-mosaic-profile="true"], [data-mosaic-title="true"]';
+    const profileRoots = [...element.querySelectorAll(profileSelector)];
+    if(element.matches(profileSelector)) profileRoots.unshift(element);
+    profileRoots.forEach(root => lockFoldTitleTree(root, { 'font-style':'normal', 'font-weight':'400' }));
     element.querySelectorAll('strong, em, [data-mosaic-thought="true"]').forEach(lockInlineFormatTree);
     element.querySelectorAll('[data-mosaic-dialogue="true"], [data-mosaic-speaker-label="true"]').forEach(dialogue => {
       dialogue.style.setProperty('-webkit-text-size-adjust', '100%', 'important');
@@ -2425,6 +2449,133 @@ function stripEditorOutputMetadata(html){
     });
   });
   return template.innerHTML;
+}
+
+// 배경은 투명하게 하되 글자색은 기본으로 유지한다. 선택하면 게시판 기본색을 사용한다.
+function transparentOutput(html, preserveColors = true){
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  template.content.querySelectorAll('*').forEach(el => {
+    const style = el.style;
+    const image = style.backgroundImage;
+    // em 단위 줄바꿈 여백은 구분선이 아니다. 실제 px 높이만 판정한다.
+    const thinRule = /^(?:\d+(?:\.\d+)?|\.\d+)px$/.test(style.height)
+      && parseFloat(style.height) > 0 && parseFloat(style.height) <= 2;
+    // 사용자가 인물색을 끈 경우에만 게시판의 라이트/다크 글자색을 따른다.
+    if(!preserveColors){
+      style.removeProperty('color');
+      style.removeProperty('-webkit-text-fill-color');
+      el.removeAttribute('color');
+    }
+    style.setProperty('background-color', thinRule ? 'rgba(128,128,128,.22)' : 'transparent', 'important');
+    // URL 이미지는 보존하고 색상 장식만 무채색으로 바꾼다.
+    if(image && !image.includes('url(')){
+      const lineImage = thinRule || /(?:^|\s)(?:0?\.5|1|2)px$/.test(style.backgroundSize);
+      style.setProperty('background-image', lineImage
+        ? image.replace(/rgba?\([^)]*\)|#[0-9a-f]{3,8}\b/gi, 'rgba(128,128,128,.22)') : 'none', 'important');
+    }
+    if(style.border || style.borderColor || style.borderTop || style.borderBottom || style.borderLeft || style.borderRight){
+      style.setProperty('border-color', 'rgba(128,128,128,.22)', 'important');
+    }
+    if(style.boxShadow) style.setProperty('box-shadow', 'none', 'important');
+    if(style.textShadow) style.setProperty('text-shadow', 'none', 'important');
+  });
+  // 투명 구분선도 게시판의 본문(p) 라이트/다크 규칙을 받는다.
+  // 색상을 고정하지 않고 실선은 currentColor, 장식은 기본 글자색을 사용한다.
+  template.content.querySelectorAll('[data-mosaic-separator="hr"], [data-mosaic-separator="hr2"], [data-mosaic-separator="hr3"]').forEach(separator => {
+    const paragraph = document.createElement('p');
+    Array.from(separator.attributes).forEach(attribute => paragraph.setAttribute(attribute.name, attribute.value));
+    paragraph.innerHTML = separator.innerHTML;
+    paragraph.style.removeProperty('color');
+    paragraph.style.removeProperty('-webkit-text-fill-color');
+    const type = separator.dataset.mosaicSeparator;
+    paragraph.style.setProperty('opacity', type === 'hr3' ? '.32' : '.22');
+    if(type === 'hr') paragraph.style.setProperty('background-color', 'currentColor', 'important');
+    separator.replaceWith(paragraph);
+  });
+  // 투명 테마에서도 옵션 6의 말풍선 형태는 약한 무채색 면으로 구분한다.
+  template.content.querySelectorAll('p[data-mosaic-dialogue-side]').forEach(dialogue => {
+    if(dialogue.style.width === 'fit-content'){
+      dialogue.style.setProperty('background-color', 'rgba(128,128,128,.10)', 'important');
+    }
+  });
+  // 인용 배경은 유지하고, 게시판 기본색 모드에서는 원본 v1.7.0의 인용색을 적용한다.
+  template.content.querySelectorAll('[data-mosaic-quote="true"]').forEach(quote => {
+    quote.style.setProperty('background-color', '#f4f4f4', 'important');
+    if(preserveColors) return;
+    [quote, ...quote.querySelectorAll('*')].forEach(el => {
+      const color = el.closest('em, [data-mosaic-thought]') ? '#707070' : '#9c9c9c';
+      el.style.setProperty('color', color, 'important');
+      el.style.setProperty('-webkit-text-fill-color', color, 'important');
+    });
+  });
+  return template.innerHTML;
+}
+
+// 특수 테마는 내용과 접기 동작을 보존하고 출력 장식만 바꾼다.
+function normalizeOutputTheme(value){
+  return ['transparent', 'document', 'document-transparent'].includes(value) ? value : 'solid';
+}
+function outputThemeShape(value){
+  return ['document', 'document-transparent'].includes(value) ? 'document' : 'solid';
+}
+function outputThemeTransparent(value){
+  return ['transparent', 'document-transparent'].includes(value);
+}
+function composeOutputTheme(shape, transparent){
+  return shape === 'document'
+    ? (transparent ? 'document-transparent' : 'document')
+    : (transparent ? 'transparent' : 'solid');
+}
+function specialThemeOutput(html, mode, settings){
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  template.content.querySelectorAll('*').forEach(el => {
+    if(el.closest('[data-mosaic-comment-index]')) return;
+    const style = el.style;
+    style.setProperty('box-shadow', 'none', 'important');
+    style.setProperty('text-shadow', 'none', 'important');
+    style.setProperty('border-radius', '0', 'important');
+
+  });
+  if(mode === 'document'){
+    const palette = tonePalette(settings);
+    // 카드 외곽선과 별개로, 일반 표제의 본문 연결선은 보존한다.
+    const title = template.content.querySelector('[data-mosaic-title]');
+    const firstCard = template.content.querySelector('[data-mosaic-card-index]');
+    template.content.querySelectorAll('[data-mosaic-card-index], [data-mosaic-profile], [data-mosaic-credit]').forEach(el => {
+      // 카드와 크레딧의 원래 외곽선을 보존한다. 독립 프로필 블록의 선만 제거한다.
+      if(el.hasAttribute('data-mosaic-profile') && !el.hasAttribute('data-mosaic-unified-item')){
+        el.style.setProperty('border', '0', 'important');
+      }
+      if(!el.style.backgroundImage.includes('url(')) el.style.setProperty('background-image', 'none', 'important');
+      el.style.setProperty('background-color', safeHexColor(settings.bgColor, '#faf9f5'), 'important');
+    });
+    if(title && firstCard && !firstCard.hasAttribute('data-mosaic-unified-item') && !settingFlagOn(settings.titleMinimal)){
+      firstCard.style.setProperty('border-top', `1px solid ${palette.divider}`, 'important');
+    }
+    template.content.querySelectorAll('summary, [data-mosaic-fold-body]').forEach(el => {
+      el.style.setProperty('background-color', safeHexColor(settings.bgColor, '#faf9f5'), 'important');
+    });
+    template.content.querySelectorAll('summary').forEach(el => {
+      el.style.setProperty('text-align', 'left');
+      el.style.setProperty('border-bottom', settingFlagOn(settings.foldDividerMinimal) ? 'none' : `1px solid ${palette.divider}`, 'important');
+      const body = el.nextElementSibling;
+      if(body && body.hasAttribute('data-mosaic-fold-body')) body.style.setProperty('border-top', 'none', 'important');
+    });
+    template.content.querySelectorAll('[data-mosaic-quote]').forEach(el => {
+      el.style.setProperty('background-color', palette.boxBg, 'important');
+    });
+  }
+  return template.innerHTML;
+}
+
+// 숨길 때의 편집 상태를 기억한다. 숨긴 상태에서도 수동 펼치기는 허용한다.
+function syncHiddenEditorCollapse(ed, collapseBtn, hiding){
+  if(hiding) ed.dataset.collapsedBeforeHide = String(ed.classList.contains('isCollapsed'));
+  const collapsed = hiding || ed.dataset.collapsedBeforeHide === 'true';
+  if(ed.classList.contains('isCollapsed') !== collapsed) collapseBtn.click();
+  if(!hiding) delete ed.dataset.collapsedBeforeHide;
 }
 
 function buildCard(settings){
@@ -2596,22 +2747,25 @@ ${bodyHTML}${footer}  </div>
   const renderedCardFlow = cardList.map(card => renderedCards.get(card.sourceIndex)).filter(Boolean);
   const renderedCommentFlow = visibleComments.map(comment => renderedComments.get(comment.sourceIndex)).filter(Boolean);
 
-  // 꼬리말은 마지막 본문 카드 안에 붙인다. 크레딧은 최상단 또는 전체 카드 흐름
-  // 뒤의 독립 블록으로 둔다. 통합 모드의 코멘트는 본문 뒤에 원래 상대 순서대로 모으고,
-  // 이때는 크레딧을 그 아래에 고정해 문서의 마지막 요소로 사용한다.
-  const forceCreditBottom = unifiedLayout && renderedCommentFlow.length > 0;
-  const credit = buildCredit(forceCreditBottom
-    ? Object.assign({}, settings, { creditPlacement:'bottom' })
-    : settings);
-  const creditAtTop = !forceCreditBottom && normalizeCreditPlacement(settings.creditPlacement) === 'top';
+  // 꼬리말은 마지막 본문 카드 안에 붙인다. 통합 모드의 코멘트는 본문 뒤에 모으되,
+  // 크레딧은 코멘트 유무와 관계없이 사용자가 선택한 최상단·최하단에 둔다.
+  const credit = buildCredit(settings);
+  const creditAtTop = normalizeCreditPlacement(settings.creditPlacement) === 'top';
   const topCredit = creditAtTop ? credit : '';
   const bottomCredit = creditAtTop ? '' : credit;
   const introFlow = topProfileBlock + imgBlock + titleBand + attachedProfileBlock;
   const mainFlow = introFlow + (unifiedLayout ? renderedCardFlow : orderedBody).join('\n');
   const arrangedMainFlow = unifiedLayout ? applyUnifiedCardLayout(mainFlow, settings) : mainFlow;
-  const collectedComments = forceCreditBottom ? `\n${renderedCommentFlow.join('\n')}` : '';
+  const collectedComments = unifiedLayout && renderedCommentFlow.length
+    ? `\n${renderedCommentFlow.join('\n')}` : '';
   const output = recognitionImg + topCredit + arrangedMainFlow + collectedComments + bottomCredit;
-  return lockOutputTypographyForArca(output);
+  const lockedOutput = lockOutputTypographyForArca(output);
+  const shapedOutput = outputThemeShape(settings.outputTheme) === 'document'
+    ? specialThemeOutput(lockedOutput, 'document', settings)
+    : lockedOutput;
+  return outputThemeTransparent(settings.outputTheme)
+    ? transparentOutput(shapedOutput, settings.transparentTextMode !== 'inherit')
+    : shapedOutput;
 }
 
 const RESTORE_META_PREFIX = '<!--MOSAIC_LOG_STATE_V1:';
@@ -3005,13 +3159,19 @@ function showBlockToolbar(ctx){
     button.classList.toggle('active', isHeading && level === ctx.level);
     button.setAttribute('aria-pressed', isHeading && level === ctx.level ? 'true' : 'false');
   });
-  const r = ctx.block.getBoundingClientRect();
+  let r = ctx.block.getBoundingClientRect();
+  if(isHeading){
+    // 전체 너비의 문단 박스 대신 실제 소제목 글자 영역을 기준으로 배치한다.
+    const range = document.createRange();
+    range.selectNodeContents(ctx.block);
+    const textRect = range.getBoundingClientRect();
+    if(textRect.width && textRect.height) r = textRect;
+  }
   bar.style.display = 'flex';
   const bw = bar.offsetWidth || 100;
   const above = r.top - bar.offsetHeight - 8;
-  // 마크다운 단계 메뉴는 소제목의 왼쪽 시작선에 맞추고,
-  // 이미지·구분선 메뉴만 기존처럼 블록 중앙에 배치한다.
-  const preferredLeft = isHeading ? r.left : r.left + r.width / 2 - bw / 2;
+  // 소제목은 글자 중앙 위에, 이미지·구분선은 블록 중앙 위에 배치한다.
+  const preferredLeft = r.left + r.width / 2 - bw / 2;
   bar.style.left = Math.max(8, Math.min(window.innerWidth - bw - 8, preferredLeft)) + 'px';
   bar.style.top = Math.max(8, Math.min(window.innerHeight - bar.offsetHeight - 8, above > 8 ? above : r.bottom + 8)) + 'px';
 }
@@ -3053,7 +3213,7 @@ function editHeadingLevelText(text, raw, action){
   const lines = text.split('\n');
   if(lines[raw] === undefined) return null;
   // 정렬·일부 접기 표시는 그대로 두고 제목의 # 개수만 바꾼다.
-  const token = lines[raw].match(/^(\s*(?:\[C\]\s*)?(?:\[접기\s+)?)(#{1,4})(\s+)(.+?)(\s*)$/i);
+  const token = lines[raw].match(/^(\s*(?:\[C\]\s*)?(?:>(?!>)\s*(?:\[C\]\s*)?)?(?:\[접기\s+)?)(#{1,4})(\s+)(.+?)(\s*)$/i);
   if(!token) return null;
   const currentLevel = token[2].length;
   if(currentLevel === nextLevel) return null;
@@ -3188,6 +3348,8 @@ function previewSourceBlocks(cardEl){
     && cardEl.firstElementChild.tagName === 'SUMMARY' ? cardEl.firstElementChild : null;
   return Array.from(cardEl.querySelectorAll('p, summary, div')).filter(el => {
     if(el === cardSummary) return false;
+    if(el.matches('[data-mosaic-quote="true"]')) return true;
+    if(el.closest('[data-mosaic-quote="true"]')) return false;
     if(el.matches('[data-mosaic-card-title="true"], [data-mosaic-speaker-label="true"], [data-mosaic-footer="true"], [data-mosaic-credit="true"], [data-mosaic-generated="true"]')) return false;
     if(el.closest('[data-mosaic-card-title="true"], [data-mosaic-speaker-label="true"], [data-mosaic-footer="true"], [data-mosaic-credit="true"], [data-mosaic-generated="true"]')) return false;
     if(el.tagName === 'DIV' && el.querySelector('p, summary, div')) return false;
@@ -4297,6 +4459,19 @@ function decoratePreviewDirectEditors(){
           segmented:entry.segmented,
           sourceBounds:entry.sourceBounds || null
         }, '본문 문단 수정');
+        // 인용 전체는 하나의 원문 문단으로 유지하고 내부 소제목만 기존 단계 메뉴에 연결한다.
+        if(block.matches('[data-mosaic-quote="true"]')){
+          const sourceLines = ctx.ta.value.split('\n');
+          block.querySelectorAll('[data-mosaic-quote-heading]').forEach(heading => {
+            const raw = entry.raw + Number(heading.dataset.mosaicQuoteLine || 0);
+            const source = sourceLines[raw] || '';
+            if(!/^\s*(?:\[C\]\s*)?(?:>(?!>)\s*(?:\[C\]\s*)?)?#{1,4}\s+/.test(source)) return;
+            bindHeadingLevelInteraction(heading, {
+              block:heading, ta:ctx.ta, raw, type:'heading',
+              level:Number(heading.dataset.mosaicQuoteHeading)
+            });
+          });
+        }
         const sourceLine = (ctx.ta.value.split('\n')[entry.raw] || '').trim();
         const headingMatch = sourceLine.match(/^(?:\[C\]\s*)?(?:\[접기\s+)?(#{1,4})\s+/i);
         if(headingMatch){
@@ -5126,8 +5301,6 @@ function decoratePreviewCreditPlacementButton(){
   if(!credit) return;
   const placement = document.getElementById('creditPlacement');
   if(!placement || placement.disabled) return;
-  // 통합 카드에 표시 코멘트가 있으면 크레딧은 코멘트 아래에 고정된다.
-  if(document.getElementById('cardLayout').value === 'unified' && previewParts().comments.length) return;
   const atTop = normalizeCreditPlacement(placement.value) === 'top';
   const title = atTop ? '크레딧을 최하단으로 이동' : '크레딧을 최상단으로 이동';
   const button = createPreviewControlButton('previewProfilePlacementBtn', atTop ? '↓' : '↑', title);
@@ -5771,7 +5944,8 @@ function focusPreviewOnCaret(ta){
 
 // 출력 설정을 읽기 전에 컨트롤과 자동 감지 인물을 동기화한다.
 function syncRenderInputs(){
-  syncCardLayoutAvailability();
+  updateHexLabels();
+  syncCardLayoutCheckbox();
   syncPreviewCardStyleToggles();
   syncDesignSummaries();
   // 본문에 새 [이름] 마커가 생기면 인물 목록을 자동 갱신 (재진입 방지)
@@ -5822,7 +5996,75 @@ function render(){
   schedulePreviewFocusAfterRender();
 }
 
+function syncOutputThemeControls(){
+  const mode = document.getElementById('outputTheme').value;
+  const shape = outputThemeShape(mode);
+  const transparent = outputThemeTransparent(mode);
+  const inheritColors = transparent && document.getElementById('transparentTextMode').value === 'inherit';
+  document.getElementById('transparentTextMode').disabled = !transparent;
+  document.querySelectorAll('[data-output-shape]').forEach(button => {
+    const selected = button.dataset.outputShape === shape;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  document.getElementById('outputTransparentOn').checked = transparent;
+  const colors = document.getElementById('comboGroup');
+  colors.classList.toggle('paletteUnavailable', inheritColors);
+  const list = document.getElementById('comboList');
+  list.inert = inheritColors;
+  ['narrColor','charColor','userColor','emphasisColor','bgColor'].forEach(id => {
+    const disabled = transparent && (id === 'bgColor' || inheritColors);
+    document.getElementById(id).disabled = disabled;
+    document.getElementById(id + 'Hex').disabled = disabled;
+  });
+}
+
+function setCardDefaultsForShapeChange(previousTheme, nextTheme){
+  const previousShape = outputThemeShape(previousTheme);
+  const nextShape = outputThemeShape(nextTheme);
+  if(previousShape === nextShape) return;
+  // 카드 모양을 새로 고를 때만 이어보기와 외곽선 기본값을 적용한다.
+  // 이후 체크박스와 미리보기 버튼에서 바꾼 값은 그대로 유지한다.
+  document.getElementById('cardLayout').value = nextShape === 'document' ? 'unified' : 'separate';
+  document.getElementById('cardBorderOn').checked = nextShape !== 'document';
+  syncCardLayoutCheckbox();
+}
+
+function chooseOutputTheme(shape, transparent){
+  commitThemeHoverPreview();
+  const outputTheme = document.getElementById('outputTheme');
+  const nextTheme = composeOutputTheme(shape, transparent);
+  setCardDefaultsForShapeChange(outputTheme.value, nextTheme);
+  outputTheme.value = nextTheme;
+  updateHexLabels();
+  renderComboList();
+  renderPresetList();
+  render();
+  saveDraft();
+  commitStyleHistory(true);
+}
+
+document.querySelectorAll('[data-output-shape]').forEach(button => {
+  button.addEventListener('click', () => {
+    const mode = document.getElementById('outputTheme').value;
+    chooseOutputTheme(button.dataset.outputShape, outputThemeTransparent(mode));
+  });
+});
+
+document.getElementById('outputTransparentOn').addEventListener('change', event => {
+  const mode = document.getElementById('outputTheme').value;
+  chooseOutputTheme(outputThemeShape(mode), event.target.checked);
+});
+
 function updateHexLabels(){
+  syncOutputThemeControls();
+  const transparentHint = document.getElementById('transparentThemeHint');
+  if(transparentHint){
+    transparentHint.hidden = !outputThemeTransparent(document.getElementById('outputTheme').value);
+    transparentHint.textContent = document.getElementById('transparentTextMode').value === 'inherit'
+      ? '투명 배경 · 게시판 기본 글자색 사용'
+      : '투명 배경 · 인물색과 기존 글자색 유지';
+  }
   ['narrColor','charColor','userColor','emphasisColor','bgColor'].forEach(id => {
     document.getElementById(id + 'Hex').value = document.getElementById(id).value;
   });
@@ -5988,6 +6230,7 @@ function syncDesktopPreviewWidth(){
 
 function syncDesignSummaries(){
   syncCardLayoutCheckbox();
+  syncMinimalChoiceControls();
   const font = selectedControlText('textFont');
   const dialogue = selectedControlText('dlgStyle');
   const cardLayout = selectedControlText('cardLayout');
@@ -6006,8 +6249,8 @@ function syncDesignSummaries(){
 
   const imageOn = document.getElementById('imgOn').checked;
   document.getElementById('imageCoverSummary').textContent = imageOn
-    ? `표시 · ${document.getElementById('imgHeight').value}px`
-    : '숨김';
+    ? `${document.getElementById('imgHeight').value}px`
+    : '';
 
   const titleOn = document.getElementById('logTitleOn').checked;
   const profileOrderSummary = selectedControlText('titleProfileOrder').replace(/\s+/g, '');
@@ -6042,15 +6285,15 @@ function syncDesignSummaries(){
     ? `${selectedControlText('profileStyle')} · ${document.getElementById('profileMinimal').checked ? '미니멀' : '일반'} · ${profilePlacementSummary}`
     : '숨김';
 
-  const footerOn = document.getElementById('footerOn').checked;
-  document.getElementById('footerCoverSummary').textContent = footerOn
-    ? '표시'
-    : '숨김';
+  const footerAuthorSummary = document.getElementById('footerAuthor').value.trim();
+  document.getElementById('footerCoverSummary').textContent = document.getElementById('footerOn').checked && footerAuthorSummary
+    ? `©${footerAuthorSummary}`
+    : '';
   const creditOn = document.getElementById('creditOn').checked;
   const creditCount = storedCreditItems().filter(item => item.label.trim() || item.value.trim()).length;
   document.getElementById('creditCoverSummary').textContent = creditOn
-    ? `표시 · ${selectedControlText('creditPlacement')} · ${creditCount}개 항목`
-    : '숨김';
+    ? `${selectedControlText('creditPlacement')} · ${creditCount}개 항목`
+    : '';
 }
 
 function normalizeProtocolRelativeUrl(value){
@@ -6170,6 +6413,12 @@ PROFILE_ENTITY_CONFIGS.forEach(config => {
   }
 });
 
+// 표지 섹션 헤더의 표시 스위치는 접기/펼치기와 독립적으로 작동한다.
+document.querySelectorAll('#tabCover .coverFoldActions').forEach(actions => {
+  actions.addEventListener('click', event => event.stopPropagation());
+  actions.addEventListener('keydown', event => event.stopPropagation());
+});
+
 PROFILE_TAG_GROUPS.forEach(group => {
   group.editorIds.forEach((id, index) => {
     const editor = document.getElementById(id);
@@ -6242,7 +6491,7 @@ const WORK_BOOLEAN_DEFAULTS = Object.freeze({
 // 배포본과 같은 저장 키·필드명을 유지한다. 이후 boolean 옵션을 추가할 때도
 // 수집·검증·초안 저장·복원에서 이 목록 하나를 공유해 누락을 막는다.
 const WORK_BOOLEAN_FIELDS = Object.freeze(Object.keys(WORK_BOOLEAN_DEFAULTS));
-const STYLE_FIELDS = ['textFont','narrSize','narrLine','narrColor','dlgStyle','dlgSize','dlgLine','paragraphGap','softBreakSpacing','titleSize','titleBold','foldTitleSize','foldTitleBold','foldTitleDecorationOn','foldDividerOn','foldTitleAutoNumber','charColor','userColor','emphasisColor','cardLayout','spacingMode','cardWidth','cardBorderOn','bgColor','narrIndent','narrCenter','headingCenter','dialogueCenter','quoteCenter','bodyFoldTitleCenter','commentWidth','commentAlign','parallelTranslationLayout','charSpeakerOn','userSpeakerOn'];
+const STYLE_FIELDS = ['outputTheme','transparentTextMode','textFont','narrSize','narrLine','narrColor','dlgStyle','dlgSize','dlgLine','paragraphGap','softBreakSpacing','titleSize','titleBold','foldTitleSize','foldTitleBold','foldTitleDecorationOn','foldDividerOn','foldTitleAutoNumber','charColor','userColor','emphasisColor','cardLayout','spacingMode','cardWidth','cardBorderOn','bgColor','narrIndent','narrCenter','headingCenter','dialogueCenter','quoteCenter','bodyFoldTitleCenter','commentWidth','commentAlign','parallelTranslationLayout','charSpeakerOn','userSpeakerOn'];
 const SIDEBAR_OUTPUT_IDS = new Set([...WORK_FIELDS, ...STYLE_FIELDS, ...WORK_BOOLEAN_FIELDS]);
 // 표시 여부에 따라 미리보기 높이가 크게 바뀌는 옵션들.
 // 위치 맞추기가 꺼져 있으면 브라우저의 자동 스크롤 보정까지 취소해 현재 화면을 유지한다.
@@ -6634,7 +6883,7 @@ function syncProfileEntityControlState(){
     // 상위 프로필 표시를 꺼도 하위 선택값은 바꾸지 않는다. 토글만 잠가 두었다가
     // 프로필을 다시 켜면 BOT·USER·관계의 기존 활성 상태를 그대로 복원한다.
     toggle.disabled = !profileOn;
-    const switchLabel = toggle.closest('.profileEntitySwitch');
+    const switchLabel = toggle.closest('.coverVisibilitySwitch, .profileEntitySwitch');
     if(switchLabel) switchLabel.title = profileOn
       ? `${config.label} 표시 전환`
       : '프로필 표시를 켜야 변경할 수 있습니다.';
@@ -6681,13 +6930,12 @@ function syncCoverControlState(){
   // 표제 전체가 켜져 있어도 실제 연결 문구가 비어 있으면 해당 링크만 잠근다.
   syncTitleLinkControlState();
   syncAllSegmentedChoiceControls();
+  syncMinimalChoiceControls();
   updateAllImageLoadStatuses();
   syncCreditControlState();
 }
 function syncCreditControlState(){
   const on = document.getElementById('creditOn').checked;
-  const forceBottom = document.getElementById('cardLayout').value === 'unified'
-    && hasVisibleCommentOutput();
   const area = document.getElementById('creditEditorArea');
   if(!area) return;
   area.classList.toggle('creditControlsDisabled', !on);
@@ -6695,11 +6943,7 @@ function syncCreditControlState(){
   area.querySelectorAll('input, select, button').forEach(control => { control.disabled = !on; });
   const placement = document.getElementById('creditPlacement');
   if(placement){
-    placement.disabled = !on || forceBottom;
-    placement.dataset.forcedValue = forceBottom ? 'bottom' : '';
-    placement.title = forceBottom
-      ? '카드 이어보기에서는 코멘트 아래에서 크레딧이 문서를 마무리합니다.'
-      : '';
+    placement.disabled = !on;
   }
   const presetSummary = area.querySelector('.creditPresetSummary');
   if(presetSummary){
@@ -7254,6 +7498,7 @@ function createCardEditor(value){
     snapshotCards();
     const visible = ed.dataset.outputVisible !== 'false';
     ed.dataset.outputVisible = String(!visible);
+    syncHiddenEditorCollapse(ed, collapseBtn, visible);
     syncVisibilityUi();
     renumberCards();
     refresh();
@@ -7449,6 +7694,7 @@ function createCardEditor(value){
   ed.appendChild(head);
   ed.appendChild(fmt);
   ed.appendChild(ta);
+  if(ed.dataset.outputVisible === 'false') syncHiddenEditorCollapse(ed, collapseBtn, true);
   return ed;
 }
 
@@ -7504,6 +7750,7 @@ function createCommentEditor(value){
   visibilityBtn.addEventListener('click', () => {
     snapshotCards();
     ed.dataset.outputVisible = String(ed.dataset.outputVisible === 'false');
+    syncHiddenEditorCollapse(ed, collapseBtn, ed.dataset.outputVisible === 'false');
     syncVisibility(); renumberCards(); refresh(); buildDocumentNavigator();
     showUndoToast(ed.dataset.outputVisible === 'false' ? '코멘트 출력 숨김.' : '코멘트 출력 다시 표시.');
   });
@@ -7540,6 +7787,7 @@ function createCommentEditor(value){
     if(focusEditor){ activeTa = focusEditor.querySelector('textarea'); if(activeTa) activeTa.focus(); }
     showUndoToast('코멘트 삭제됨.');
   });
+  if(ed.dataset.outputVisible === 'false') syncHiddenEditorCollapse(ed, collapseBtn, true);
   return ed;
 }
 
@@ -9867,7 +10115,7 @@ function updateCounter(){
        || statusLineContent(structuralLine) !== null) return false;
     return structuralLine.replace(/\s/g, '').length > 300;
   }).length;
-  const longNote = longCount > 0 ? ` · 긴 문단 ${longCount}개 (나눠 쓰면 읽기 편해)` : '';
+  const longNote = longCount > 0 ? ` · 긴 문단 ${longCount}개` : '';
 
   // 대사/서술/강조 구성비 (강조 글자는 서술에서 빼 중복 없이 합계 100%로 계산)
   let dlgC = 0, emphasisC = 0, narrC = 0;
@@ -10270,13 +10518,13 @@ document.getElementById('codeFsCopyBtn').addEventListener('click', () => {
 // ---------- 프리셋 ----------
 const PRESET_KEY = 'logGenPresets_v2';
 const THEME_COLOR_FIELDS = ['bgColor', 'narrColor', 'emphasisColor', 'charColor', 'userColor'];
-const SAVED_PRESET_FIELDS = [...THEME_COLOR_FIELDS, 'dlgStyle'];
+const SAVED_PRESET_FIELDS = [...THEME_COLOR_FIELDS, 'outputTheme', 'transparentTextMode', 'dlgStyle'];
 const DEFAULT_STYLE = {
   textFont: 'pretendard', narrSize: '14', narrLine: '1.7', narrColor: '#555555',
   dlgStyle: 'softlight', dlgSize: '14', dlgLine: '1.7', paragraphGap: '20', softBreakSpacing: '0',
   titleSize: '21', titleBold: true, foldTitleSize: '16', foldTitleBold: true, foldTitleDecorationOn: true, foldDividerOn: true, foldTitleAutoNumber: false,
   charColor: '#222222', userColor: '#707070', emphasisColor: '#747474',
-  cardLayout: 'separate', spacingMode: 'normal', cardWidth: '750', cardBorderOn: true, bgColor: '#ffffff', narrIndent: false, narrCenter: false, headingCenter: false, dialogueCenter: false, quoteCenter: false, bodyFoldTitleCenter: false, commentWidth: 'default', commentAlign: 'left', parallelTranslationLayout: 'auto', charSpeakerOn: false, userSpeakerOn: false
+  outputTheme: 'solid', transparentTextMode: 'preserve', cardLayout: 'separate', spacingMode: 'normal', cardWidth: '750', cardBorderOn: true, bgColor: '#ffffff', narrIndent: false, narrCenter: false, headingCenter: false, dialogueCenter: false, quoteCenter: false, bodyFoldTitleCenter: false, commentWidth: 'default', commentAlign: 'left', parallelTranslationLayout: 'auto', charSpeakerOn: false, userSpeakerOn: false
 };
 
 // 저채도 배경과 4.5:1 이상의 본문 대비를 기준으로 구성한 추천 색 조합.
@@ -10297,6 +10545,7 @@ const COLOR_COMBOS = [
   { name:'쿨 차콜', families:['mono'], v:{ bgColor:'#f2f4f6', narrColor:'#4a5159', emphasisColor:'#616b75', charColor:'#1f2933', userColor:'#604b59' } },
   { name:'웜 그래파이트', families:['mono'], v:{ bgColor:'#f5f1eb', narrColor:'#534f4a', emphasisColor:'#6f665d', charColor:'#2c2925', userColor:'#61483a' } },
   { name:'스톤 페이퍼', families:['mono'], v:{ bgColor:'#f3f1ed', narrColor:'#514f4b', emphasisColor:'#69655f', charColor:'#282724', userColor:'#57534e' } },
+  { name:'종이', families:['mono'], v:{ bgColor:'#faf9f5', narrColor:'#494740', emphasisColor:'#78644b', charColor:'#303530', userColor:'#666259' } },
   { name:'포슬린', families:['mono'], v:{ bgColor:'#f8f9f7', narrColor:'#505653', emphasisColor:'#68706c', charColor:'#222825', userColor:'#56605b' } },
 
   { name:'딥 네이비', families:['blue'], v:{ bgColor:'#f3f6fa', narrColor:'#4a5564', emphasisColor:'#596b82', charColor:'#183a63', userColor:'#485f7c' } },
@@ -10337,7 +10586,7 @@ const COLOR_COMBOS = [
 
 let currentComboName = null;
 let currentComboFamily = 'featured';
-const DIALOG_STYLE_CYCLE = ['softlight', 'highlight', 'badge', 'gradient', 'box'];
+const DIALOG_STYLE_CYCLE = ['softlight', 'highlight', 'badge', 'gradient', 'box', 'messenger'];
 let lastClickedPresetKey = null;
 
 function nextDialogueStyleValue(value){
@@ -10394,11 +10643,34 @@ document.getElementById('cardLayoutUnifiedOn').addEventListener('change', event 
 
 const SEGMENTED_CHOICE_SELECT_IDS = ['titleProfileOrder', 'profilePlacement', 'profileStyle', 'profileProfileOrder', 'creditPlacement'];
 
+function syncMinimalChoiceControls(){
+  document.querySelectorAll('[data-minimal-control]').forEach(group => {
+    const input = document.getElementById(group.dataset.minimalControl);
+    group.querySelectorAll('button[data-value]').forEach(button => {
+      button.setAttribute('aria-pressed', String(input.checked === (button.dataset.value === 'minimal')));
+      button.disabled = input.disabled;
+    });
+  });
+}
+
+document.querySelectorAll('[data-minimal-control]').forEach(group => {
+  const input = document.getElementById(group.dataset.minimalControl);
+  group.querySelectorAll('button[data-value]').forEach(button => {
+    button.addEventListener('click', () => {
+      const next = button.dataset.value === 'minimal';
+      if(input.disabled || input.checked === next) return;
+      input.checked = next;
+      input.dispatchEvent(new Event('input', { bubbles:true }));
+      input.dispatchEvent(new Event('change', { bubbles:true }));
+    });
+  });
+});
+
 function syncSegmentedChoiceControl(selectId){
   const select = document.getElementById(selectId);
   const group = document.querySelector(`[data-control="${selectId}"]`);
   if(!select || !group) return;
-  const displayedValue = select.dataset.forcedValue || select.value;
+  const displayedValue = select.value;
   group.title = select.title || '';
   group.querySelectorAll('button[data-value]').forEach(button => {
     const active = button.dataset.value === displayedValue;
@@ -10493,6 +10765,7 @@ let themeHoverPreview = null;
 const themeHoverPreviewCards = new WeakMap();
 
 function beginThemeHoverPreview(key, values){
+  if(outputThemeTransparent(document.getElementById('outputTheme').value) && document.getElementById('transparentTextMode').value === 'inherit') return;
   if(themeHoverPreview && themeHoverPreview.key === key) return;
   themeHoverPreview = { key };
   // 호버는 팔레트 확인만 제공한다. 내 프리셋에 저장된 대사 옵션은 클릭할 때만 적용한다.
@@ -10500,7 +10773,7 @@ function beginThemeHoverPreview(key, values){
   THEME_COLOR_FIELDS.forEach(id => {
     if(values[id] !== undefined) previewColors[id] = values[id];
   });
-  const previewSettings = { ...getSettings(), ...previewColors };
+  const previewSettings = { ...getSettings(), ...previewColors, outputTheme: document.getElementById('outputTheme').value };
   renderPreview(buildCard(previewSettings));
 }
 
@@ -10549,7 +10822,7 @@ window.addEventListener('blur', () => {
   if(themeHoverPreview) endThemeHoverPreview(themeHoverPreview.key);
 });
 
-// 현재 테마의 실제 5색을 추천 프리셋과 같은 순서로 보여준다.
+// 현재 테마의 실제 5색을 색상 프리셋과 같은 순서로 보여준다.
 function renderCurrentThemePalette(){
   const button = document.getElementById('currentThemePaletteButton');
   if(!button) return;
@@ -10629,9 +10902,9 @@ function renderComboList(){
       commitThemeHoverPreview();
       applyPresetDialogueStyle(presetKey);
       applyThemeColorValues(v);
-      updateHexLabels();
       currentComboName = combo.name;
       currentPresetName = null;
+      updateHexLabels();
       renderPresetList();
       renderComboList();
       render();
@@ -10677,6 +10950,11 @@ function applyThemeColorValues(values){
   updateHexLabels();
 }
 function applySavedPresetValues(values){
+  const outputTheme = document.getElementById('outputTheme');
+  const nextTheme = normalizeOutputTheme(values.outputTheme);
+  setCardDefaultsForShapeChange(outputTheme.value, nextTheme);
+  outputTheme.value = nextTheme;
+  document.getElementById('transparentTextMode').value = values.transparentTextMode === 'inherit' ? 'inherit' : 'preserve';
   applyThemeColorValues(values);
   const dialogueStyle = document.getElementById('dlgStyle');
   if(values && Array.from(dialogueStyle.options).some(option => option.value === values.dlgStyle)){
@@ -10686,12 +10964,14 @@ function applySavedPresetValues(values){
 }
 function savedPresetStateEqual(a, b){
   if(!a || !b) return false;
-  return SAVED_PRESET_FIELDS.every(id => String(a[id]).toLowerCase() === String(b[id]).toLowerCase());
+  const value = (state, id) => state[id] ?? (id === 'outputTheme' ? 'solid' : id === 'transparentTextMode' ? 'preserve' : '');
+  return SAVED_PRESET_FIELDS.every(id => String(value(a,id)).toLowerCase() === String(value(b,id)).toLowerCase());
 }
 
 function applyStyleValues(v){
   // 따로 저장된 나레이션·대사 폰트는 전체 폰트 값으로 정규화한다.
-  const values = { ...v };
+  const values = { ...v, outputTheme: normalizeOutputTheme(v.outputTheme),
+    transparentTextMode: v.transparentTextMode === 'inherit' ? 'inherit' : 'preserve' };
   // 이전 버전의 `장식/구분선 제거` 값을 긍정형 `표시` 설정으로 변환한다.
   if(values.foldTitleDecorationOn === undefined && values.foldTitleMinimal !== undefined){
     values.foldTitleDecorationOn = !settingFlagOn(values.foldTitleMinimal);
@@ -11234,6 +11514,7 @@ function sanitizeImportedPreset(preset){
 
 // 색 조합 스와치: 배경/나레이션/강조/{{char}}/{{user}} 순서의 소형 컬러칩.
 function buildSwatchRow(v){
+  if(outputThemeTransparent(v.outputTheme)) return '<div class="transparentSwatch">배경 없이 · ' + (v.transparentTextMode === 'inherit' ? '게시판 기본색' : '기존 글자색 유지') + '</div>';
   const bg = v.bgColor || '#ffffff';
   const dots = [
     { c: bg,                         t: '배경' },
