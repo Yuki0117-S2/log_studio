@@ -14,3 +14,5 @@
 .font-sample{font-size:20px;line-height:1.6;border:1px solid #8888CC;padding:12px;border-radius:6px;overflow-wrap:anywhere;margin:10px 0}
 .quick-font .check-row{font-size:11px;align-items:flex-start;line-height:1.6}
 .quick-spacing .field-help,.quick-font .field-help{display:block;overflow-wrap:anywhere}
+.batch-typography .field-help{display:block;overflow-wrap:anywhere;line-height:1.6}
+.batch-typography .check-row{font-size:11px;align-items:flex-start;line-height:1.6}

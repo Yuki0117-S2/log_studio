@@ -82,7 +82,7 @@
     $('mobileImageActions').hidden=multi||!(selected?.tag==='img'&&selected.el?.getAttribute('src'));
     if(!selected){$('selectionPath').textContent='미리보기에서 고칠 부분을 선택하세요';$('selectionLine').textContent='';return;}
     const path=[];let r=selected;while(r){path.unshift(r.tag);r=model.byId.get(r.parentId);}
-    $('selectionPath').textContent=multi?`${selectedIds.size}개 요소 선택 · 글씨체·색상 변경`:path.join(' › ');$('selectionLine').textContent=multi?'Ctrl+클릭으로 추가·해제 · Esc 전체 해제':`${model.lineAt(selected.start)}–${model.lineAt(selected.end)}줄 선택`;
+    $('selectionPath').textContent=multi?`${selectedIds.size}개 요소 선택 · 글자 모양·색상 변경`:path.join(' › ');$('selectionLine').textContent=multi?'Ctrl+클릭으로 추가·해제 · Esc 전체 해제':`${model.lineAt(selected.start)}–${model.lineAt(selected.end)}줄 선택`;
     const inFields=$('inspector').contains(document.activeElement)&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if(force||!inFields)renderInspector();else if(!multi&&selected.tag==='img')refreshImageInspector();
     if(document.activeElement!==code){code.setSelectionRange(selected.start,selected.end);code.scrollTop=Math.max(0,(model.lineAt(selected.start)-3)*21);$('lineNumbers').scrollTop=code.scrollTop;}
@@ -208,16 +208,46 @@
   }
   function renderBatchInspector(){
     const records=selectedRecords();
-    $('selectedTag').textContent=records.length+'개 선택';$('selectedLabel').textContent='글씨체 · 글자색 · 배경색 변경';
+    $('selectedTag').textContent=records.length+'개 선택';$('selectedLabel').textContent='글씨체 · 크기 · 간격 · 색상 변경';
     const fields=[['글자색','color'],['배경색','background-color']].map(([label,prop])=>{
       const values=records.map(r=>r.el.style.getPropertyValue(prop)),mixed=new Set(values).size>1;
       return colorField(label,prop,mixed?'':values[0]).replace('placeholder="#8888CC / transparent"',`placeholder="${mixed?'서로 다른 색상':'#8888CC / transparent'}"`);
     }).join('');
     $('inspectorFields').innerHTML=`<p class="muted">선택한 ${records.length}개 요소에 함께 적용해요.<br>Ctrl+클릭으로 추가·해제할 수 있어요. Mac은 ⌘+클릭.</p><details open class="inspector-section"><summary>색상 일괄 변경</summary>${fields}<div class="swatches" aria-label="추천 배경색">${['#8888CC','#DDAACC','#CCAA88','#BB6688'].map(c=>`<button style="background:${c}" data-swatch="${c}" title="배경색 ${c}" aria-label="배경색 ${c}"></button>`).join('')}</div></details><button id="clearSelection" class="wide">선택 모두 해제</button>`;
     $('clearSelection').onclick=()=>select(null);
-    $('inspectorFields').insertAdjacentHTML('afterbegin',window.ArcaVisual.fontPanel(records[0],null,true));
+    $('inspectorFields').insertAdjacentHTML('afterbegin',batchTypographyPanel(records)+window.ArcaVisual.fontPanel(records[0],null,true));
   }
-  function editVisualStyles(records,properties,message,kind){
+  const batchTypographySpecs=[
+    {prop:'font-size',label:'글씨 크기 (px)',unit:'px',min:0,example:'예: 16'},
+    {prop:'line-height',label:'줄 간격 (배)',unit:'',min:0,example:'예: 1.7'},
+    {prop:'letter-spacing',label:'자간 (px)',unit:'px',example:'예: -0.2'},
+    {prop:'font-weight',label:'글자 두께',options:[['100','100 · 매우 얇게'],['200','200'],['300','300 · 얇게'],['400','400 · 보통'],['500','500'],['600','600'],['700','700 · 굵게'],['800','800'],['900','900 · 매우 굵게']]},
+    {prop:'text-align',label:'정렬',options:[['left','왼쪽'],['center','가운데'],['right','오른쪽'],['justify','양쪽']]}
+  ];
+  function batchTypographyPanel(records){
+    const fields=batchTypographySpecs.map(spec=>{
+      const values=records.map(r=>r.el.style.getPropertyValue(spec.prop)),mixed=new Set(values).size>1;
+      const current=mixed?'여러 값':values[0]||'상속·기본값';
+      const input=spec.options?`<select data-batch-typography="${spec.prop}"><option value="">변경 안 함</option>${spec.options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select>`:`<input type="number" step="any" ${spec.min===undefined?'':`min="${spec.min}"`} data-batch-typography="${spec.prop}" placeholder="${mixed?'여러 값':spec.example}">`;
+      return `<label class="field">${spec.label}${input}<span class="field-help">현재: ${e(current)}</span></label>`;
+    }).join('');
+    return `<details open class="inspector-section batch-typography"><summary>글자 모양 일괄 변경</summary><p class="field-help">바꿀 항목만 입력하세요. <b>빈칸은 기존 값을 유지</b>해요.</p><div class="field-row">${fields}</div><label class="check-row"><input id="batchTextDescendants" type="checkbox" checked>선택 구역 안의 글자까지 함께 변경</label><button type="button" data-apply-typography class="wide">선택한 ${records.length}개에 글자 모양 적용</button></details>`;
+  }
+  function applyBatchTypography(){
+    const properties={},descendants=$('batchTextDescendants').checked;
+    for(const spec of batchTypographySpecs){
+      const input=$('inspectorFields').querySelector(`[data-batch-typography="${spec.prop}"]`),value=input.value.trim();
+      if(!input.checkValidity()){toast(spec.label+' 값을 확인해 주세요.');input.reportValidity();return;}
+      if(!value)continue;
+      if(spec.options){if(!spec.options.some(([option])=>option===value))return;properties[spec.prop]=value;}
+      else {const number=Number(value);if(!Number.isFinite(number)){toast(spec.label+' 값을 확인해 주세요.');return;}properties[spec.prop]=number+spec.unit;}
+    }
+    if(!Object.keys(properties).length){toast('바꿀 글씨 크기나 간격 등을 입력해 주세요.');return;}
+    flush();const roots=selectedRecords();if(roots.length<2)return;
+    const records=descendants?model.records.filter(r=>r.el&&roots.some(root=>root.el===r.el||root.el.contains(r.el))):roots;
+    editVisualStyles(records,properties,`${roots.length}개 요소 · 글자 모양 일괄 변경`,'command',0);
+  }
+  function editVisualStyles(records,properties,message,kind,delay=100){
     const edits=[];
     for(const r of records){
       const el=r.el.cloneNode(false);
@@ -228,7 +258,7 @@
     let next=source;
     for(const {r,html} of edits.sort((a,b)=>b.r.start-a.r.start))next=C.patch(next,r.start,r.openEnd,html);
     if(kind==='command'||kind!==lastEditKind||Date.now()-historyTime>800)backup(message+' 전');
-    commit(next,message,kind,null,100,selectionState());
+    commit(next,message,kind,null,delay,selectionState());
   }
   function quickSpacing(input){
     const prop=input.dataset.quickStyle,n=Number(input.value);
@@ -473,6 +503,7 @@
     const target=ev.target.closest('[data-space-target]');
     if(target){flush();select(model.byId.get(target.dataset.spaceTarget),{scrollPreview:true});return;}
     if(ev.target.closest('[data-apply-font]')){applyFont();return;}
+    if(ev.target.closest('[data-apply-typography]')){applyBatchTypography();return;}
     if(ev.target.closest('[data-auto-height]')){flush();if(selected&&selectedIds.size===1)editVisualStyles([selected],{height:'auto','min-height':'0'},'고정·최소 높이 풀기','command');}
   });
   $('inspectorFields').addEventListener('change',ev=>{if(ev.target.matches('[data-check],select[data-style]'))updateProperty(ev.target);});
