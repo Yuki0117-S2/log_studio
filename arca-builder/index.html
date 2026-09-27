@@ -8,10 +8,14 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="reference-theme.css">
   <link rel="stylesheet" href="visual-properties.css">
+  <link rel="stylesheet" href="design-tools.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&amp;family=Noto+Serif+KR:wght@400;600;700;800&amp;display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <script defer src="core.js"></script>
   <script defer src="visual-properties.js"></script>
+  <script defer src="easy-design.js"></script>
+  <script defer src="design-tools.js"></script>
+  <script defer src="layout-studio.js"></script>
   <script defer src="components.js"></script>
   <script defer src="assets.js"></script>
   <script defer src="upload.js"></script>
@@ -29,7 +33,7 @@
         <div class="segmented" aria-label="미리보기 너비"><button data-width="900" class="active">PC</button><button data-width="360">모바일</button></div>
         <button id="themeToggle" class="quiet" title="미리보기 배경 전환">☼ 라이트</button>
         <label class="zoom-label">배율<select id="zoom"><option value="fit">맞춤</option><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select></label>
-        <span class="spacer"></span><button id="help" class="round-button" aria-label="사용법">?</button>
+        <span class="spacer"></span><a href="examples/" target="_blank" rel="noopener">예제 · TIP ↗</a><button id="help" class="round-button" aria-label="사용법">?</button>
       </div>
   </header>
   <div class="workspace">
@@ -43,8 +47,8 @@
       </section>
       <section id="libraryPanel" class="pane" hidden>
         <div class="library-intro">필요한 만큼, 자유롭게.<small>선택한 위치에 새 블록을 넣어요.</small></div>
-        <label class="field">새 블록 색상<select id="palette"><option value="lavender">라벤더 · #8888CC</option><option value="rose">로즈 · #DDAACC</option><option value="sand">샌드 · #CCAA88</option><option value="berry">베리 · #BB6688</option></select></label>
-        <button id="localImages" class="wide image-button">▧ 원본 이미지 · 주소 연결</button><div id="library"></div><button id="images" class="wide image-button">＋ 여러 이미지 한 번에 넣기</button>
+        <label class="field">새 블록 스타일<select id="palette"><option value="minimal">미니멀 · 흰색 / Pretendard</option><option value="lavender">라벤더 · #8888CC</option><option value="rose">로즈 · #DDAACC</option><option value="sand">샌드 · #CCAA88</option><option value="berry">베리 · #BB6688</option></select></label>
+        <button id="localImages" class="wide image-button">▧ 원본 이미지 · 주소 연결</button><div id="library"></div><h3 class="library-group">내 블록</h3><div id="savedBlocks"></div><button id="images" class="wide image-button">＋ 여러 이미지 한 번에 넣기</button>
       </section>
     </aside>
     <main class="main-panel">
@@ -57,7 +61,8 @@
         <div id="noSelection" class="empty-selection"><div class="selection-illustration">⌖</div><h2>어디를 바꿔볼까요?</h2><p>미리보기, 구성 트리, 코드에서<br>원하는 부분을 눌러보세요.</p><div class="mini-guide"><span>01</span> 고를 때는 미리보기에서<br><span>02</span> 바꿀 때는 속성이나 코드에서<br><span>03</span> 결과는 바로 확인</div></div>
         <div id="inspector" hidden>
           <div class="selected-heading"><code id="selectedTag"></code><span id="selectedLabel"></span></div>
-          <div id="singleElementActions" class="element-actions"><button data-operation="up" title="위로 이동">↑</button><button data-operation="down" title="아래로 이동">↓</button><button data-operation="parent">상위 선택</button><button data-operation="duplicate">복제</button><button data-operation="delete" class="danger-text">삭제</button></div>
+          <div id="singleElementActions" class="element-actions"><button data-operation="up" title="위로 이동">↑</button><button data-operation="down" title="아래로 이동">↓</button><button data-operation="parent">상위 선택</button><button data-operation="outdent" title="현재 상자 밖, 바로 다음 위치로 이동">상자 밖으로</button><button data-operation="duplicate">복제</button><button data-operation="delete" class="danger-text" title="선택한 요소 삭제 · Delete">삭제</button></div>
+          <button id="duplicateFold" class="wide" hidden>접기 전체 복제 · 안쪽 내용 포함</button>
           <div id="inspectorFields"></div>
           <details id="innerHtmlSection" class="inspector-section"><summary>내부 HTML 편집</summary><p class="muted">하위 요소까지 바꾸려면 여기에서 수정하세요.</p><textarea id="innerHtml" spellcheck="false" rows="7" aria-label="선택 요소 내부 HTML"></textarea><button id="applyInner" class="wide">선택 영역에 적용</button></details>
         </div>
@@ -68,7 +73,7 @@
       <div class="selection-bar"><span id="selectionPath">미리보기에서 고칠 부분을 선택하세요</span><span id="selectionLine"></span></div>
       <div id="codeResizer" role="separator" aria-label="코드 영역 높이 조절" aria-orientation="horizontal" tabindex="0"></div>
       <section class="code-panel">
-        <div class="code-header"><div><span class="code-dot"></span><strong>HTML 코드</strong><span class="code-caption">양방향 동기화 · 코드를 고치면 미리보기도 갱신</span></div><div><button id="findCode" class="text-button">코드 찾기</button><button id="copySource" class="text-button">원본 복사</button><button id="downloadSource" class="text-button">원본 저장</button></div></div>
+        <div class="code-header"><div><span class="code-dot"></span><strong>HTML 코드</strong><button id="toggleCode" class="text-button" aria-expanded="true">코드 접기</button><span class="code-caption">양방향 동기화 · 코드를 고치면 미리보기도 갱신</span></div><div><button id="findCode" class="text-button">코드 찾기</button><button id="copySource" class="text-button">원본 복사</button><button id="downloadSource" class="text-button">원본 저장</button></div></div>
         <div class="code-wrap"><pre id="lineNumbers" aria-hidden="true">1</pre><textarea id="code" aria-label="HTML 원본 코드" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea></div>
         <div class="code-footer"><span id="codeStats"></span><span id="changeSummary">준비됐어요</span></div>
       </section>

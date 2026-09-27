@@ -5,6 +5,7 @@
     ['pretendard','프리텐다드',"'Pretendard Variable', Pretendard, 'Noto Sans KR', 'Malgun Gothic', sans-serif"],
     ['notoSans','Noto Sans KR · 고딕',"'Noto Sans KR', 'Malgun Gothic', sans-serif"],
     ['notoSerif','Noto Serif KR · 명조',"'Noto Serif KR', 'Nanum Myeongjo', Batang, serif"],
+    ['georgia','Georgia · 영문 명조',"Georgia, 'Times New Roman', 'Noto Serif KR', serif"],
     ['system','기본 고딕',"'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif"]
   ];
   const fontLinks='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&amp;family=Noto+Serif+KR:wght@400;600;700;800&amp;display=swap"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">';
@@ -40,5 +41,17 @@
     const key=preset?.[0]||(name&&!/^(inherit|initial|unset|serif|sans-serif|monospace|system-ui)$/i.test(name)?'custom':'');
     return `<details open class="inspector-section quick-font"><summary>글씨체 미리보기</summary><p class="field-help">현재: ${e(current||'상위 글씨체 상속')}</p><label class="field">글씨체<select id="quickFont"><option value="">글씨체 선택…</option>${fonts.map(([id,label])=>`<option value="${id}" ${key===id?'selected':''}>${label}</option>`).join('')}<option value="custom" ${key==='custom'?'selected':''}>내 컴퓨터 폰트 · 이름 직접 입력</option></select></label><label id="customFontField" class="field" ${key==='custom'?'':'hidden'}>설치된 글꼴 이름<input id="customFontName" value="${e(key==='custom'?name:'')}" maxlength="200" placeholder="예: Aa 오디너리" autocomplete="off" spellcheck="false"><span class="field-help">파일명이 아닌 글꼴 이름을 그대로 입력하세요. 이 컴퓨터에 설치되어 있으면 업로드 없이 사용해요. 이름이 다르거나 미설치 상태면 대체 글꼴로 보여요.</span></label><div id="fontSample" class="font-sample" style="font-family:${e(current||'inherit')}">이야기가 머무는 자리<br>가나다 Aa 0123</div><label class="check-row"><input id="fontDescendants" type="checkbox" checked>선택 구역 안의 글자까지 함께 변경</label><button type="button" data-apply-font class="wide">${multi?'선택한 구역들':'선택 구역'}에 글씨체 적용</button><p class="field-help">입력하면 위 예문을 미리 봐요. 적용 버튼을 누르면 본문도 바뀝니다. 같은 컴퓨터에서 이미지로 저장하면 표시된 글씨체가 이미지에 남아요.</p></details>`;
   }
-  window.ArcaVisual={fonts,fontLinks,spacing,fontPanel,firstFont,fontChoice};
+  function surfacePanel(record,live){
+    const st=live?getComputedStyle(live):record.el.style;
+    const rgba=/rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)(?:\s*[,/]\s*([\d.]+))?/.exec(st.backgroundColor||'');
+    const color=rgba?'#'+rgba.slice(1,4).map(n=>Number(n).toString(16).padStart(2,'0')).join(''):'#ffffff';
+    const alpha=rgba?Math.round(Number(rgba[4]??1)*100):0;
+    return `<details class="inspector-section"><summary>배경 쉽게 꾸미기</summary><label class="field">배경 색<input type="color" data-surface-color value="${color}"></label><label class="field">배경 불투명도 (%)<input type="number" data-surface-alpha min="0" max="100" step="1" value="${alpha}"></label><p class="field-help">0은 투명, 100은 불투명해요. 글자는 그대로 두고 배경만 바뀝니다.</p></details>`;
+  }
+  function imagePanel(record){
+    if(record.tag!=='img')return '';
+    const st=record.el.style;
+    return `<details open class="inspector-section"><summary>이미지 맞춤 · 정렬</summary><div class="design-buttons"><button type="button" data-image-align="left">이미지 왼쪽</button><button type="button" data-image-align="center">이미지 가운데</button><button type="button" data-image-align="right">이미지 오른쪽</button></div><label class="field">사진 맞춤<select data-style="object-fit">${[['contain','그림 전체 보이기'],['cover','칸에 꽉 채우기'],['fill','칸 크기로 늘리기']].map(([v,t])=>`<option value="${v}" ${(st.objectFit||'contain')===v?'selected':''}>${t}</option>`).join('')}</select></label><label class="field">사진 기준 위치<select data-style="object-position">${[['center','가운데'],['top','위쪽'],['bottom','아래쪽'],['left','왼쪽'],['right','오른쪽']].map(([v,t])=>`<option value="${v}" ${(st.objectPosition||'center')===v?'selected':''}>${t}</option>`).join('')}</select></label><p class="field-help">꽉 채우기는 이미지 높이를 지정했을 때 사진 가장자리를 잘라 맞춰요.</p></details>`;
+  }
+  window.ArcaVisual={fonts,fontLinks,spacing,fontPanel,firstFont,fontChoice,surfacePanel,imagePanel};
 })();

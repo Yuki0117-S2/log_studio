@@ -79,6 +79,12 @@
   }
   function label(rec) {
     if (!rec.el) return rec.tag;
+    const foldPart=rec.el.getAttribute('data-arca-fold-part');
+    if(foldPart)return '접기 '+({number:'번호',title:'제목',subtitle:'설명',arrow:'화살표'}[foldPart]||foldPart)+' · '+rec.el.textContent.trim().slice(0,30);
+    if(rec.el.hasAttribute('data-arca-board'))return '디자인 구역';
+    if(rec.el.hasAttribute('data-arca-group'))return '묶은 그룹';
+    if(rec.el.hasAttribute('data-arca-anchor'))return '배치 칸';
+    if(rec.tag==='video')return '음악 · VIDEO';
     if (rec.tag === 'img') return rec.el.getAttribute('alt') || '이미지';
     const text = rec.el.textContent.trim().replace(/\s+/g,' ');
     return text.slice(0,45) || ({hr:'구분선',br:'줄바꿈',td:'빈 셀',div:'빈 구역',iframe:'임베드',video:'동영상'}[rec.tag] || rec.tag);
@@ -233,7 +239,7 @@
         if(expiry?.expired)add(rec,'warn','주소의 만료 시각이 지났어요. 원본 글에서 현재 이미지 주소를 다시 가져와 주세요. 실제 로딩 결과도 확인하세요.');
         else if(/[?&](expires|expire|token|signature)=/i.test(el.getAttribute('src')||''))add(rec,'warn','만료될 수 있는 이미지 주소예요. 게시 후 실제 주소를 확인하세요.');
       }
-      if(tag==='iframe'||tag==='video')add(rec,'warn','임베드·동영상은 신뢰하는 HTTPS 출처와 실제 게시 결과를 확인하세요. 편집 미리보기에서는 실행하지 않아요.');
+      if(tag==='iframe'||tag==='video')add(rec,'warn',tag==='video'?'VIDEO는 재생 버튼으로 미리 들을 수 있어요. 외부 주소의 만료·접근 제한과 실제 게시 결과를 확인하세요.':'임베드는 미리보기에서 실행하지 않아요. 실제 게시 결과를 확인하세요.');
       if(tag==='a'&&el.target==='_blank')el.setAttribute('rel','noopener noreferrer');
       const style=el.style;
       for(const prop of [...style]) {
@@ -282,7 +288,8 @@
   function previewHtml(model, result, mode, dark, localImage=()=>null) {
     const doc=(mode==='final'?result.clean:model.doc).cloneNode(true);
     for(const el of [...doc.querySelectorAll('script,link,meta,base,object,embed,template,noscript')])el.remove();
-    for(const el of [...doc.querySelectorAll('iframe,video,audio')]) {const div=doc.createElement('div');div.setAttribute(model.attr,el.getAttribute(model.attr)||'');div.style.cssText='padding:24px;border:1px dashed #8888CC;color:#8888CC;text-align:center';div.textContent='미디어 미리보기 · '+(el.getAttribute('src')||'주소 없음');el.replaceWith(div);}
+    for(const el of [...doc.querySelectorAll('iframe,audio')]) {const div=doc.createElement('div');div.setAttribute(model.attr,el.getAttribute(model.attr)||'');div.style.cssText='padding:24px;border:1px dashed #666666;color:#666666;text-align:center';div.textContent='미디어 미리보기 · '+(el.getAttribute('src')||'주소 없음');el.replaceWith(div);}
+    for(const el of doc.querySelectorAll('video')){el.removeAttribute('autoplay');el.setAttribute('preload','none');el.setAttribute('controls','');el.setAttribute('playsinline','');}
     for(const el of doc.querySelectorAll('*')) {
       for(const a of [...el.attributes])if(a.name.startsWith('on')||['action','formaction','srcdoc','srcset','ping'].includes(a.name))el.removeAttribute(a.name);
       if(['input','button','select','textarea'].includes(el.localName))el.setAttribute('disabled','');
@@ -294,16 +301,16 @@
         el.setAttribute('loading','lazy');el.setAttribute('referrerpolicy','no-referrer');
         if(!el.getAttribute('src')?.trim()){
           const label=mode==='edit'?'이미지를 여기에 놓으세요':'빈 이미지 칸';
-          const svg='<svg xmlns="http://www.w3.org/2000/svg" width="600" height="120" viewBox="0 0 600 120"><text x="300" y="66" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#8888CC">'+label+'</text></svg>';
+          const svg='<svg xmlns="http://www.w3.org/2000/svg" width="600" height="120" viewBox="0 0 600 120"><text x="300" y="66" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#666666">'+label+'</text></svg>';
           el.setAttribute('src','data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));el.setAttribute('data-editor-empty-image','');el.setAttribute('alt',label);el.setAttribute('title',label);
         }
       }
     }
     // The iframe has no script capability, navigation capability, or network APIs.
-    const csp="default-src 'none'; img-src https: http: data:; style-src 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src https://fonts.gstatic.com https://cdn.jsdelivr.net; frame-src 'none'; media-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'";
+    const csp="default-src 'none'; img-src https: http: data:; style-src 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src https://fonts.gstatic.com https://cdn.jsdelivr.net; frame-src 'none'; media-src https: http:; connect-src 'none'; form-action 'none'; base-uri 'none'";
     const headStyles=(window.ArcaVisual?.fontLinks||'')+(mode==='edit'?[...doc.head.querySelectorAll('style')].map(x=>x.outerHTML).join(''):'');
     const bodyAttrs=[...doc.body.attributes].map(a=>' '+a.name+'="'+escape(a.value)+'"').join('');
-    return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html{min-height:100%;background:${dark?'#202027':'#fff'}}body{margin:0;padding:0;color:${dark?'#eee':'#24212d'};font-family:Arial,'Malgun Gothic',sans-serif;font-size:15px;line-height:1.7;overflow-wrap:anywhere}img{max-width:100%;height:auto}img[data-editor-empty-image]{display:inline-block;min-width:80px;min-height:70px;background:#8888CC12;border:1px dashed #8888CC;color:#686890;object-fit:contain;box-sizing:border-box}body{min-height:120px}</style>${headStyles}</head><body${bodyAttrs}>${doc.body.innerHTML}</body></html>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html{min-height:100%;background:${dark?'#202027':'#fff'}}body{margin:0;padding:0;color:${dark?'#eee':'#24212d'};font-family:Arial,'Malgun Gothic',sans-serif;font-size:15px;line-height:1.7;overflow-wrap:anywhere}img{max-width:100%;height:auto}img[data-editor-empty-image]{display:inline-block;min-width:80px;min-height:70px;background:#f5f5f5;border:1px dashed #aaaaaa;color:#666666;object-fit:contain;box-sizing:border-box}body{min-height:120px}</style>${headStyles}</head><body${bodyAttrs}>${doc.body.innerHTML}</body></html>`;
   }
   window.ArcaCore={VOID,escape,parse,label,atOffset,patch,openingWith,canPlace,insertionPoint,move,imageTarget,placeImage,swapImages,clearImage,normalizeUrl,expiryInfo,extractImages,safeUrl,analyze,captureDetails,restoreDetails,previewHtml};
 })();

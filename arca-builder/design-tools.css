@@ -1,0 +1,13 @@
+.design-buttons{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.design-buttons button{flex:1;border:1px solid var(--line);font-size:10px;padding:7px 5px}
+.design-warning{border-left:3px solid #CCAA88;padding-left:8px}
+.design-handles{position:absolute;inset:0;pointer-events:none;z-index:3}
+.design-handles button{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;width:30px;height:30px;padding:0;border:2px solid #8888CC;border-radius:50%;background:#fff;color:#8888CC;box-shadow:0 2px 6px #0002;font-size:14px;cursor:grab}
+.design-handles .design-resize{border-radius:6px;cursor:nwse-resize}
+.design-handles button:active{cursor:grabbing;min-width:36px;width:auto}
+.design-handles[hidden],.design-handles button[hidden]{display:none}
+.saved-block-row{display:flex;gap:4px;margin:6px 0}
+.saved-block-row button:first-child{flex:1;min-width:0;white-space:normal;text-align:left;border:1px solid var(--line)}
+.code-panel.code-collapsed{height:36px!important;min-height:36px!important}
+.code-collapsed .code-wrap,.code-collapsed .code-footer{display:none}
+.layout-panel{border-left:2px solid #8888CC;padding-left:8px}

@@ -12,6 +12,15 @@
   let frameScrollRestore=null,search='',filename='나의 기록',saved=false;
   let renderedModel=null,frameReady=false,previewView=null,pendingPreviewScroll=false;
   const code=$('code'),frame=$('preview'),A=window.ArcaAssets,U=window.ArcaUpload;
+  const D=window.ArcaDesign;
+  const E=window.ArcaEasy;
+  const L=window.ArcaLayout.create({context:()=>({source,model,selected,records:selectedRecords(),doc:frameReady?frame.contentDocument:null,position:$('insertPosition').value}),editing:()=>mode==='edit',toast,select:r=>{select(r);frame.focus({preventScroll:true});},saveBlock,
+    apply:(next,message,offset=null,keep=false)=>{backup(message+' 전');commit(next,message,'command',offset,0,keep?selectionState():null);highlight(false);}});
+  const designHandles=D.attach({container:$('frameSizer'),frame,getState:()=>{
+    if(!frameReady||mode!=='edit'||selectedIds.size!==1||!selected)return null;
+    const live=frame.contentDocument?.querySelector(`[${model.attr}="${selected.id}"]`);
+    return live?{record:selected,live,scale}:null;
+  },apply:(record,styles,message)=>{if(selected?.id===record.id)editVisualStyles([selected],styles,message,'command',0);}});
   let assets=new Map(),assetStorageOk=true,uploadBatch=null;
   try{assets=await A.load();}catch(_){assetStorageOk=false;$('saveStatus').textContent='원본 이미지 저장소를 열지 못했어요 · 프로젝트 파일로 저장하세요';}
   const localData=src=>assets.get(A.idOf(src))?.data||null;
@@ -79,6 +88,7 @@
     const multi=selectedIds.size>1;
     $('noSelection').hidden=!!selected;$('inspector').hidden=!selected;
     $('singleElementActions').hidden=multi;$('innerHtmlSection').hidden=multi;
+    $('duplicateFold').hidden=multi||!selected?.el?.closest('details');
     $('mobileImageActions').hidden=multi||!(selected?.tag==='img'&&selected.el?.getAttribute('src'));
     if(!selected){$('selectionPath').textContent='미리보기에서 고칠 부분을 선택하세요';$('selectionLine').textContent='';return;}
     const path=[];let r=selected;while(r){path.unshift(r.tag);r=model.byId.get(r.parentId);}
@@ -89,6 +99,8 @@
     if(focusCode){code.focus({preventScroll:true});code.setSelectionRange(selected.start,selected.end);code.scrollTop=Math.max(0,(model.lineAt(selected.start)-3)*21);$('lineNumbers').scrollTop=code.scrollTop;}
   }
   function renderFrame(){
+    L.cancel();
+    designHandles.hide();
     if(frameReady&&renderedModel&&frame.contentDocument)previewView={model:renderedModel,details:C.captureDetails(renderedModel,frame.contentDocument)};
     const details=C.restoreDetails(previewView?.model,model,previewView?.details);
     frameReady=false;
@@ -104,14 +116,16 @@
     for(const state of details){const el=doc.querySelector(`[${model.attr}="${state.id}"]`);if(el?.localName==='details')el.open=state.open;}
     renderedModel=model;frameReady=true;
     const style=doc.createElement('style');style.textContent=`[data-editor-selected]{outline:2px solid #8888CC!important;outline-offset:2px!important}[data-editor-drop]{outline:2px dashed #f0b64a!important;outline-offset:3px!important}`;doc.head.appendChild(style);
-    if(mode==='edit')for(const el of doc.querySelectorAll(`[${model.attr}]`)){if(!['html','head','body','br'].includes(el.localName))el.draggable=true;}
+    if(mode==='edit')for(const el of doc.querySelectorAll(`[${model.attr}]`)){if(!['html','head','body','br','video'].includes(el.localName)&&!el.closest('[data-arca-board]'))el.draggable=true;}
+    const layoutStyle=doc.createElement('style');layoutStyle.textContent='[data-arca-board]{outline:1px dashed #8888CC55;min-height:30px}[data-arca-item]{touch-action:none;cursor:move}[data-arca-item] video{cursor:auto}';if(mode==='edit')doc.head.append(layoutStyle);
+    L.bind(doc);
     doc.addEventListener('click',ev=>{
       $('imageMenu').hidden=true;
       if(ev.target.closest('a,button,input,form'))ev.preventDefault();
       if(mode!=='edit')return;
-      const el=ev.target.closest(`[${model.attr}]`);if(!el)return;
+      const el=window.ArcaLayout.pick(ev.target,model,selected,ev.ctrlKey||ev.metaKey)||ev.target.closest(`[${model.attr}]`);if(!el)return;
       const toggle=ev.ctrlKey||ev.metaKey;if(toggle)ev.preventDefault();
-      const id=el.getAttribute(model.attr);select(model.byId.get(id),{focusCode:true,toggle});setRight('properties');
+      const id=el.getAttribute(model.attr);select(model.byId.get(id),{toggle});setRight('properties');
     });
     doc.addEventListener('submit',ev=>ev.preventDefault());
     doc.addEventListener('contextmenu',ev=>{
@@ -124,6 +138,8 @@
       menu.style.top=Math.max(8,Math.min(innerHeight-70,rect.top+ev.clientY*scale))+'px';$('contextDeleteImage').focus({preventScroll:true});
     });
     doc.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&mode==='edit'){ev.preventDefault();select(null);}});
+    doc.addEventListener('keydown',deleteKey);
+    doc.addEventListener('keydown',ev=>{if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='z'&&!isTextInput(ev.target)&&!$('modal').open){ev.preventDefault();history(ev.shiftKey?'redo':'undo');}});
     doc.addEventListener('dragstart',ev=>{if(mode!=='edit'||selectedIds.size>1){ev.preventDefault();return;}const el=ev.target.closest(`[${model.attr}]`);if(el){dragged=el.getAttribute(model.attr);ev.dataTransfer.setData('text/plain',dragged);ev.dataTransfer.effectAllowed='move';}});
     doc.addEventListener('dragover',ev=>{const files=!dragged&&hasFiles(ev);if(!dragged&&!files)return;ev.preventDefault();for(const x of doc.querySelectorAll('[data-editor-drop]'))x.removeAttribute('data-editor-drop');const el=ev.target.closest(`[${model.attr}]`);if(files){const r=el&&C.imageTarget(model,model.byId.get(el.getAttribute(model.attr)));ev.dataTransfer.dropEffect=mode==='edit'&&r?'copy':'none';if(mode==='edit'&&r)doc.querySelector(`[${model.attr}="${r.id}"]`)?.setAttribute('data-editor-drop','');}else if(el)el.setAttribute('data-editor-drop','');});
     doc.addEventListener('drop',ev=>{ev.preventDefault();for(const x of doc.querySelectorAll('[data-editor-drop]'))x.removeAttribute('data-editor-drop');const el=ev.target.closest(`[${model.attr}]`);if(!dragged&&hasFiles(ev)){dropImageFiles([...ev.dataTransfer.files],el?.getAttribute(model.attr));}else if(el&&dragged)performMove(dragged,el.getAttribute(model.attr),$('insertPosition').value,true);dragged=null;});
@@ -176,10 +192,12 @@
   function layoutFrame(){
     const area=$('canvasArea'),padding=getComputedStyle(area),available=area.clientWidth-parseFloat(padding.paddingLeft)-parseFloat(padding.paddingRight);scale=$('zoom').value==='fit'?Math.min(1,Math.max(.2,available/width)):Number($('zoom').value);
     frame.style.width=width+'px';frame.style.transform=`scale(${scale})`;$('frameSizer').style.width=width*scale+'px';$('frameSizer').style.height=frameHeight*scale+'px';
+    designHandles.update();
   }
   function highlight(scroll){
     if(!frameReady){pendingPreviewScroll=pendingPreviewScroll||scroll;return;}
     const doc=frame.contentDocument;if(!doc)return;for(const el of doc.querySelectorAll('[data-editor-selected]'))el.removeAttribute('data-editor-selected');
+    designHandles.update();
     if(!selected||mode!=='edit')return;
     for(const id of selectedIds)doc.querySelector(`[${model.attr}="${id}"]`)?.setAttribute('data-editor-selected','');
     const el=doc.querySelector(`[${model.attr}="${selected.id}"]`);if(!el)return;
@@ -187,23 +205,31 @@
   }
   function field(label,attr,value,type='text',help=''){return `<label class="field">${label}<input type="${type}" data-attr="${attr}" value="${e(value||'')}" ${type==='url'?'placeholder="https://…"':''}>${help?`<span class="field-help">${help}</span>`:''}</label>`;}
   function styleField(label,prop,value,placeholder=''){return `<label class="field">${label}<input data-style="${prop}" value="${e(value||'')}" placeholder="${placeholder}"></label>`;}
-  function colorField(label,prop,value){const rgb=/^rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/i.exec(value||'');const color=/^#[\da-f]{6}$/i.test(value||'')?value:rgb?'#'+rgb.slice(1,4).map(n=>Number(n).toString(16).padStart(2,'0')).join(''):'#8888CC';return `<label class="field">${label}<span class="color-input"><input type="color" data-style="${prop}" value="${color}" aria-label="${label} 선택"><input type="text" data-style="${prop}" value="${e(value||'')}" placeholder="#8888CC / transparent"></span></label>`;}
+  function colorField(label,prop,value){const rgb=/^rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/i.exec(value||'');const color=/^#[\da-f]{6}$/i.test(value||'')?value:rgb?'#'+rgb.slice(1,4).map(n=>Number(n).toString(16).padStart(2,'0')).join(''):(prop==='background-color'?'#ffffff':'#000000');return `<label class="field">${label}<span class="color-input"><input type="color" data-style="${prop}" value="${color}" aria-label="${label} 선택"><input type="text" data-style="${prop}" value="${e(value||'')}" placeholder="#000000 / transparent"></span></label>`;}
   function renderInspector(){
     if(!selected?.el)return;const el=selected.el,st=el.style,tag=selected.tag;
+    const expanded=new Map([...$('inspectorFields').querySelectorAll('details')].map(section=>[section.querySelector('summary')?.textContent,section.open]));
     if(selectedIds.size>1){renderBatchInspector();return;}
     $('selectedTag').textContent='<'+tag+'>';$('selectedLabel').textContent=C.label(selected);
     const live=frameReady&&renderedModel===model?frame.contentDocument.querySelector(`[${model.attr}="${selected.id}"]`):null;
-    let html=window.ArcaVisual.spacing(selected,model,live)+window.ArcaVisual.fontPanel(selected,live);
-    if(!C.VOID.has(tag)&&el.children.length===0)html+=`<label class="field">내용<textarea id="textValue" data-text="true" rows="3">${e(el.textContent)}</textarea><span class="field-help">입력하면 코드와 미리보기에 바로 반영돼요.</span></label>`;
+    let html=(D.kind(el)?D.panel(selected,live)+L.panel():L.panel()+D.panel(selected,live))+window.ArcaVisual.spacing(selected,model,live)+window.ArcaVisual.fontPanel(selected,live);
+    if(!C.VOID.has(tag)&&!['video','iframe'].includes(tag)&&!el.hasAttribute('data-arca-board')&&!D.kind(el)&&el.children.length===0)html=`<label class="field">내용<textarea id="textValue" data-text="true" rows="3">${e(el.textContent)}</textarea><span class="field-help">입력하면 코드와 미리보기에 바로 반영돼요.</span></label>${['▶','◀','▲','▼'].includes(el.textContent.trim())?'<div class="design-buttons">'+['◀','▲','▼','▶'].map(x=>`<button type="button" data-symbol="${x}" aria-label="삼각형 ${x} 방향">${x}</button>`).join('')+'</div>':''}`+html;
     else if(!C.VOID.has(tag))html+='<p class="muted">안쪽 글자를 바꾸려면 해당 문장을 선택하세요.<br>이 요소 전체는 아래 ‘내부 HTML’에서 편집해요.</p>';
     if(tag==='img')html+=`<div class="inspector-image"><img id="selectedImageThumb" alt="선택 이미지 미리보기"><span id="selectedImageState" class="muted">주소를 확인하는 중…</span><button id="enlargeSelectedImage" class="wide">이미지 크게 보기</button></div>`+(A.idOf(el.getAttribute('src'))?field('게시용 주소','data-arca-publish',el.getAttribute('data-arca-publish'),'text','원본으로 미리봐요. 이 주소는 게시용 HTML에 들어가요.'):field('이미지 주소','src',el.getAttribute('src'),'text','https:// 또는 //로 시작하는 이미지 주소를 넣어주세요.'))+field('이미지 설명','alt',el.getAttribute('alt'));
     if(tag==='a')html+=field('링크 주소','href',el.getAttribute('href'),'text')+`<label class="check-row"><input type="checkbox" data-check="target" ${el.target==='_blank'?'checked':''}>새 탭에서 열기</label>`;
-    if(tag==='video'||tag==='iframe')html+=field('미디어 주소','src',el.getAttribute('src'),'url');
+    if(tag==='video'||tag==='iframe')html=field('미디어 주소','src',el.getAttribute('src'),'url')+html;
+    if(tag==='video')html+=`<label class="check-row"><input type="checkbox" data-media-flag="loop" ${el.hasAttribute('loop')?'checked':''}>반복 재생</label><label class="check-row"><input type="checkbox" data-media-flag="muted" ${el.hasAttribute('muted')?'checked':''}>처음에는 음소거</label><p class="field-help">미리보기의 재생바를 눌러 재생해요. 주소가 만료되거나 접근이 제한되면 새 주소로 바꿔 주세요.</p>`;
     if(tag==='details')html+=`<label class="check-row"><input type="checkbox" data-check="open" ${el.hasAttribute('open')?'checked':''}>처음부터 펼쳐 놓기</label>`;
     html+=`<details open class="inspector-section"><summary>글자 · 색상</summary><div class="field-row">${styleField('글자 크기','font-size',st.fontSize,'15px')}${styleField('줄 간격','line-height',st.lineHeight,'1.8')}</div><div class="field-row"><label class="field">정렬<select data-style="text-align"><option value="">상속</option>${['left','center','right','justify'].map((x,i)=>`<option value="${x}" ${st.textAlign===x?'selected':''}>${['왼쪽','가운데','오른쪽','양쪽'][i]}</option>`).join('')}</select></label>${styleField('글자 두께','font-weight',st.fontWeight,'400 / 700')}</div>${colorField('글자색','color',st.color)}${colorField('배경색','background-color',st.backgroundColor)}${styleField('배경 · 그라데이션','background',st.background,'linear-gradient(…)')}<div class="swatches" aria-label="추천 배경색">${['#8888CC','#DDAACC','#CCAA88','#BB6688'].map(c=>`<button style="background:${c}" data-swatch="${c}" title="배경색 ${c}" aria-label="배경색 ${c}"></button>`).join('')}</div></details>`;
-    html+=`<details open class="inspector-section"><summary>크기 · 여백</summary><div class="field-row">${styleField('너비','width',st.width,'100%')}${styleField('최대 너비','max-width',st.maxWidth,'900px')}${styleField('높이','height',st.height,'auto')}${styleField('둥근 모서리','border-radius',st.borderRadius,'8px')}</div>${styleField('안쪽 여백','padding',st.padding,'20px / 20px 24px')}${styleField('바깥 여백','margin',st.margin,'20px 24px')}${styleField('테두리','border',st.border,'1px solid #DDAACC')}${styleField('그림자','box-shadow',st.boxShadow,'0 4px 16px rgba(0,0,0,0.1)')}</details>`;
+    html+=`<details open class="inspector-section"><summary>크기 · 여백</summary><div class="field-row">${styleField('너비','width',st.width,'100%')}${styleField('최대 너비','max-width',st.maxWidth,'900px')}${styleField('높이','height',st.height,'auto')}${styleField('둥근 모서리','border-radius',st.borderRadius,'8px')}</div>${styleField('안쪽 여백','padding',st.padding,'20px / 20px 24px')}${styleField('바깥 여백','margin',st.margin,'20px 24px')}${styleField('테두리','border',st.border,'1px solid #000000')}${styleField('그림자','box-shadow',st.boxShadow,'0 4px 16px rgba(0,0,0,0.1)')}</details>`;
     if(['td','th'].includes(tag))html+=`<div class="field-row">${field('가로 칸 수','colspan',el.getAttribute('colspan'),'number')}${field('세로 칸 수','rowspan',el.getAttribute('rowspan'),'number')}</div>`;
-    $('inspectorFields').innerHTML=html;$('innerHtml').value=source.slice(selected.openEnd,selected.closeStart);$('innerHtml').disabled=C.VOID.has(tag);$('applyInner').disabled=C.VOID.has(tag);
+    // Keep the common text controls above geometry and advanced CSS fields.
+    html=html.replace(/<details open class="(inspector-section(?: quick-font| quick-spacing)?)">/g,'<details class="$1">');
+    const contentEnd=html.indexOf('</label>');
+    if(html.startsWith('<label class="field">내용')&&contentEnd>=0)html=html.slice(0,contentEnd+8)+E.textPanel(selected,live)+html.slice(contentEnd+8);
+    else html=E.textPanel(selected,live)+html;
+    $('inspectorFields').innerHTML=E.foldPanel(selected,model)+window.ArcaVisual.imagePanel(selected)+window.ArcaVisual.surfacePanel(selected,live)+html;$('innerHtml').value=source.slice(selected.openEnd,selected.closeStart);$('innerHtml').disabled=C.VOID.has(tag);$('applyInner').disabled=C.VOID.has(tag);
+    for(const section of $('inspectorFields').querySelectorAll('details')){const key=section.querySelector('summary')?.textContent;if(expanded.has(key))section.open=expanded.get(key);}
     if(tag==='img')refreshImageInspector();
   }
   function renderBatchInspector(){
@@ -211,11 +237,12 @@
     $('selectedTag').textContent=records.length+'개 선택';$('selectedLabel').textContent='글씨체 · 크기 · 간격 · 색상 변경';
     const fields=[['글자색','color'],['배경색','background-color']].map(([label,prop])=>{
       const values=records.map(r=>r.el.style.getPropertyValue(prop)),mixed=new Set(values).size>1;
-      return colorField(label,prop,mixed?'':values[0]).replace('placeholder="#8888CC / transparent"',`placeholder="${mixed?'서로 다른 색상':'#8888CC / transparent'}"`);
+      return colorField(label,prop,mixed?'':values[0]).replace('placeholder="#000000 / transparent"',`placeholder="${mixed?'서로 다른 색상':'#000000 / transparent'}"`);
     }).join('');
     $('inspectorFields').innerHTML=`<p class="muted">선택한 ${records.length}개 요소에 함께 적용해요.<br>Ctrl+클릭으로 추가·해제할 수 있어요. Mac은 ⌘+클릭.</p><details open class="inspector-section"><summary>색상 일괄 변경</summary>${fields}<div class="swatches" aria-label="추천 배경색">${['#8888CC','#DDAACC','#CCAA88','#BB6688'].map(c=>`<button style="background:${c}" data-swatch="${c}" title="배경색 ${c}" aria-label="배경색 ${c}"></button>`).join('')}</div></details><button id="clearSelection" class="wide">선택 모두 해제</button>`;
     $('clearSelection').onclick=()=>select(null);
-    $('inspectorFields').insertAdjacentHTML('afterbegin',batchTypographyPanel(records)+window.ArcaVisual.fontPanel(records[0],null,true));
+    $('inspectorFields').insertAdjacentHTML('afterbegin','<button type="button" class="wide danger-text" data-delete-selection>선택한 요소 삭제 · Delete</button>');
+    $('inspectorFields').insertAdjacentHTML('afterbegin',L.panel()+batchTypographyPanel(records)+window.ArcaVisual.fontPanel(records[0],null,true));
   }
   const batchTypographySpecs=[
     {prop:'font-size',label:'글씨 크기 (px)',unit:'px',min:0,example:'예: 16'},
@@ -251,7 +278,7 @@
     const edits=[];
     for(const r of records){
       const el=r.el.cloneNode(false);
-      for(const [prop,value] of Object.entries(properties))el.style.setProperty(prop,value,el.style.getPropertyPriority(prop));
+      for(const [prop,value] of Object.entries(L.adaptStyles(r,properties)))el.style.setProperty(prop,value,el.style.getPropertyPriority(prop));
       if(el.getAttribute('style')!==r.el.getAttribute('style'))edits.push({r,html:C.openingWith(r,{style:el.getAttribute('style')})});
     }
     if(!edits.length)return;
@@ -259,6 +286,78 @@
     for(const {r,html} of edits.sort((a,b)=>b.r.start-a.r.start))next=C.patch(next,r.start,r.openEnd,html);
     if(kind==='command'||kind!==lastEditKind||Date.now()-historyTime>800)backup(message+' 전');
     commit(next,message,kind,null,delay,selectionState());
+  }
+  function easyTextChange(input,report=false){
+    const value=input.value.trim(),prop=input.dataset.easyStyle;
+    if(!value)return;
+    let properties;
+    if(input.hasAttribute('data-easy-font')){const font=window.ArcaVisual.fontChoice(value);if(!font)return;properties={'font-family':font[2]};}
+    else {
+      if(input.type==='number'&&(!input.checkValidity()||!Number.isFinite(Number(value)))){if(report)input.reportValidity();return;}
+      const css=value+(input.dataset.unit||'');
+      if(!CSS.supports(prop,css)){if(report)toast('색상이나 숫자 형식을 확인해 주세요.');return;}
+      properties={[prop]:css};
+    }
+    flush();if(!selected||selectedIds.size!==1)return;
+    editVisualStyles([selected],properties,'글자 모양 변경','easy-'+(prop||'font'),100);
+    // Color picker and hex field must show the same value without replacing the focused field.
+    if(prop==='color')for(const other of $('inspectorFields').querySelectorAll('[data-easy-style="color"]'))if(other!==input)other.value=value;
+  }
+  function buildFoldTitle(){
+    flush();const root=E.summary(selected);if(!root)return;
+    const id=root.getAttribute(model.attr);
+    showModal('번호·두 줄 접기 제목','<p>접기 제목 부분을 바꿔요. 안쪽 내용은 그대로 유지돼요.</p>'+[['number','번호','1'],['title','제목',root.textContent.trim()],['subtitle','설명',''],['arrow','화살표','⌵']].map(([key,label,value])=>`<label class="field">${label}<input id="fold-${key}" value="${e(value)}"></label>`).join('')+'<button id="applyFoldTitle" class="primary wide">두 줄 제목 만들기</button>');
+    $('applyFoldTitle').onclick=()=>{
+      const r=model.byId.get(id);if(!r)return;
+      const values=Object.fromEntries(['number','title','subtitle','arrow'].map(key=>[key,$('fold-'+key).value]));
+      const el=r.el.cloneNode(false);el.style.display='block';el.style.listStyle='none';el.style.padding='20px 40px';el.style.fontWeight='400';
+      const opening=C.openingWith(r,{'data-arca-fold-title':'true',style:el.getAttribute('style')});
+      backup('접기 제목 나누기 전');closeModal();
+      commit(C.patch(source,r.start,r.closeStart,opening+E.foldContent(values)),'접기 제목 · 번호와 두 줄로 배치','command',r.start,0);
+    };
+  }
+  function designChange(input){
+    flush();if(!selected||selectedIds.size!==1)return;
+    const live=frame.contentDocument?.querySelector(`[${model.attr}="${selected.id}"]`);
+    let styles={},message='모양 변경';
+    if(input.hasAttribute('data-design-angle')){
+      if(input.value.trim()===''||!Number.isFinite(Number(input.value)))return;
+      styles=D.rotationStyles(selected,live,Number(input.value));message='회전 변경';
+    }else if(input.dataset.designProp){
+      if(input.value.trim()===''||!Number.isFinite(Number(input.value))||Number(input.value)<0)return;
+      const prop=input.dataset.designProp;styles[prop]=Number(input.value)+'px';
+      if(prop==='border-width'&&Number(input.value)>0&&(!selected.el.style.borderStyle||selected.el.style.borderStyle==='none'))styles['border-style']='solid';
+      if(prop==='width'||prop==='height'){
+        const circle=/^1(?:\s*\/\s*1)?$/.test(selected.el.style.aspectRatio)&&selected.el.style.borderRadius==='50%';
+        if(circle){styles.width=Number(input.value)+'px';styles.height='auto';}else styles['aspect-ratio']='auto';
+        if(live&&getComputedStyle(live).display==='inline'&&selected.tag!=='img')styles.display='inline-block';
+      }
+    }else if(input.hasAttribute('data-design-border')){
+      styles['border-style']=input.value;
+      if(input.value!=='none'&&!(parseFloat(selected.el.style.borderWidth)>0))styles['border-width']='1px';
+    }else{
+      styles['border-color']=input.dataset.borderColor||input.value;
+      if(!selected.el.style.borderStyle||selected.el.style.borderStyle==='none')styles['border-style']='solid';
+      if(!(parseFloat(selected.el.style.borderWidth)>0))styles['border-width']='1px';
+    }
+    editVisualStyles([selected],styles,message,'command',0);
+  }
+  function duplicateRecord(r){
+    if(!r||!C.canPlace(model,{tag:r.tag,start:-2,end:-1},r,'after')){toast('이 요소만 복제할 수 없는 위치예요. 상위 구역을 선택해 주세요.');return;}
+    const end=D.duplicateEnd(source,r);
+    if(end===null){toast('접기의 닫는 태그 </details>를 먼저 확인해 주세요.');return;}
+    const clone=r.el.cloneNode(true),nodes=[clone,...clone.querySelectorAll('*')];
+    const used=new Set([...model.doc.querySelectorAll('[id]')].map(el=>el.id)),ids=new Map();
+    for(const el of nodes){
+      el.removeAttribute(model.attr);
+      if(el.id){const original=el.id;let i=2,next=original+'-copy';while(used.has(next))next=original+'-copy-'+i++;used.add(next);ids.set(original,next);el.id=next;}
+    }
+    for(const el of nodes){
+      for(const attr of ['for','aria-labelledby','aria-describedby','aria-controls','headers'])if(el.hasAttribute(attr))el.setAttribute(attr,el.getAttribute(attr).split(/\s+/).map(id=>ids.get(id)||id).join(' '));
+      const href=el.getAttribute('href');if(href?.startsWith('#')&&ids.has(href.slice(1)))el.setAttribute('href','#'+ids.get(href.slice(1)));
+    }
+    backup('블록 복제 전');commit(C.patch(source,end,end,'\n'+clone.outerHTML),r.tag==='details'?'접기 전체 복제 · 제목과 내용 포함':'요소 복제','command',end+1+(clone.hasAttribute('data-arca-anchor')?clone.outerHTML.indexOf('>')+1:0));
+    highlight(true);
   }
   function quickSpacing(input){
     const prop=input.dataset.quickStyle,n=Number(input.value);
@@ -303,7 +402,7 @@
     for(const field of $('inspectorFields').querySelectorAll(`[data-style="${prop}"]`)){
       if(field===document.activeElement)continue;
       if(field.type!=='color'||/^#[\da-f]{6}$/i.test(value))field.value=value;
-      if(field.type!=='color')field.placeholder='#8888CC / transparent';
+      if(field.type!=='color')field.placeholder='#000000 / transparent';
     }
   }
   function refreshImageInspector(){
@@ -331,12 +430,30 @@
   function setLeft(which){document.querySelectorAll('[data-left]').forEach(x=>{const on=x.dataset.left===which;x.classList.toggle('active',on);x.setAttribute('aria-selected',on);});$('treePanel').hidden=which!=='tree';$('libraryPanel').hidden=which!=='library';}
   function setRight(which){document.querySelectorAll('[data-right]').forEach(x=>{const on=x.dataset.right===which;x.classList.toggle('active',on);x.setAttribute('aria-selected',on);});$('propertiesPanel').hidden=which!=='properties';$('issuesPanel').hidden=which!=='issues';}
   function addHtml(html){flush();const mini=C.parse(html),root=mini.records.find(r=>r.el&&r.el.parentElement===mini.doc.body);if(root&&!C.canPlace(model,{tag:root.tag,start:-2,end:-1},selected,$('insertPosition').value)){toast('표·목록 구조에 맞는 위치를 선택해 주세요. 상위 구역을 선택하면 넣을 수 있어요.');return;}
-    const point=C.insertionPoint(model,selected,$('insertPosition').value),block='\n'+html+'\n';commit(C.patch(source,point,point,block),'블록 추가','command',point+1);setLeft('tree');setRight('properties');highlight(true);}
+    const point=C.insertionPoint(model,selected,$('insertPosition').value),block='\n'+html+'\n';commit(C.patch(source,point,point,block),'블록 추가','command',point+1);setRight('properties');highlight(true);}
   function performMove(from,to,position,drop=false){flush();const moving=model.byId.get(from),target=model.byId.get(to);if(!moving||!target||from===to)return;try{const slots=drop&&moving.tag==='img'&&moving.el.getAttribute('src')&&C.imageTarget(model,target);const change=slots?C.swapImages(model,moving,target):C.move(model,moving,target,position);commit(change.source,slots?'이미지 칸 이동 · 채워진 칸끼리는 교환':`${moving.tag} 위치 이동`,'command',change.offset);highlight(true);}catch(err){toast(err.message);}}
-  function operation(type){flush();if(!selected||selectedIds.size>1)return;const r=selected;
-    if(type==='parent'){select(model.byId.get(r.parentId),{focusCode:true,scrollPreview:true});return;}
-    if(type==='delete'){backup('요소 삭제 전');commit(C.patch(source,r.start,r.end,''),'요소 삭제 · Ctrl Z로 되돌릴 수 있어요','command',Math.max(0,r.start-1));return;}
-    if(type==='duplicate'){commit(C.patch(source,r.end,r.end,'\n'+source.slice(r.start,r.end)),'요소 복제','command',r.end+1);return;}
+  function isTextInput(target){return !!target?.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"])');}
+  function deleteKey(ev){
+    if(ev.key!=='Delete'||ev.ctrlKey||ev.metaKey||ev.altKey||ev.isComposing||mode!=='edit'||$('modal').open||isTextInput(ev.target)||!selectedIds.size)return;
+    ev.preventDefault();deleteSelection();
+  }
+  function deleteSelection(){
+    flush();const candidates=selectedRecords().map(r=>window.ArcaLayout.isItem(r.el)?model.byId.get(r.el.parentElement.getAttribute(model.attr)):r).filter(r=>r&&!['html','head','body'].includes(r.tag));
+    const unique=[...new Map(candidates.map(r=>[r.id,r])).values()],roots=unique.filter(r=>!unique.some(p=>p!==r&&p.el.contains(r.el)));
+    if(!roots.length)return;let next=source;
+    const parent=roots.length===1?model.byId.get(roots[0].parentId):null;
+    for(const r of roots.sort((a,b)=>b.start-a.start))next=C.patch(next,r.start,r.end,'');
+    backup('선택 요소 삭제 전');commit(next,`${roots.length}개 삭제 · Ctrl Z로 되돌리기`,'command',parent?.start??null);if(!parent)select(null);
+  }
+  function operation(type){flush();if(type==='delete'){deleteSelection();return;}if(!selected||selectedIds.size>1)return;const r=selected;
+    if(type==='outdent'){
+      if(window.ArcaLayout.isItem(r.el)){toast('상위 구역을 선택하면 구역 전체를 밖으로 옮길 수 있어요.');return;}
+      const parent=model.byId.get(r.parentId);if(!parent||['html','body'].includes(parent.tag)){toast('이미 가장 바깥에 있어요.');return;}
+      performMove(r.id,parent.id,'after');return;
+    }
+    if(window.ArcaLayout.isItem(r.el)&&['up','down','parent'].includes(type)){L.action(type==='up'?'back':type==='down'?'front':'parent');return;}
+    if(type==='parent'){select(model.byId.get(r.parentId),{scrollPreview:true});return;}
+    if(type==='duplicate'){duplicateRecord(window.ArcaLayout.isItem(r.el)?model.byId.get(r.el.parentElement.getAttribute(model.attr)):r);return;}
     const siblings=model.records.filter(x=>x.el&&x.parentId===r.parentId&&!['head'].includes(x.tag));const i=siblings.indexOf(r),target=type==='up'?siblings[i-1]:siblings[i+1];if(target)performMove(r.id,target.id,type==='up'?'before':'after');else toast('더 이동할 수 없는 위치예요.');
   }
   function history(direction){flush();const from=direction==='undo'?undo:redo,to=direction==='undo'?redo:undo;if(!from.length)return;to.push({html:source,offset:selected?.start??0,selection:selectionState()});const entry=from.pop();source=entry.html;lastEditKind='';sync(entry.offset,entry.selection,true);scheduleSave();$('changeSummary').textContent=direction==='undo'?'이전 상태로 되돌렸어요':'다시 적용했어요';}
@@ -344,6 +461,39 @@
   async function copy(text){try{await navigator.clipboard.writeText(text);toast('복사했어요.');}catch(_){const t=document.createElement('textarea');t.value=text;t.style.cssText='position:fixed;left:-10000px';($('modal').open?$('modal'):document.body).append(t);t.select();const ok=document.execCommand('copy');t.remove();toast(ok?'복사했어요.':'복사가 차단됐어요. 코드 입력칸에서 직접 복사해 주세요.');}}
   function replaceDocument(html,name,reason,batch=null){flush();backup(reason);uploadBatch=U.readBatch(batch);filename=name||filename;selected=null;selectedIds.clear();collapsed.clear();previewView=null;renderedModel=null;frameReady=false;pendingPreviewScroll=false;const unchanged=html===source;commit(html,reason,'command',null);if(unchanged)renderFrame();selected=null;selectedIds.clear();selectionUi(false);renderTree();closeModal();scheduleSave();}
   function readFile(accept,callback,maxMB=8){const input=$('fileInput');input.accept=accept;input.value='';input.onchange=async()=>{const file=input.files[0];if(!file)return;if(file.size>maxMB*1024*1024){toast(maxMB+'MB 이하 파일을 열어주세요.');return;}try{await callback(await file.text(),file.name);}catch(err){toast('파일을 읽지 못했어요: '+err.message);}};input.click();}
+  function addComponent(type){
+    flush();if(type==='music'){musicDialog();return;}
+    const html=B.make(type,$('palette').value);
+    if(!html.includes('data-arca-board')&&L.insert(html)){setRight('properties');return;}
+    addHtml(html);
+  }
+  function musicDialog(){
+    showModal('음악 · VIDEO 추가','<p>아카라이브에 올린 MP4 주소를 넣으면 재생바가 생겨요. 유튜브 페이지 주소나 컴퓨터의 파일 경로는 사용할 수 없어요.</p><label class="field">MP4 주소<input id="musicUrl" type="url" placeholder="https://…/음악.mp4"></label><label class="field">곡 제목<input id="musicTitle" value="나의 사운드트랙" maxlength="160"></label><label class="check-row"><input id="musicLoop" type="checkbox" checked>반복 재생</label><label class="check-row"><input id="musicCompact" type="checkbox" checked>작은 재생바로 표시</label><div class="modal-actions"><button type="button" id="insertMusic" class="primary">음악 넣기</button></div>');
+    $('insertMusic').onclick=()=>{
+      const url=C.normalizeUrl($('musicUrl').value);
+      if(!url||!C.safeUrl(url,'media')){toast('공개된 HTTP(S) MP4 주소를 입력해 주세요.');return;}
+      const parsed=new URL(url);
+      if(/(^|\.)(youtube\.com|youtu\.be)$/.test(parsed.hostname)){toast('유튜브 링크 대신 업로드된 MP4 파일 주소를 넣어주세요.');return;}
+      const html=window.ArcaLayout.music(url,$('musicTitle').value,$('musicLoop').checked,$('musicCompact').checked);
+      closeModal();if(!L.insert(html))addHtml(html);setRight('properties');
+    };
+  }
+  function readBlocks(){try{const items=JSON.parse(localStorage.getItem(KEY+'-blocks')||'[]');return Array.isArray(items)?items.filter(x=>typeof x.name==='string'&&typeof x.html==='string').slice(0,20):[];}catch(_){return [];}}
+  function renderSavedBlocks(){
+    const blocks=readBlocks();$('savedBlocks').innerHTML=blocks.length?blocks.map((b,i)=>`<div class="saved-block-row"><button type="button" data-saved-block="${i}">${e(b.name)}</button><button type="button" data-remove-block="${i}" aria-label="${e(b.name)} 저장 목록에서 삭제">×</button></div>`).join(''):'<p class="field-help">디자인 구역이나 그룹을 선택해서 자주 쓰는 구성을 저장하세요.</p>';
+  }
+  function saveBlock(record){
+    if(!record?.el)return;
+    const clone=record.el.cloneNode(true);for(const el of [clone,...clone.querySelectorAll('*')])el.removeAttribute(model.attr);
+    showModal('내 블록으로 저장','<label class="field">이름<input id="blockName" value="나의 디자인" maxlength="50"></label><p>이 브라우저에 저장돼요. 다른 컴퓨터로 옮길 때는 프로젝트도 저장해 주세요.</p><div class="modal-actions"><button type="button" id="confirmBlock" class="primary">저장</button></div>');
+    $('confirmBlock').onclick=()=>{const name=$('blockName').value.trim();if(!name)return;const blocks=readBlocks();if(blocks.length>=20){toast('내 블록은 최대 20개예요. 필요 없는 저장 항목을 지워주세요.');return;}blocks.push({name,html:clone.outerHTML});try{localStorage.setItem(KEY+'-blocks',JSON.stringify(blocks));}catch(_){toast('저장 공간이 부족해요. 프로젝트로 저장해 주세요.');return;}closeModal();renderSavedBlocks();toast('내 블록에 저장했어요.');};
+  }
+  function uniqueSavedHtml(html){
+    const d=new DOMParser().parseFromString(html,'text/html'),used=new Set([...model.doc.querySelectorAll('[id]')].map(x=>x.id)),ids=new Map();
+    for(const el of d.body.querySelectorAll('[id]')){const old=el.id;let n=1,next=old;while(used.has(next))next=old+'-saved-'+n++;used.add(next);ids.set(old,next);el.id=next;}
+    for(const el of d.body.querySelectorAll('*')){for(const attr of ['for','aria-labelledby','aria-describedby','aria-controls','headers'])if(el.hasAttribute(attr))el.setAttribute(attr,el.getAttribute(attr).split(/\s+/).map(id=>ids.get(id)||id).join(' '));const href=el.getAttribute('href');if(href?.startsWith('#')&&ids.has(href.slice(1)))el.setAttribute('href','#'+ids.get(href.slice(1)));}
+    return d.body.innerHTML;
+  }
   function importDialog(){
     let importName=null;
     showModal('HTML 불러오기','<p>기존 HTML을 그대로 붙여넣으세요. 현재 문서는 교체 전에 백업돼요.</p><button id="chooseHtml" class="drop-file">＋ HTML 파일 선택</button><textarea id="importValue" class="modal-code" aria-label="불러올 HTML" spellcheck="false" placeholder="&lt;div style=…&gt;…&lt;/div&gt;"></textarea><div class="modal-actions"><button id="importAppend">선택 위치에 추가</button><button id="importReplace" class="primary">문서로 불러오기</button></div>');
@@ -484,8 +634,8 @@
   $('themeToggle').onclick=()=>{dark=!dark;$('themeToggle').textContent=dark?'☾ 다크':'☼ 라이트';renderFrame();};$('zoom').onchange=layoutFrame;
   $('treeSearch').oninput=ev=>{search=ev.target.value.toLowerCase();renderTree();};
   $('collapseTree').onclick=()=>{allCollapsed=!allCollapsed;collapsed=allCollapsed?new Set(model.records.map(r=>r.id)):new Set();$('collapseTree').textContent=allCollapsed?'모두 펼치기':'모두 접기';renderTree();};
-  $('tree').onclick=ev=>{flush();const collapse=ev.target.closest('[data-collapse]');if(collapse){const id=collapse.dataset.collapse;if(collapsed.has(id))collapsed.delete(id);else collapsed.add(id);renderTree();return;}const row=ev.target.closest('[data-id]');if(row){select(model.byId.get(row.dataset.id),{focusCode:true,scrollPreview:true,toggle:ev.ctrlKey||ev.metaKey});setRight('properties');}};
-  $('tree').onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){const row=ev.target.closest('[data-id]');if(row){ev.preventDefault();select(model.byId.get(row.dataset.id),{focusCode:true,scrollPreview:true,toggle:ev.ctrlKey||ev.metaKey});}}};
+  $('tree').onclick=ev=>{flush();const collapse=ev.target.closest('[data-collapse]');if(collapse){const id=collapse.dataset.collapse;if(collapsed.has(id))collapsed.delete(id);else collapsed.add(id);renderTree();return;}const row=ev.target.closest('[data-id]');if(row){select(model.byId.get(row.dataset.id),{scrollPreview:true,toggle:ev.ctrlKey||ev.metaKey});setRight('properties');}};
+  $('tree').onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){const row=ev.target.closest('[data-id]');if(row){ev.preventDefault();select(model.byId.get(row.dataset.id),{scrollPreview:true,toggle:ev.ctrlKey||ev.metaKey});}}};
   $('tree').ondragstart=ev=>{flush();if(selectedIds.size>1){ev.preventDefault();return;}const row=ev.target.closest('[data-id]');if(row){dragged=row.dataset.id;ev.dataTransfer.setData('text/plain',dragged);ev.dataTransfer.effectAllowed='move';}};
   $('tree').ondragover=ev=>{if(!dragged)return;ev.preventDefault();document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));ev.target.closest('[data-id]')?.classList.add('drag-over');};
   $('tree').ondrop=ev=>{ev.preventDefault();const row=ev.target.closest('[data-id]');if(row&&dragged)performMove(dragged,row.dataset.id,$('insertPosition').value,true);dragged=null;document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));};
@@ -496,6 +646,24 @@
   code.onclick=codeSelect;code.onkeyup=ev=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(ev.key))codeSelect();};
   code.onkeydown=ev=>{if(ev.key==='Tab'){ev.preventDefault();const start=code.selectionStart,end=code.selectionEnd;code.setRangeText('  ',start,end,'end');code.dispatchEvent(new Event('input'));}};
   $('inspectorFields').addEventListener('input',ev=>{if(ev.target.matches('[data-text],[data-style],[data-attr]')&&ev.target.type!=='checkbox')updateProperty(ev.target);});
+  $('inspectorFields').addEventListener('change',ev=>{
+    if(!ev.target.matches('[data-surface-color],[data-surface-alpha]'))return;
+    const panel=ev.target.closest('details'),color=panel.querySelector('[data-surface-color]').value,field=panel.querySelector('[data-surface-alpha]');
+    if(field.value.trim()===''||!field.checkValidity())return;
+    const alpha=Number(field.value)/100;if(!Number.isFinite(alpha))return;
+    const rgb=[1,3,5].map(n=>parseInt(color.slice(n,n+2),16));
+    flush();if(selectedIds.size===1&&selected)editVisualStyles([selected],{'background-color':`rgba(${rgb.join(',')},${alpha})`},'배경 색과 투명도 변경','command',0);
+  });
+  $('inspectorFields').addEventListener('click',ev=>{
+    const button=ev.target.closest('[data-image-align]');if(!button)return;
+    flush();if(selectedIds.size!==1||selected?.tag!=='img')return;
+    const align=button.dataset.imageAlign;
+    if(window.ArcaLayout.isItem(selected.el)){L.action(align);return;}
+    editVisualStyles([selected],{display:'block','margin-left':align==='left'?'0':'auto','margin-right':align==='right'?'0':'auto'},'이미지 정렬','command',0);
+  });
+  $('inspectorFields').addEventListener('change',ev=>{if(ev.target.matches('[data-easy-style],[data-easy-font]'))easyTextChange(ev.target,true);});
+  $('inspectorFields').addEventListener('input',ev=>{if(ev.target.matches('input[data-easy-style]'))easyTextChange(ev.target);});
+  $('inspectorFields').addEventListener('click',ev=>{if(ev.target.closest('[data-build-fold]'))buildFoldTitle();});
   $('inspectorFields').addEventListener('input',ev=>{if(ev.target.matches('[data-quick-style]'))quickSpacing(ev.target);});
   $('inspectorFields').addEventListener('change',ev=>{if(ev.target.id==='quickFont')previewFontChoice();});
   $('inspectorFields').addEventListener('input',ev=>{if(ev.target.id==='customFontName')previewFontChoice();});
@@ -509,21 +677,48 @@
   $('inspectorFields').addEventListener('change',ev=>{if(ev.target.matches('[data-check],select[data-style]'))updateProperty(ev.target);});
   $('inspectorFields').addEventListener('click',ev=>{const b=ev.target.closest('[data-swatch]');if(b)updateProperty({dataset:{style:'background-color'},value:b.dataset.swatch});});
   document.querySelectorAll('[data-operation]').forEach(x=>x.onclick=()=>operation(x.dataset.operation));
+  $('duplicateFold').onclick=()=>{flush();if(selectedIds.size!==1)return;const fold=selected?.el?.closest('details');if(fold)duplicateRecord(model.byId.get(fold.getAttribute(model.attr)));};
+  $('inspectorFields').addEventListener('change',ev=>{if(ev.target.matches('[data-design-prop],[data-design-angle],[data-design-border],[data-design-color]'))designChange(ev.target);});
+  $('inspectorFields').addEventListener('change',ev=>{
+    if(ev.target.matches('[data-layout-value]')){flush();L.numeric(ev.target);}
+    if(ev.target.matches('[data-media-flag]')){flush();if(selected?.tag!=='video')return;const attr=ev.target.dataset.mediaFlag;commit(C.patch(source,selected.start,selected.openEnd,C.openingWith(selected,{[attr]:ev.target.checked?attr:null})),'재생 설정 변경','command',selected.start);}
+  });
+  $('inspectorFields').addEventListener('click',ev=>{const button=ev.target.closest('[data-layout-action]');if(button){flush();L.action(button.dataset.layoutAction);}});
+  $('inspectorFields').addEventListener('click',ev=>{const button=ev.target.closest('[data-symbol]');if(button){updateProperty({dataset:{text:'true'},value:button.dataset.symbol});flush();}});
+  const changeShapeColor=value=>{flush();if(selectedIds.size!==1||!selected||!D.kind(selected.el))return;editVisualStyles([selected],{[D.kind(selected.el)==='symbol'?'color':'background-color']:value},'도형 색 변경','command',0);};
+  $('inspectorFields').addEventListener('change',ev=>{if(ev.target.matches('[data-shape-color]'))changeShapeColor(ev.target.value);});
+  $('inspectorFields').addEventListener('click',ev=>{const button=ev.target.closest('[data-shape-swatch]');if(button)changeShapeColor(button.dataset.shapeSwatch);});
+  $('inspectorFields').addEventListener('click',ev=>{if(ev.target.closest('[data-delete-selection]'))deleteSelection();});
+  $('inspectorFields').addEventListener('click',ev=>{
+    const shape=ev.target.closest('[data-shape]'),border=ev.target.closest('[data-border-color]'),reset=ev.target.closest('[data-reset-angle]');
+    if(!shape&&!border&&!reset)return;flush();if(!selected||selectedIds.size!==1)return;
+    if(border){designChange(border);return;}
+    const live=frame.contentDocument?.querySelector(`[${model.attr}="${selected.id}"]`);
+    editVisualStyles([selected],reset?D.rotationStyles(selected,live,0):D.shapeStyles(shape.dataset.shape,selected,live),reset?'회전 초기화':'모양 변경','command',0);
+  });
   $('applyInner').onclick=()=>{const val=$('innerHtml').value;flush();if(selectedIds.size===1&&selected&&!C.VOID.has(selected.tag)){backup('내부 HTML 교체 전');commit(C.patch(source,selected.openEnd,selected.closeStart,val),'내부 HTML 변경','command',selected.start);}};
   $('issues').onclick=ev=>{const b=ev.target.closest('[data-issue]');if(b){const issue=analysis.issues[Number(b.dataset.issue)];const rec=model.byId.get(issue.id)||C.atOffset(model,issue.offset);select(rec,{focusCode:true,scrollPreview:true});}};
-  const groups={structure:'STRUCTURE · 구성',text:'TEXT · 글',content:'CONTENT · 콘텐츠',detail:'DETAIL · 디테일'};
+  const groups={design:'직접 디자인하기',structure:'구성',text:'글',content:'사진 · 콘텐츠',detail:'꾸미기'};
   $('library').innerHTML=Object.entries(groups).map(([key,label])=>`<h3 class="library-group">${label}</h3><div class="component-grid">${B.specs.filter(s=>s[0]===key).map(s=>`<button class="component-button" data-component="${s[1]}"><span>${e(s[2])}</span>${s[3]}</button>`).join('')}</div>`).join('');
-  $('library').onclick=ev=>{const b=ev.target.closest('[data-component]');if(b)addHtml(B.make(b.dataset.component,$('palette').value));};
-  document.querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>addHtml(B.make(b.dataset.quick,$('palette').value)));
+  $('library').onclick=ev=>{const b=ev.target.closest('[data-component]');if(!b)return;addComponent(b.dataset.component);};
+  document.querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>addComponent(b.dataset.quick));
+  renderSavedBlocks();
+  $('savedBlocks').onclick=ev=>{
+    const insert=ev.target.closest('[data-saved-block]'),remove=ev.target.closest('[data-remove-block]'),blocks=readBlocks();
+    if(insert){flush();const entry=blocks[Number(insert.dataset.savedBlock)];if(!entry)return;const html=uniqueSavedHtml(entry.html);if(html.includes('data-arca-board')||!L.insert(html))addHtml(html);setRight('properties');}
+    if(remove){blocks.splice(Number(remove.dataset.removeBlock),1);try{localStorage.setItem(KEY+'-blocks',JSON.stringify(blocks));renderSavedBlocks();}catch(_){toast('저장 목록을 변경하지 못했어요.');}}
+  };
+  $('toggleCode').onclick=()=>{const panel=document.querySelector('.code-panel'),closed=panel.classList.toggle('code-collapsed');$('toggleCode').textContent=closed?'코드 펼치기':'코드 접기';$('toggleCode').setAttribute('aria-expanded',String(!closed));};
   $('quickLocalImages').onclick=localImagesDialog;
   $('localImages').onclick=localImagesDialog;
   $('images').onclick=imagesDialog;$('help').onclick=helpDialog;$('importHtml').onclick=importDialog;$('exportHtml').onclick=exportDialog;$('backups').onclick=backupsDialog;
-  $('newDoc').onclick=()=>{showModal('새 문서 시작하기','<p>지금 작업은 교체 전에 백업돼요.</p><div class="new-options"><button id="newBlank"><b>빈 문서</b><small>처음부터 자유롭게 구성하기</small></button><button id="newSample"><b>예시 문서</b><small>나의 작은 기록실에서 시작하기</small></button></div>');$('newBlank').onclick=()=>replaceDocument('<div style="max-width:900px;margin:0 auto;padding:24px;color:#34314d;background:#fbfaff;"></div>','새 문서','새 문서 시작 전');$('newSample').onclick=()=>replaceDocument(B.starter(),'나의 기록','예시 문서 시작 전');};
+  $('newDoc').onclick=()=>{showModal('새 문서 시작하기','<p>지금 작업은 교체 전에 백업돼요.</p><div class="new-options"><button id="newBlank"><b>빈 문서</b><small>처음부터 자유롭게 구성하기</small></button><button id="newSample"><b>예시 문서</b><small>나의 작은 기록실에서 시작하기</small></button></div>');$('newBlank').onclick=()=>replaceDocument(B.blank(),'새 문서','새 문서 시작 전');$('newSample').onclick=()=>replaceDocument(B.starter('decorated'),'나의 기록','예시 문서 시작 전');};
   $('openProject').onclick=()=>readFile('.json',async(text,name)=>{const raw=JSON.parse(text),data=A.unpack(raw);try{await A.put(data.assets);}catch(_){assetStorageOk=false;toast('이미지는 이번 작업에서 사용할 수 있지만 자동 보관은 실패했어요. 프로젝트로 저장하세요.');}for(const item of data.assets)assets.set(item.id,item);replaceDocument(data.html,data.name||name.replace(/\.json$/,''),'프로젝트 열기 전',U.remapBatch(raw.uploadBatch,data.assetIdMap));},150);
   $('saveProject').onclick=()=>{flush();backup('프로젝트 저장');download(JSON.stringify(project()),'application/json',filename+'.arca.json');toast('원본 이미지를 포함해 프로젝트를 저장했어요.');};
   $('copySource').onclick=()=>{flush();copy(source);};$('downloadSource').onclick=()=>{flush();download(source,'text/html',filename+'-원본.html');};
   $('undo').onclick=()=>history('undo');$('redo').onclick=()=>history('redo');
   $('findCode').onclick=()=>{showModal('코드에서 찾기','<label class="field">찾을 내용<input id="findValue" placeholder="문장, 태그, 이미지 주소…"></label><div class="modal-actions"><button id="findNext" class="primary">찾기</button></div>');$('findNext').onclick=()=>{const q=$('findValue').value;if(!q)return;let i=source.indexOf(q,code.selectionEnd);if(i<0)i=source.indexOf(q);if(i<0){toast('일치하는 내용을 찾지 못했어요.');return;}closeModal();select(C.atOffset(model,i),{scrollPreview:true});code.focus();code.setSelectionRange(i,i+q.length);code.scrollTop=Math.max(0,(model.lineAt(i)-3)*21);};$('findValue').focus();};
+  document.addEventListener('keydown',deleteKey);
   document.addEventListener('keydown',ev=>{if(!(ev.ctrlKey||ev.metaKey))return;const key=ev.key.toLowerCase();if(key==='s'){ev.preventDefault();$('saveProject').click();}if(key==='z'&&!$('modal').open&&(document.activeElement===code||!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName))){ev.preventDefault();history(ev.shiftKey?'redo':'undo');}if(key==='y'&&document.activeElement===code){ev.preventDefault();history('redo');}});
   let resizeStart=null;$('codeResizer').onpointerdown=ev=>{resizeStart={y:ev.clientY,height:document.querySelector('.code-panel').getBoundingClientRect().height};ev.target.setPointerCapture(ev.pointerId);};$('codeResizer').onpointermove=ev=>{if(resizeStart)document.documentElement.style.setProperty('--code-height',Math.max(110,Math.min(innerHeight*.6,resizeStart.height+resizeStart.y-ev.clientY))+'px');};$('codeResizer').onpointerup=()=>resizeStart=null;$('codeResizer').onkeydown=ev=>{if(ev.key==='ArrowUp'||ev.key==='ArrowDown'){ev.preventDefault();const current=document.querySelector('.code-panel').getBoundingClientRect().height;document.documentElement.style.setProperty('--code-height',Math.max(110,Math.min(innerHeight*.6,current+(ev.key==='ArrowUp'?25:-25)))+'px');}};
   new ResizeObserver(layoutFrame).observe($('canvasArea'));
