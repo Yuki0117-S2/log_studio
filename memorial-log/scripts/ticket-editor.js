@@ -16141,6 +16141,70 @@
     }
   });
 
+  /* Drag-and-drop image input: the dropped file is handed to the matching file
+     input, so the existing change handlers (validation, undo, asset storage)
+     run exactly as they do for the file picker. */
+  function hasDraggedFiles(event) {
+    var types = event.dataTransfer && event.dataTransfer.types;
+    return !!types && Array.prototype.indexOf.call(types, "Files") !== -1;
+  }
+  function firstDroppedImage(event) {
+    var files = event.dataTransfer && event.dataTransfer.files;
+    if (!files) return null;
+    for (var index = 0; index < files.length; index++) {
+      if (/^image\//.test(files[index].type)) return files[index];
+    }
+    return null;
+  }
+  function deliverDroppedImage(input, file) {
+    try {
+      var transfer = new DataTransfer();
+      transfer.items.add(file);
+      input.files = transfer.files;
+    } catch (error) {
+      showToast("이 브라우저에서는 끌어다 놓기를 쓸 수 없어요. 파일 선택을 이용해 주세요.");
+      return;
+    }
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function bindImageDropTarget(target, input) {
+    if (!target || !input) return;
+    var depth = 0;
+    function clear() { depth = 0; target.classList.remove("is-image-dragover"); }
+    target.addEventListener("dragenter", function (event) {
+      if (!hasDraggedFiles(event)) return;
+      event.preventDefault();
+      depth += 1;
+      target.classList.add("is-image-dragover");
+    });
+    target.addEventListener("dragover", function (event) {
+      if (!hasDraggedFiles(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    });
+    target.addEventListener("dragleave", function () {
+      depth = Math.max(0, depth - 1);
+      if (!depth) clear();
+    });
+    target.addEventListener("drop", function (event) {
+      if (!hasDraggedFiles(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      clear();
+      var file = firstDroppedImage(event);
+      if (!file) { showToast("이미지 파일만 사용할 수 있어요."); return; }
+      deliverDroppedImage(input, file);
+    });
+  }
+  bindImageDropTarget($("#imageInput").closest("label"), $("#imageInput"));
+  bindImageDropTarget($("#addImageLayerInput").closest("label"), $("#addImageLayerInput"));
+  bindImageDropTarget($("#customImageReplaceInput").closest("label"), $("#customImageReplaceInput"));
+  bindImageDropTarget($("#chooseCustomShapeImageBtn"), $("#customShapeImageInput"));
+  bindImageDropTarget($("#stage"), $("#addImageLayerInput"));
+  // A drop that misses every target must not replace the editor with the image.
+  document.addEventListener("dragover", function (event) { if (hasDraggedFiles(event)) event.preventDefault(); });
+  document.addEventListener("drop", function (event) { if (hasDraggedFiles(event)) event.preventDefault(); });
+
   installColorCodeInputs();
   if (window.indexedDB) {
     imageAssetHydrationPromise = hydrateImageAssets().then(function (restored) {
