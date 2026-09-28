@@ -16420,3 +16420,18 @@ body[data-template="sticker-pack"]:not(.sticker-editing-active) .layer-create-co
 .is-image-dragover { outline: 2px dashed #8888CC; outline-offset: 2px; }
 .is-image-dragover:not(#stage) { background: rgba(136, 136, 204, .14); }
 #stage.is-image-dragover { outline-offset: -8px; }
+/* Panel splitters: width from --panel-*-w, contents scaled by --panel-*-zoom */
+.panel-splitter { position: fixed; z-index: 60; width: 8px; cursor: col-resize; touch-action: none; }
+.panel-splitter[hidden] { display: none; }
+.panel-splitter::after { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px; background: transparent; transition: background .15s ease; }
+.panel-splitter:hover::after, body.panel-resizing .panel-splitter::after { background: #8888CC; }
+body.panel-resizing { cursor: col-resize; user-select: none; }
+@media (min-width: 901px) {
+  body.panel-sized .workspace { grid-template-columns: var(--panel-layers-w) minmax(390px, 1fr) var(--panel-editor-w); }
+  body.panel-sized.layers-collapsed .workspace { grid-template-columns: 0 minmax(390px, 1fr) var(--panel-editor-w); }
+  body.panel-sized.editor-collapsed .workspace { grid-template-columns: var(--panel-layers-w) minmax(390px, 1fr) 0; }
+  body.panel-sized.layers-collapsed.editor-collapsed .workspace { grid-template-columns: 0 minmax(390px, 1fr) 0; }
+  body.panel-sized .layers-panel { zoom: var(--panel-layers-zoom, 1); }
+  body.panel-sized .editor-panel { zoom: var(--panel-editor-zoom, 1); }
+  body.panel-resizing .workspace { transition: none; }
+}

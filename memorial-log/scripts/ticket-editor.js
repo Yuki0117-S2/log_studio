@@ -16504,6 +16504,163 @@
   document.addEventListener("dragover", function (event) { if (hasDraggedFiles(event)) event.preventDefault(); });
   document.addEventListener("drop", function (event) { if (hasDraggedFiles(event)) event.preventDefault(); });
 
+  /* Panel splitters (desktop three-column layout only). Dragging a splitter
+     widens its panel and scales the panel's contents by the same ratio with
+     CSS zoom, so text grows with the panel. Double-click resets that panel. */
+  var PANEL_ZOOM_KEY = "memorial-log-panel-zoom";
+  var PANEL_ZOOM_MAX = 1.8;
+  var panelSplitMedia = window.matchMedia("(min-width: 901px)");
+  var panelZoom = { layers: 1, editor: 1 };
+  var panelBase = { layers: 206, editor: 282 };
+  var panelSplitters = {};
+  try {
+    var savedPanelZoom = JSON.parse(localStorage.getItem(PANEL_ZOOM_KEY) || "null");
+    if (savedPanelZoom) {
+      ["layers", "editor"].forEach(function (panel) {
+        var value = Number(savedPanelZoom[panel]);
+        if (isFinite(value)) panelZoom[panel] = clamp(value, 1, PANEL_ZOOM_MAX);
+      });
+    }
+  } catch (error) { /* storage unavailable: keep defaults */ }
+  function panelElement(panel) { return $(panel === "layers" ? ".layers-panel" : ".editor-panel"); }
+  function savePanelZoom() {
+    try { localStorage.setItem(PANEL_ZOOM_KEY, JSON.stringify(panelZoom)); } catch (error) { /* ignore */ }
+  }
+  function panelsSideBySide() {
+    if (!panelSplitMedia.matches) return false;
+    var entry = $("#templateEntry");
+    if (entry && !entry.classList.contains("hidden")) return false;
+    var workspace = $(".workspace");
+    return !!workspace && workspace.getBoundingClientRect().width > 0 && getComputedStyle(workspace).display === "grid";
+  }
+  var panelBaseReady = false;
+  function measurePanelBase() {
+    var body = document.body;
+    if (!panelsSideBySide()) return;
+    panelBaseReady = true;
+    var workspace = $(".workspace");
+    var sized = body.classList.contains("panel-sized");
+    /* Measure the template's own column widths without the grid transition,
+       which would otherwise report the in-between width. */
+    workspace.style.transition = "none";
+    body.classList.remove("panel-sized");
+    ["layers", "editor"].forEach(function (panel) {
+      if (body.classList.contains(panel + "-collapsed")) return;
+      var width = panelElement(panel).getBoundingClientRect().width;
+      if (width > 80) panelBase[panel] = width;
+    });
+    if (sized) body.classList.add("panel-sized");
+    void workspace.offsetWidth;
+    workspace.style.transition = "";
+  }
+  function applyPanelZoom() {
+    var body = document.body;
+    var style = document.documentElement.style;
+    var active = panelsSideBySide() && (panelZoom.layers !== 1 || panelZoom.editor !== 1);
+    ["layers", "editor"].forEach(function (panel) {
+      style.setProperty("--panel-" + panel + "-w", Math.round(panelBase[panel] * panelZoom[panel]) + "px");
+      style.setProperty("--panel-" + panel + "-zoom", String(panelZoom[panel]));
+    });
+    body.classList.toggle("panel-sized", active);
+    positionPanelSplitters();
+  }
+  function positionPanelSplitters() {
+    var show = panelsSideBySide();
+    var workspaceRect = $(".workspace").getBoundingClientRect();
+    ["layers", "editor"].forEach(function (panel) {
+      var splitter = panelSplitters[panel];
+      var visible = show && !document.body.classList.contains(panel + "-collapsed");
+      splitter.hidden = !visible;
+      if (!visible) return;
+      var rect = panelElement(panel).getBoundingClientRect();
+      splitter.style.top = workspaceRect.top + "px";
+      splitter.style.height = workspaceRect.height + "px";
+      splitter.style.left = (panel === "layers" ? rect.right : rect.left) - 4 + "px";
+    });
+  }
+  function maxPanelZoom(panel) {
+    var other = panel === "layers" ? "editor" : "layers";
+    var otherWidth = document.body.classList.contains(other + "-collapsed") ? 0 : panelElement(other).getBoundingClientRect().width;
+    var room = $(".workspace").getBoundingClientRect().width - otherWidth - 390;
+    return clamp(room / panelBase[panel], 1, PANEL_ZOOM_MAX);
+  }
+  function startPanelResize(panel, event) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    measurePanelBase();
+    var splitter = panelSplitters[panel];
+    var startX = event.clientX;
+    var startWidth = panelBase[panel] * panelZoom[panel];
+    var limit = maxPanelZoom(panel);
+    splitter.setPointerCapture(event.pointerId);
+    document.body.classList.add("panel-resizing");
+    function move(moveEvent) {
+      var delta = (moveEvent.clientX - startX) * (panel === "layers" ? 1 : -1);
+      panelZoom[panel] = Math.round(clamp((startWidth + delta) / panelBase[panel], 1, limit) * 100) / 100;
+      applyPanelZoom();
+    }
+    function end() {
+      splitter.removeEventListener("pointermove", move);
+      splitter.removeEventListener("pointerup", end);
+      splitter.removeEventListener("pointercancel", end);
+      document.body.classList.remove("panel-resizing");
+      savePanelZoom();
+      fitPreview();
+    }
+    splitter.addEventListener("pointermove", move);
+    splitter.addEventListener("pointerup", end);
+    splitter.addEventListener("pointercancel", end);
+  }
+  ["layers", "editor"].forEach(function (panel) {
+    var splitter = document.createElement("div");
+    splitter.className = "panel-splitter panel-splitter-" + panel;
+    splitter.setAttribute("role", "separator");
+    splitter.setAttribute("aria-orientation", "vertical");
+    splitter.title = "드래그: 패널 크기 조절 · 더블클릭: 원래 크기";
+    splitter.hidden = true;
+    splitter.addEventListener("pointerdown", function (event) { startPanelResize(panel, event); });
+    splitter.addEventListener("dblclick", function () {
+      panelZoom[panel] = 1;
+      savePanelZoom();
+      applyPanelZoom();
+      window.setTimeout(fitPreview, 260);
+    });
+    document.body.appendChild(splitter);
+    panelSplitters[panel] = splitter;
+  });
+  measurePanelBase();
+  applyPanelZoom();
+  if (window.ResizeObserver) {
+    var panelObserver = new ResizeObserver(function () {
+      if (!panelBaseReady && panelsSideBySide()) {
+        measurePanelBase();
+        applyPanelZoom();
+        return;
+      }
+      positionPanelSplitters();
+    });
+    panelObserver.observe(panelElement("layers"));
+    panelObserver.observe(panelElement("editor"));
+    panelObserver.observe($(".workspace"));
+  }
+  if (window.MutationObserver && $("#templateEntry")) {
+    new MutationObserver(function () {
+      if (!panelBaseReady) measurePanelBase();
+      /* Apply saved widths without the grid transition, then fit the preview
+         to the canvas that is actually left over. */
+      var workspace = $(".workspace");
+      workspace.style.transition = "none";
+      applyPanelZoom();
+      void workspace.offsetWidth;
+      workspace.style.transition = "";
+      if (document.body.classList.contains("panel-sized")) requestAnimationFrame(fitPreview);
+    }).observe($("#templateEntry"), { attributes: true, attributeFilter: ["class"] });
+  }
+  window.addEventListener("resize", function () {
+    measurePanelBase();
+    applyPanelZoom();
+  });
+
   installColorCodeInputs();
   if (window.indexedDB) {
     imageAssetHydrationPromise = hydrateImageAssets().then(function (restored) {
