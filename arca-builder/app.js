@@ -228,7 +228,7 @@
     const contentEnd=html.indexOf('</label>');
     if(html.startsWith('<label class="field">내용')&&contentEnd>=0)html=html.slice(0,contentEnd+8)+E.textPanel(selected,live)+html.slice(contentEnd+8);
     else html=E.textPanel(selected,live)+html;
-    $('inspectorFields').innerHTML=E.foldPanel(selected,model)+window.ArcaVisual.imagePanel(selected)+window.ArcaVisual.surfacePanel(selected,live)+html;$('innerHtml').value=source.slice(selected.openEnd,selected.closeStart);$('innerHtml').disabled=C.VOID.has(tag);$('applyInner').disabled=C.VOID.has(tag);
+    $('inspectorFields').innerHTML=E.foldPanel(selected,model)+window.ArcaVisual.imagePanel(selected)+window.ArcaVisual.surfacePanel(selected,live)+window.ArcaEffects.panel(selected)+html;$('innerHtml').value=source.slice(selected.openEnd,selected.closeStart);$('innerHtml').disabled=C.VOID.has(tag);$('applyInner').disabled=C.VOID.has(tag);
     for(const section of $('inspectorFields').querySelectorAll('details')){const key=section.querySelector('summary')?.textContent;if(expanded.has(key))section.open=expanded.get(key);}
     if(tag==='img')refreshImageInspector();
   }
@@ -645,6 +645,13 @@
   const codeSelect=()=>{if(syncTimer)return;const rec=C.atOffset(model,code.selectionStart);if(rec?.id!==selected?.id||selectedIds.size>1)select(rec,{scrollPreview:true});};
   code.onclick=codeSelect;code.onkeyup=ev=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(ev.key))codeSelect();};
   code.onkeydown=ev=>{if(ev.key==='Tab'){ev.preventDefault();const start=code.selectionStart,end=code.selectionEnd;code.setRangeText('  ',start,end,'end');code.dispatchEvent(new Event('input'));}};
+  $('inspectorFields').addEventListener('click',ev=>{
+    const button=ev.target.closest('[data-effect]');if(!button)return;
+    const color=$('effectColor')?.value||'#8888CC';
+    flush();if(!selected||selectedIds.size!==1||selected.tag==='a')return;
+    const properties=window.ArcaEffects.styles(button.dataset.effect,color);if(!properties)return;
+    editVisualStyles([selected],properties,'효과 프리셋 적용','command',0);
+  });
   $('inspectorFields').addEventListener('input',ev=>{if(ev.target.matches('[data-text],[data-style],[data-attr]')&&ev.target.type!=='checkbox')updateProperty(ev.target);});
   $('inspectorFields').addEventListener('change',ev=>{
     if(!ev.target.matches('[data-surface-color],[data-surface-alpha]'))return;

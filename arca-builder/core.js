@@ -240,6 +240,24 @@
         else if(/[?&](expires|expire|token|signature)=/i.test(el.getAttribute('src')||''))add(rec,'warn','만료될 수 있는 이미지 주소예요. 게시 후 실제 주소를 확인하세요.');
       }
       if(tag==='iframe'||tag==='video')add(rec,'warn',tag==='video'?'VIDEO는 재생 버튼으로 미리 들을 수 있어요. 외부 주소의 만료·접근 제한과 실제 게시 결과를 확인하세요.':'임베드는 미리보기에서 실행하지 않아요. 실제 게시 결과를 확인하세요.');
+      // Check authored values before CSS parsing drops unresolved tokens.
+      const token=/\{[A-Z][A-Z0-9_]*\}/;
+      const attrs=[...rec.el.attributes].filter(a=>a.name!==model.attr);
+      const ownText=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('');
+      if(attrs.some(a=>token.test(a.value))||(!el.closest('pre,code')&&token.test(ownText)))add(rec,'warn','치환되지 않은 디자인 토큰이 있어요.');
+      if(tag==='a'){
+        const href=(el.getAttribute('href')||'').trim();
+        if(!href||href==='#'||/^https?:\/\/(?:www\.)?example\.(?:com|org|net)(?:[/?#]|$)/i.test(href))add(rec,'warn','링크 주소가 비어 있거나 예시 주소예요. 실제 주소로 바꿔주세요.');
+      }
+      if(tag==='table'){
+        const rows=[...el.querySelectorAll('tr')].filter(row=>row.closest('table')===el);
+        const crowded=rows.some(row=>{
+          const cells=[...row.cells],columns=cells.reduce((sum,cell)=>sum+cell.colSpan,0);
+          return columns>4||(columns>2&&cells.some(cell=>cell.textContent.trim().length>40));
+        });
+        if(crowded)add(rec,'warn','모바일에서 표가 좁을 수 있어요. 긴 본문은 1열, 텍스트 카드는 1~2열을 권장해요.');
+        if(el.style.borderSpacing&&el.style.borderCollapse!=='separate')add(rec,'warn','칸 간격을 쓰는 표에는 border-collapse:separate를 지정하세요.');
+      }
       if(tag==='a'&&el.target==='_blank')el.setAttribute('rel','noopener noreferrer');
       const style=el.style;
       for(const prop of [...style]) {
@@ -255,9 +273,8 @@
       }
       if(tag==='blockquote'&&el.hasAttribute('style')){add(rec,'warn','blockquote 스타일은 안쪽 div로 옮겨주세요. 게시용 출력에서 제외해요.');el.removeAttribute('style');}
       if(style.borderImageSource&&!/^(none|initial|inherit|unset)$/i.test(style.borderImageSource)&&style.borderRadius)add(rec,'warn','border-image와 border-radius의 조합을 확인하세요.');
-      if(['table','td','th'].includes(tag)&&!style.border)add(rec,'warn','표·셀의 기본 테두리가 나타날 수 있어요. border를 직접 지정하세요.');
+      if(['table','tr','td','th'].includes(tag)&&!style.border)add(rec,'warn','표·셀의 기본 테두리가 나타날 수 있어요. border를 직접 지정하세요.');
       if(['span','div'].includes(tag)&&!el.children.length&&el.textContent==='')add(rec,'warn','빈 장식 요소는 지워질 수 있어요. 공백(&nbsp;)을 넣어주세요.');
-      if(/\{[A-Z][A-Z0-9_]*\}/.test(el.getAttribute('style')||''))add(rec,'warn','치환되지 않은 디자인 토큰이 있어요.');
       if(!el.getAttribute('style'))el.removeAttribute('style');
     }
     const body=clean.body;

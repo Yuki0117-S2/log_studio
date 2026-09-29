@@ -4,7 +4,7 @@
   const areaStyle="width:100%;height:300px;margin:16px 0;padding:0;font-size:0;line-height:0;text-align:left;white-space:normal;background:#ffffff;";
   const anchorStyle='display:inline-block;width:100%;height:0;vertical-align:top;font-size:0;line-height:0;';
   const round=n=>Math.round(n*100)/100,clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-  function board(){return `<div data-arca-board="true" style="${areaStyle}"></div>`;}
+  function board(){return `<div data-arca-board="true" style="${areaStyle}">&nbsp;</div>`;}
   function isItem(el){return el?.hasAttribute('data-arca-item');}
   function parentArea(el){return el?.parentElement?.parentElement;}
   function area(el){return el?.closest('[data-arca-group],[data-arca-board]');}
