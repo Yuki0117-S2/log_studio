@@ -11,16 +11,17 @@
   <link rel="stylesheet" href="design-tools.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&amp;family=Noto+Serif+KR:wght@400;600;700;800&amp;display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-  <script defer src="core.js?v=6.7"></script>
+  <script defer src="core.js?v=6.7.1"></script>
   <script defer src="visual-properties.js"></script>
   <script defer src="easy-design.js"></script>
   <script defer src="design-tools.js"></script>
-  <script defer src="layout-studio.js?v=6.7"></script>
-  <script defer src="components.js?v=6.7"></script>
+  <script defer src="layout-studio.js?v=6.7.1"></script>
+  <script defer src="components.js?v=6.7.1"></script>
   <script defer src="assets.js"></script>
   <script defer src="upload.js"></script>
-  <script defer src="effects.js?v=6.7"></script>
-  <script defer src="app.js?v=6.7"></script>
+  <script defer src="effects.js?v=6.7.1"></script>
+  <script defer src="dark-mode.js?v=6.7.1"></script>
+  <script defer src="app.js?v=6.7.1"></script>
 </head>
 <body>
   <header class="topbar">
@@ -33,6 +34,7 @@
         <div class="toolbar-divider"></div>
         <div class="segmented" aria-label="미리보기 너비"><button data-width="900" class="active">PC</button><button data-width="360">모바일</button></div>
         <button id="themeToggle" class="quiet" title="미리보기 배경 전환">☼ 라이트</button>
+        <label class="check-row" title="게시 예상과 내보내기에만 적용 · 실제 아카 저장 검증 전"><input id="protectColors" type="checkbox">색상 보호(시험)</label>
         <label class="zoom-label">배율<select id="zoom"><option value="fit">맞춤</option><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select></label>
         <span class="spacer"></span><a href="examples/" target="_blank" rel="noopener">예제 · TIP ↗</a><button id="help" class="round-button" aria-label="사용법">?</button>
       </div>
@@ -69,7 +71,7 @@
         </div>
         <div class="insert-position"><label class="field">추가·이동 위치<select id="insertPosition"><option value="after">선택 요소 뒤</option><option value="inside">선택 요소 안쪽 맨 끝</option><option value="before">선택 요소 앞</option></select></label><small>선택이 없으면 문서 끝에 추가돼요.</small></div>
       </section>
-      <section id="issuesPanel" class="pane" hidden><div class="lint-intro"><strong>가이드 v6.7 기준</strong><p>원본은 자동으로 지우지 않아요.<br>게시 예상과 내보내기에서 정리 결과를 확인하세요.</p></div><div id="issues"></div><p class="compat-note">이 검사는 제공된 가이드 기반의 예상입니다. 실제 아카라이브 저장·재접속 결과는 다를 수 있어요.</p></section>
+      <section id="issuesPanel" class="pane" hidden><div class="lint-intro"><strong>가이드 v6.7.1 기준</strong><p>원본은 자동으로 지우지 않아요.<br>다크모드 경고는 보호 적용 전 원본 기준이에요.<br>게시 예상과 내보내기에서 정리 결과를 확인하세요.</p></div><div id="issues"></div><p class="compat-note">이 검사는 제공된 가이드 기반의 예상입니다. 실제 아카라이브 저장·재접속 결과는 다를 수 있어요.</p></section>
     </aside>
       <div class="selection-bar"><span id="selectionPath">미리보기에서 고칠 부분을 선택하세요</span><span id="selectionLine"></span></div>
       <div id="codeResizer" role="separator" aria-label="코드 영역 높이 조절" aria-orientation="horizontal" tabindex="0"></div>
@@ -79,7 +81,7 @@
         <div class="code-footer"><span id="codeStats"></span><span id="changeSummary">준비됐어요</span></div>
       </section>
   </div>
-  <footer class="statusbar"><span id="saveStatus"><span class="dot"></span>브라우저에 자동 저장</span><span>Arca Studio <b>01</b><i></i>가이드 v6.7</span></footer>
+  <footer class="statusbar"><span id="saveStatus"><span class="dot"></span>브라우저에 자동 저장</span><span>Arca Studio <b>01</b><i></i>가이드 v6.7.1</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
   <dialog id="modal"><form method="dialog" class="modal-heading"><h2 id="modalTitle"></h2><button aria-label="닫기" value="cancel">×</button></form><div id="modalBody"></div></dialog>
   <input id="fileInput" type="file" hidden>

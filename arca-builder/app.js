@@ -6,6 +6,7 @@
   let editorTheme='dark';
   try{if(localStorage.getItem(THEME_KEY)==='light')editorTheme='light';}catch(_){}
   let source=B.starter(),model,analysis,selected=null,mode='edit',width=900,dark=false,scale=1;
+  let protectColors=false;
   let selectedIds=new Set();
   let undo=[],redo=[],historyTime=0,lastEditKind='',collapsed=new Set(),allCollapsed=false,dragged=null;
   let syncTimer=null,saveTimer=null,toastTimer=null,frameObserver=null,frameHeight=500,frameVersion=0;
@@ -108,12 +109,22 @@
     frame.onload=()=>{if(version!==frameVersion)return;bindFrame(details);};
     frame.srcdoc=C.previewHtml(model,analysis,mode,dark,localData);
     $('previewCaption').textContent=(mode==='edit'?'편집 미리보기':'게시 후 예상 · 근사치')+` · ${width}px`;
-    $('previewHint').textContent=mode==='edit'?'Ctrl+클릭 = 여러 요소 선택 · 파일 놓기 = 이미지 넣기':'가이드 기준 정리 결과 · 실제 게시 후 확인';
+    $('previewHint').textContent=mode==='edit'?'Ctrl+클릭 = 여러 요소 선택 · 파일 놓기 = 이미지 넣기':(dark?'아카 다크 색상 처리 근사치':'가이드 기준 정리 결과')+(protectColors?' · 색상 보호(시험) 적용':'')+' · 실제 게시 후 확인';
     layoutFrame();
   }
   function bindFrame(details){
     const doc=frame.contentDocument;if(!doc)return;
     for(const state of details){const el=doc.querySelector(`[${model.attr}="${state.id}"]`);if(el?.localName==='details')el.open=state.open;}
+    analysis.issues=analysis.issues.filter(issue=>!issue.darkMode);
+    for(const issue of window.ArcaDark.inspect(doc)){
+      const rec=model.byId.get(issue.el.getAttribute(model.attr));if(!rec)continue;
+      analysis.issues.push({id:rec.id,offset:rec.start,line:model.lineAt(rec.start),level:'warn',message:issue.message,darkMode:true});
+    }
+    analysis.warnings=analysis.issues.filter(issue=>issue.level==='warn').length;renderIssues();
+    if(mode==='final'){
+      if(protectColors)window.ArcaDark.protect(doc);
+      if(dark)window.ArcaDark.simulate(doc,dark==='#000');
+    }
     renderedModel=model;frameReady=true;
     const style=doc.createElement('style');style.textContent=`[data-editor-selected]{outline:2px solid #8888CC!important;outline-offset:2px!important}[data-editor-drop]{outline:2px dashed #f0b64a!important;outline-offset:3px!important}`;doc.head.appendChild(style);
     if(mode==='edit')for(const el of doc.querySelectorAll(`[${model.attr}]`)){if(!['html','head','body','br','video'].includes(el.localName)&&!el.closest('[data-arca-board]'))el.draggable=true;}
@@ -506,7 +517,26 @@
     if(missing.length){showModal('게시용 주소 연결이 필요해요',`<p><strong>${missing.length}개 이미지</strong>에 게시용 주소가 없거나 올바르지 않아요. 배치는 보존돼 있어요.</p><div class="modal-actions"><button id="connectBeforeExport" class="primary">원본 이미지 · 주소 연결</button></div>`);$('connectBeforeExport').onclick=localImagesDialog;return;}
     const changes=analysis.issues.filter(x=>x.level==='error'||/제외|출력|남겨/.test(x.message));
     showModal('게시용 HTML 내보내기',`<p><strong>편집 중인 원본은 유지해요.</strong> 아래 결과만 아카라이브에 붙여넣으세요.</p><div class="export-summary">차단 ${analysis.errors}건 · 주의 ${analysis.warnings}건${changes.length?'<ul>'+changes.slice(0,30).map(x=>'<li>'+e(x.message)+'</li>').join('')+'</ul>':'<br>가이드 기준 차단 요소를 찾지 못했어요.'}</div><textarea id="exportValue" class="modal-code output" readonly aria-label="게시용 HTML"></textarea><p class="muted" style="margin-top:12px">게시 후 실제 모양을 확인해 주세요. ‘프로젝트 저장’은 나중에 이어서 편집할 원본을 보관해요.</p><div class="modal-actions"><button id="exportDownload">HTML 파일 저장</button><button id="exportCopy" class="primary">게시용 HTML 복사</button></div>`);
-    $('exportValue').value=analysis.html;$('exportCopy').onclick=()=>copy(analysis.html);$('exportDownload').onclick=()=>download(analysis.html,'text/html',filename+'-게시용.html');
+    $('exportValue').insertAdjacentHTML('beforebegin','<label class="check-row"><input id="exportProtectColors" type="checkbox">색상 보호(시험) · 원본은 유지</label><p id="protectStatus" class="muted">밝은 단색 배경을 같은 색 그라데이션으로 바꿔요. 아카 저장·재접속 검증 전인 보정입니다.</p>');
+    $('exportProtectColors').checked=protectColors;
+    let request=0;
+    const updateExport=async()=>{
+      const current=++request,enabled=$('exportProtectColors').checked;
+      protectColors=enabled;$('protectColors').checked=enabled;renderFrame();
+      const output=$('exportValue'),status=$('protectStatus'),copyButton=$('exportCopy'),downloadButton=$('exportDownload');
+      copyButton.disabled=downloadButton.disabled=true;
+      try{
+        const result=enabled?await window.ArcaDark.exportProtected(analysis.html):{html:analysis.html};
+        if(current!==request||!output.isConnected)return;
+        output.value=result.html;
+        status.textContent=enabled?`밝은 배경 ${result.surfaces}개 · 글자 보호 ${result.colors}개 보정. 아카 저장·재접속 검증 전입니다.`:'보호 꺼짐 · 기존 게시용 HTML을 그대로 내보내요.';
+        copyButton.disabled=downloadButton.disabled=false;
+      }catch(error){if(current===request&&output.isConnected){output.value='';status.textContent=error.message+' 보호를 끄고 다시 확인하세요.';}}
+    };
+    $('exportProtectColors').onchange=updateExport;
+    $('exportCopy').onclick=()=>copy($('exportValue').value);
+    $('exportDownload').onclick=()=>download($('exportValue').value,'text/html',filename+'-게시용.html');
+    updateExport();
   }
   function imageViewer(url,alt){
     if(!url||!(C.safeUrl(url,'media')||A.validData(url))){toast('이미지 주소를 먼저 확인해 주세요.');return;}
@@ -631,7 +661,8 @@
   document.querySelectorAll('[data-right]').forEach(x=>x.onclick=()=>setRight(x.dataset.right));
   document.querySelectorAll('[data-mode]').forEach(x=>x.onclick=()=>{flush();mode=x.dataset.mode;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b===x));renderFrame();});
   document.querySelectorAll('[data-width]').forEach(x=>x.onclick=()=>{width=Number(x.dataset.width);document.querySelectorAll('[data-width]').forEach(b=>b.classList.toggle('active',b===x));renderFrame();});
-  $('themeToggle').onclick=()=>{dark=!dark;$('themeToggle').textContent=dark?'☾ 다크':'☼ 라이트';renderFrame();};$('zoom').onchange=layoutFrame;
+  $('themeToggle').onclick=()=>{dark=!dark?'#222':dark==='#222'?'#000':false;$('themeToggle').textContent=!dark?'☼ 라이트':dark==='#222'?'☾ 다크':'☾ 블랙';renderFrame();};
+  $('protectColors').onchange=()=>{protectColors=$('protectColors').checked;renderFrame();};$('zoom').onchange=layoutFrame;
   $('treeSearch').oninput=ev=>{search=ev.target.value.toLowerCase();renderTree();};
   $('collapseTree').onclick=()=>{allCollapsed=!allCollapsed;collapsed=allCollapsed?new Set(model.records.map(r=>r.id)):new Set();$('collapseTree').textContent=allCollapsed?'모두 펼치기':'모두 접기';renderTree();};
   $('tree').onclick=ev=>{flush();const collapse=ev.target.closest('[data-collapse]');if(collapse){const id=collapse.dataset.collapse;if(collapsed.has(id))collapsed.delete(id);else collapsed.add(id);renderTree();return;}const row=ev.target.closest('[data-id]');if(row){select(model.byId.get(row.dataset.id),{scrollPreview:true,toggle:ev.ctrlKey||ev.metaKey});setRight('properties');}};
