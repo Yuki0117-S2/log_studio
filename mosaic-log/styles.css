@@ -18,6 +18,93 @@
     --control-h: 34px;
     --control-sm: 30px;
   }
+  :root.uiNight {
+    color-scheme: dark;
+    --ink: #e8eae8;
+    --ink-soft: #bec3bf;
+    --ink-faint: #acb2ad;
+    --help-ink: #969e99;
+    --help-ink-strong: #b4bbb6;
+    --line: #3b413e;
+    --line-strong: #555e59;
+    --bg-app: #181c1a;
+    --bg-panel: #222523;
+    --bg-field: #2a2f2c;
+    --bg-subtle: #272b28;
+    --bg-muted: #323834;
+    --accent: #a4bdab;
+    --accent-hover: #b6cdbc;
+    --ok: #a4bdab;
+    --bg-preview-night: #363a38;
+  }
+  :root:not(.uiNight)[data-ui-palette="gray"] {
+    --ink:#2b2b2b; --ink-soft:#686868; --ink-faint:#777777;
+    --help-ink:#969696; --help-ink-strong:#777777;
+    --line:#e1e1e1; --line-strong:#cecece;
+    --bg-app:#f1f1f1; --bg-panel:#fcfcfc; --bg-field:#f7f7f7;
+    --bg-subtle:#f5f5f5; --bg-muted:#ececec;
+    --accent:#626262; --accent-hover:#4f4f4f; --ok:#626262;
+  }
+  :root.uiNight[data-ui-palette="gray"] {
+    --ink:#eaeaea; --ink-soft:#c4c4c4; --ink-faint:#b0b0b0;
+    --help-ink:#9f9f9f; --help-ink-strong:#bdbdbd;
+    --line:#444444; --line-strong:#626262;
+    --bg-app:#1d1d1d; --bg-panel:#292929; --bg-field:#343434;
+    --bg-subtle:#2e2e2e; --bg-muted:#3c3c3c;
+    --accent:#c4c4c4; --accent-hover:#d6d6d6; --ok:#c4c4c4;
+    --bg-preview-night:#424242;
+  }
+  :root:not(.uiNight)[data-ui-palette="blue"] {
+    --ink:#252f36; --ink-soft:#64717c; --ink-faint:#6d7d88;
+    --help-ink:#8e9ca6; --help-ink-strong:#6c7d89;
+    --line:#dce4e9; --line-strong:#c5d2db;
+    --bg-app:#f2f2f0; --bg-panel:#fcfbf9; --bg-field:#f8f8f6;
+    --bg-subtle:#f5f5f3; --bg-muted:#eeefed;
+    --accent:#486f8c; --accent-hover:#375a74; --ok:#486f8c;
+  }
+  :root.uiNight[data-ui-palette="blue"] {
+    --ink:#e8ecef; --ink-soft:#bfc8ce; --ink-faint:#b0b8bf;
+    --help-ink:#98a3aa; --help-ink-strong:#b9c2c8;
+    --line:#3c454b; --line-strong:#59656e;
+    --bg-app:#1b1c1c; --bg-panel:#232625; --bg-field:#2c2f2e;
+    --bg-subtle:#282c2b; --bg-muted:#343836;
+    --accent:#b4c6d2; --accent-hover:#c7d6df; --ok:#b4c6d2;
+    --bg-preview-night:#393d3f;
+  }
+  :root:not(.uiNight)[data-ui-palette="pink"] {
+    --ink:#352b31; --ink-soft:#786a72; --ink-faint:#877680;
+    --help-ink:#a3949c; --help-ink-strong:#836f79;
+    --line:#eadfe4; --line-strong:#d9c9d1;
+    --bg-app:#f3f1f0; --bg-panel:#fcfbf9; --bg-field:#f8f7f5;
+    --bg-subtle:#f6f4f2; --bg-muted:#efece9;
+    --accent:#936176; --accent-hover:#7b4c60; --ok:#936176;
+  }
+  :root.uiNight[data-ui-palette="pink"] {
+    --ink:#eee8ea; --ink-soft:#ccc1c6; --ink-faint:#baaeb5;
+    --help-ink:#a89ba1; --help-ink-strong:#c7bac0;
+    --line:#473d42; --line-strong:#64565e;
+    --bg-app:#1d1b1c; --bg-panel:#262525; --bg-field:#302e2e;
+    --bg-subtle:#2b2929; --bg-muted:#393536;
+    --accent:#d1b8c1; --accent-hover:#e2ccd4; --ok:#d1b8c1;
+    --bg-preview-night:#3d3a3c;
+  }
+  :root:not(.uiNight)[data-ui-palette="yellow"] {
+    --ink:#343127; --ink-soft:#756f5e; --ink-faint:#837b67;
+    --help-ink:#a09680; --help-ink-strong:#81765d;
+    --line:#e9e3d3; --line-strong:#d8cfb8;
+    --bg-app:#f3f1ec; --bg-panel:#fcfbf8; --bg-field:#f8f7f3;
+    --bg-subtle:#f6f4ee; --bg-muted:#efede6;
+    --accent:#80683d; --accent-hover:#6d5630; --ok:#80683d;
+  }
+  :root.uiNight[data-ui-palette="yellow"] {
+    --ink:#eae7df; --ink-soft:#c9c4b8; --ink-faint:#b5b0a3;
+    --help-ink:#a19b8c; --help-ink-strong:#c0b9a9;
+    --line:#46443c; --line-strong:#625d51;
+    --bg-app:#1c1c1a; --bg-panel:#252521; --bg-field:#2f2e2b;
+    --bg-subtle:#2b2a27; --bg-muted:#383631;
+    --accent:#c6ba9d; --accent-hover:#d6ccb2; --ok:#c6ba9d;
+    --bg-preview-night:#3e3c38;
+  }
   * { box-sizing: border-box; }
   input[type="checkbox"] { accent-color: var(--accent); }
   body {
@@ -164,7 +251,7 @@
     font-weight:650;
     white-space:nowrap;
   }
-  #archiveOpenBtn:hover, #archiveOpenBtn[aria-expanded="true"] { border-color:var(--line); background:var(--bg-field); color:var(--ink); }
+  #archiveOpenBtn:hover, #archiveOpenBtn[aria-expanded="true"] { border-color:transparent; background:var(--bg-muted); color:var(--ink); }
   #archiveDrawer {
     position:fixed;
     inset:0 auto 0 0;
@@ -187,8 +274,10 @@
   }
   .archiveDrawerHead { display:flex; align-items:center; justify-content:space-between; min-height:38px; margin-bottom:10px; }
   .archiveDrawerTitle { font-size:18px; font-weight:800; }
-  #archiveCloseBtn { width:32px; height:32px; padding:0; border:1px solid transparent; border-radius:7px; background:transparent; color:var(--ink-faint); font-size:18px; }
-  #archiveCloseBtn:hover { border-color:var(--line); background:var(--bg-field); color:var(--ink); }
+  #archiveCloseBtn { position:relative; flex:none; width:32px; height:32px; padding:0; border:1px solid transparent; border-radius:7px; background:transparent; color:var(--ink-faint); font-size:0; }
+  #archiveCloseBtn::before, #archiveCloseBtn::after { content:''; position:absolute; top:50%; left:50%; width:14px; height:1.6px; background:currentColor; transform:translate(-50%, -50%) rotate(45deg); }
+  #archiveCloseBtn::after { transform:translate(-50%, -50%) rotate(-45deg); }
+  #archiveCloseBtn:hover { border-color:transparent; background:var(--bg-muted); color:var(--ink); }
   #draftConflictBtn {
     flex: none;
     min-height: 24px;
@@ -381,50 +470,6 @@
     opacity: .42;
     cursor: default;
   }
-  /* 표제의 선택 기능은 본 입력 흐름을 방해하지 않도록 얇은 하위 접기로 분리한다. */
-  .titleLinkFold {
-    margin: 12px 0 0;
-    padding-top: 2px;
-    border-top: 1px solid var(--line);
-  }
-  .titleLinkFold > summary {
-    display: flex;
-    align-items: center;
-    min-height: 38px;
-    gap: 10px;
-    padding: 0 2px;
-    list-style: none;
-    cursor: pointer;
-    user-select: none;
-    color: var(--ink-soft);
-    font-size: 12.5px;
-    font-weight: 750;
-  }
-  .titleLinkFold > summary::-webkit-details-marker { display: none; }
-  .titleLinkFold > summary::after {
-    content: "+";
-    flex: none;
-    margin-left: auto;
-    color: var(--ink-faint);
-    font-size: 15px;
-    font-weight: 400;
-  }
-  .titleLinkFold[open] > summary::after { content: "−"; }
-  .titleLinkFold:not([open]) > *:not(summary) { display: none; }
-  .titleLinkMeta {
-    min-width: 0;
-    margin-left: auto;
-    overflow: hidden;
-    color: var(--ink-faint);
-    font-size: 10.5px;
-    font-weight: 500;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .titleLinkFold > summary::after { margin-left: 0; }
-  .titleLinkFold[open] > summary .titleLinkMeta { display: none; }
-  .titleLinkFold[open] > summary::after { margin-left: auto; }
-  .titleLinkBody { padding: 3px 2px 6px; }
   input[type="text"], input[type="url"], input[type="number"], select, textarea {
     font-family: inherit;
     color: var(--ink);
@@ -454,22 +499,62 @@
     padding: 0;
     margin: 0;
   }
-  /* 본문 조절 슬라이더는 기능 묶음별 색으로 빠르게 구분한다. */
-  #narrSize,
-  #narrLine {
-    accent-color: #315f48;
+  /* 글자·표지의 이미지 슬라이더는 팔레트색 채움과 중성 트랙을 함께 그린다. */
+  :is(#tabDesign .typographyGroup, #tabCover .settingsForm) .row > input[type="range"] {
+    --type-range-ink: var(--accent);
+    height: 30px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
   }
-  #dlgSize,
-  #dlgLine {
-    accent-color: #66865c;
+  #tabDesign .typographyGroup .row > :is(#dlgSize, #dlgLine),
+  #tabCover .profileImageAdjustments .row > input[type="range"] {
+    --type-range-ink: color-mix(in srgb, var(--accent) 68%, var(--bg-panel));
   }
-  #paragraphGap,
-  #softBreakSpacing {
-    accent-color: #717674;
+  :root.uiNight #tabDesign .typographyGroup .row > :is(#dlgSize, #dlgLine),
+  :root.uiNight #tabCover .profileImageAdjustments .row > input[type="range"] {
+    --type-range-ink: color-mix(in srgb, var(--accent) 82%, var(--bg-panel));
   }
-  #titleSize,
-  #foldTitleSize {
-    accent-color: #555b58;
+  #tabDesign .typographyGroup .row > :is(#narrDialogueGap, #paragraphGap, #softBreakSpacing, #titleSize, #foldTitleSize) {
+    --type-range-ink: color-mix(in srgb, var(--accent) 42%, var(--ink-soft));
+  }
+  :is(#tabDesign .typographyGroup, #tabCover .settingsForm) .row > input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(to right,
+      var(--type-range-ink) 0 var(--type-range-progress, 50%),
+      var(--line-strong) var(--type-range-progress, 50%) 100%);
+  }
+  :is(#tabDesign .typographyGroup, #tabCover .settingsForm) .row > input[type="range"]::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    margin-top: -3px;
+    border: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--type-range-ink);
+  }
+  :is(#tabDesign .typographyGroup, #tabCover .settingsForm) .row > input[type="range"]::-moz-range-track {
+    height: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--line-strong);
+  }
+  :is(#tabDesign .typographyGroup, #tabCover .settingsForm) .row > input[type="range"]::-moz-range-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--type-range-ink);
+  }
+  :is(#tabDesign .typographyGroup, #tabCover .settingsForm) .row > input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 0;
+    background: var(--type-range-ink);
+  }
+  :is(#tabDesign .typographyGroup, #tabCover .settingsForm) .row > input[type="range"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
   .row select {
     width: 100%;
@@ -477,27 +562,20 @@
     font-size: 13px;
     cursor: pointer;
   }
-  /* 표지·디자인 탭 셀렉트: 기본 화살표를 같은 위치의 작은 캐럿으로 통일 */
-  #tabCover .row select,
-  #tabDesign .row select,
-  #creditPresetSelect {
+  /* 보이는 선택창은 디자인 탭과 같은 작은 채움 삼각형을 쓴다.
+     본문 도구 모음의 ⋯ 메뉴와 화면에서 숨긴 상태 저장용 select는 제외한다. */
+  select:not([hidden]):not(.segmentedChoiceSource):not(.separatorInsertSelect) {
     -webkit-appearance: none;
     appearance: none;
-    padding-right: 34px;
+    padding-right: 25px;
     background-image:
       linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
       linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
     background-position:
-      calc(100% - 17px) 50%,
-      calc(100% - 12px) 50%;
-    background-size: 5px 5px, 5px 5px;
+      calc(100% - 11px) 50%,
+      calc(100% - 8px) 50%;
+    background-size: 3px 3px, 3px 3px;
     background-repeat: no-repeat;
-  }
-  /* 데스크톱: 슬라이더 + 값의 전체 폭을 위 선택창(50%)과 일치시킴 */
-  #tabDesign .halfControls .row > label ~ input[type="range"] {
-    flex: none;
-    width: calc(50% - 40px);
-    margin-left: auto;
   }
   .row input[type="checkbox"] {
     accent-color: var(--accent);
@@ -702,8 +780,14 @@
     top: 6px;
     right: 8px;
     z-index: 2;
-    font-size: 11px;
-    padding: 4px 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    font-size: 17px;
+    line-height: 1;
     border: 1px solid var(--line-strong);
     background: var(--bg-panel);
     color: var(--ink-faint);
@@ -744,12 +828,14 @@
   #codeHead button {
     font-size: 12px;
     padding: 6px 12px;
-    border: 1px solid var(--line-strong);
-    background: var(--bg-field);
+    border: 1px solid transparent;
+    background: transparent;
     color: var(--ink-soft);
     border-radius: 7px;
   }
-  #codeHead button:hover { border-color: var(--ink-faint); color: var(--ink); }
+  #codeHead button:hover { border-color: var(--line-strong); background: var(--bg-muted); color: var(--ink); }
+  #codeHead button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #codeFsCloseBtn { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; padding:0; font-size:17px !important; line-height:1; }
   #codeFsArea {
     flex: 1;
     min-height: 0;
@@ -808,21 +894,38 @@
   }
   .presetRow button.secondary:hover { border-color: var(--ink-faint); background: var(--bg-field); }
 
-  /* 이름 바꾸기·키워드 치환: 입력창 옆에 가벼운 텍스트 실행 버튼을 둔다. */
+  /* 이름 바꾸기·키워드 치환: 같은 너비의 입력 줄 아래에 실행 버튼을 둔다. */
   #tabBody .nameReplaceRow {
     display: grid;
-    grid-template-columns: minmax(150px, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
-    align-items: center;
+    align-items: stretch;
   }
-  #tabBody .nameReplaceRow.keywordAutoRow { grid-template-columns:minmax(150px, 1fr) auto; }
   #tabBody .keywordRuleList { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
-  #tabBody .keywordRuleEmpty { padding:4px 2px 2px; color:var(--ink-faint); font-size:11px; text-align:left; }
+  #tabBody .keywordRuleList:empty { display:none; }
   #tabBody .keywordRuleItem { display:flex; align-items:center; gap:8px; min-height:36px; padding:6px 8px 6px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg-panel); }
   #tabBody .keywordRuleText { flex:1; min-width:0; overflow:hidden; color:var(--ink-soft); font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
   #tabBody .keywordRuleText b { color:var(--ink); font-weight:650; }
-  #tabBody .keywordUndoBtn { flex:none; min-height:26px; padding:3px 8px; border:1px solid var(--line); border-radius:6px; background:transparent; color:var(--ink-faint); font-size:10.5px; }
-  #tabBody .keywordUndoBtn:hover { border-color:#d8b5b5; background:#fff8f8; color:#9a5148; }
+  #tabBody .keywordUndoBtn {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-faint);
+    font-size: 14px;
+    line-height: 1;
+  }
+  #tabBody .keywordUndoBtn:hover {
+    border: 0;
+    background: color-mix(in srgb, #a65f59 10%, var(--bg-panel));
+    color: #a65f59;
+  }
   #tabBody .nameFieldGroup {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -845,12 +948,36 @@
     font-size: 12px;
     line-height: 1;
   }
+  #tabBody #nameReplaceGroup .nameFieldGroup { row-gap: 3px; }
+  #tabBody .nameQuickFill {
+    display: flex;
+    grid-column: 3;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+  }
+  #tabBody .nameQuickFill button {
+    min-height: 22px;
+    padding: 2px 5px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--ink-faint);
+    font: inherit;
+    font-size: 10.5px;
+    cursor: pointer;
+  }
+  #tabBody .nameQuickFill button:hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
+  }
   #tabBody .nameActionGroup {
     display: inline-flex;
     justify-content: flex-end;
     align-items: center;
     gap: 2px;
-    width: auto;
+    width: 100%;
   }
   #tabBody .nameActionGroup button {
     width: auto;
@@ -889,10 +1016,6 @@
     color: var(--ink-faint);
     opacity: .45;
     cursor: default;
-  }
-  @container sidebar (max-width: 380px) {
-    #tabBody .nameReplaceRow { grid-template-columns: 1fr; }
-    #tabBody .nameActionGroup { width: auto; justify-self: end; }
   }
   /* 문단 옵션은 항목별 선택 행으로 보여준다. */
   #paragraphSettingsGroup .paragraphCheckList { display:flex; flex-direction:column; gap:0; margin:0; }
@@ -1069,6 +1192,12 @@
     border-radius: 9px;
     background: var(--bg-subtle);
   }
+  #fsToolbar {
+    padding: 8px 5px 5px;
+    border: 0;
+    border-radius: 0;
+    background: var(--bg-subtle);
+  }
   #bodyInputGroup > .foldBody > .editorToolbar { justify-content: center; }
   #bodyInputGroup > .foldBody > .editorToolbar button, #fsToolbar button {
     font-size: 10.5px;
@@ -1085,9 +1214,10 @@
     border-color: var(--line);
     color: var(--ink);
   }
+  #fsToolbar button:hover { border-color:transparent; background:#fff; }
   #bodyInputGroup > .foldBody > #bodyEditorToolbar {
     position: sticky;
-    top: var(--body-toolbar-sticky-top, 112px);
+    top: calc(var(--body-toolbar-sticky-top, 112px) - 2px);
     z-index: 9;
     flex-wrap: nowrap;
     align-items: center;
@@ -1099,8 +1229,7 @@
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line-strong);
     border-radius: 0;
-    background: color-mix(in srgb, var(--bg-panel) 97%, var(--accent) 3%);
-    box-shadow: 0 3px 10px rgba(35,32,28,.045);
+    background: var(--bg-panel);
     scrollbar-width: none;
   }
   #bodyEditorToolbar::-webkit-scrollbar { display: none; }
@@ -1180,15 +1309,20 @@
     line-height: 1.5;
   }
   #clearBodyBtn {
-    font-size: 11px;
-    padding: 5px 9px;
-    border: 1px solid var(--line);
-    background: var(--bg-panel);
-    color: var(--ink-faint);
+    width: 28px;
+    height: 30px;
+    min-height: 30px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: color-mix(in srgb, var(--ink-faint) 58%, transparent);
+    font-size: 14px;
+    line-height: 1;
     border-radius: 6px;
     flex-shrink: 0;
+    transition: color .14s ease, background .14s ease;
   }
-  #clearBodyBtn:hover { border-color: var(--line-strong); color: var(--ink-soft); }
+  #clearBodyBtn:hover { border: 0; background: var(--bg-muted); color: #a65f59; }
 
   /* ---------- 하단 액션 영역 ---------- */
   .stickyActions {
@@ -1203,19 +1337,24 @@
     align-items: center;
     gap: 10px;
   }
-  .previewStyleToggles {
+  .previewStyleControls,
+  .previewViewControls {
     display: inline-flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
   }
+  .previewStyleControls { gap: 14px; }
+  .previewLayoutControls { display: inline-flex; align-items: center; gap: 6px; }
+  body.previewFullscreen .previewLayoutControls { gap: 10px; }
+  .previewActionControls { display: inline-flex; align-items: center; gap: 6px; }
   .previewStyleToggle {
     position: relative;
     height: 30px;
     padding: 0 1px;
     border: 0;
     background: transparent;
-    color: var(--ink-faint);
-    font-size: 11.5px;
+    color: color-mix(in srgb, var(--ink-faint) 88%, transparent);
+    font-size: 11px;
     font-weight: 500;
     line-height: 30px;
     white-space: nowrap;
@@ -1226,15 +1365,11 @@
     left: 0;
     right: 0;
     bottom: 2px;
-    height: 2px;
-    border-radius: 2px;
+    height: 1px;
     background: transparent;
+    opacity: .85;
   }
   .previewStyleToggle:hover { color: var(--ink-soft); }
-  .previewStyleToggle[aria-pressed="true"] {
-    color: var(--accent);
-    font-weight: 650;
-  }
   .previewStyleToggle[aria-pressed="true"]::after { background: var(--accent); }
   .previewStyleDivider {
     width: 1px;
@@ -1299,7 +1434,7 @@
     line-height: 1;
     white-space: nowrap;
   }
-  #newLogBtn:hover { border-color: var(--line); background: var(--bg-field); color: var(--ink-soft); }
+  #newLogBtn:hover { border-color: transparent; background: var(--bg-muted); color: var(--ink-soft); }
   .archiveSaveRow {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 104px;
@@ -1381,10 +1516,22 @@
     font-weight: 500;
   }
   #resetCurrentWorkBtn:hover {
-    border-color: #dfc4c0;
+    border-color: transparent;
     background: #fbf3f1;
     color: #8a4b43;
   }
+  #archiveDrawer .archiveHelpList {
+    display:grid;
+    gap:10px;
+    margin:8px 0 0;
+    padding:0;
+    list-style:none;
+    color:var(--help-ink);
+    font-size:11.5px;
+    line-height:1.55;
+  }
+  #archiveDrawer .archiveHelpList li { display:grid; gap:2px; }
+  #archiveDrawer .archiveHelpList strong { color:var(--help-ink-strong); font-weight:650; }
   #slotList {
     display: flex;
     flex-direction: column;
@@ -1432,16 +1579,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  .slotRow .slotChar {
-    flex: 0 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--ink-faint);
-    font-size: 10.5px;
-    font-weight: 400;
   }
   .slotRow .slotDate { font-size: 10.5px; color: var(--ink-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .slotRow button {
@@ -1496,11 +1633,23 @@
   }
   .cardEditorHead .miniCtl:hover { color: var(--ink-soft); border-color: var(--line-strong); }
   .cardEditorHead .autoExpandBtn {
-    width: auto;
-    min-width: 42px;
-    padding: 0 7px;
-    font-size: 10.5px;
-    letter-spacing: -0.2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    min-width: 28px;
+    padding: 0;
+  }
+  .cardEditorHead .autoExpandBtn[aria-pressed="false"] { color: var(--help-ink); }
+  .cardEditorHead .autoExpandIcon {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
   }
   .cardEditorHead .autoExpandBtn[aria-pressed="true"] {
     color: var(--accent);
@@ -1531,6 +1680,7 @@
     line-height: 1;
     text-align: center;
   }
+  .cardEditorHead .visibilityCtl .visibilityVisibleIcon { transform: translateY(-1px); }
   .cardEditorHead .visibilityCtl .visibilityHiddenIcon { display: none; }
   .cardEditorHead .visibilityCtl.isHidden {
     color: #9a9690;
@@ -1539,12 +1689,11 @@
   }
   .cardEditorHead .visibilityCtl.isHidden .visibilityVisibleIcon { display: none; }
   .cardEditorHead .visibilityCtl.isHidden .visibilityHiddenIcon { display: block; }
-  .cardEditor.isOutputHidden .cardToolRow,
-  .cardEditor.isOutputHidden > textarea { opacity: .48; }
+  .cardEditor.isOutputHidden { filter: grayscale(1); }
   .cardEditor.isOutputHidden .cardNum { color: var(--ink-faint); }
   .cardEditorHead .headLeft { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
 
-  /* ---------- 추천 프리셋 / 내 프리셋 ---------- */
+  /* ---------- 색상 프리셋 / 내 프리셋 ---------- */
   #comboList {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1838,12 +1987,16 @@
     font-weight:600;
     letter-spacing:0;
   }
-  .commentEditor .cardEditorHead .miniCtl { border-color:var(--line); background:transparent; color:var(--help-ink); }
+  .commentEditor .cardEditorHead .miniCtl { border:0; background:transparent; color:var(--help-ink); }
+  .commentEditor .cardEditorHead .miniCtl:hover {
+    background:color-mix(in srgb,var(--comment-accent) 9%,transparent);
+    color:var(--ink-soft);
+  }
   .commentEditor .cardEditorHead .autoExpandBtn[aria-pressed="true"] {
-    border-color:var(--line-strong);
     background:var(--bg-muted);
     color:var(--ink-soft);
   }
+  .commentEditor .cardEditorHead .visibilityCtl.isHidden { background:var(--bg-muted); }
   .commentEditor .cardEditorHead .delCardBtn {
     display:inline-flex;
     align-items:center;
@@ -1864,6 +2017,25 @@
     background:#fff4f3;
     color:#a7473f;
   }
+  .cardFoldGroup .delCardBtn,
+  .commentEditor .cardEditorHead .delCardBtn { position: relative; }
+  .cardFoldGroup .delCardBtn::before,
+  .cardFoldGroup .delCardBtn::after,
+  .commentEditor .cardEditorHead .delCardBtn::before,
+  .commentEditor .cardEditorHead .delCardBtn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 1px;
+    background: currentColor;
+    pointer-events: none;
+  }
+  .cardFoldGroup .delCardBtn::before,
+  .commentEditor .cardEditorHead .delCardBtn::before { transform: translate(-50%, -50%) rotate(45deg); }
+  .cardFoldGroup .delCardBtn::after,
+  .commentEditor .cardEditorHead .delCardBtn::after { transform: translate(-50%, -50%) rotate(-45deg); }
   .commentEditor textarea {
     height:96px;
     min-height:96px;
@@ -1933,32 +2105,66 @@
   #fsSearchBar {
     display: none;
     align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    padding: 5px;
-    border: 1px solid var(--line);
-    border-radius: 9px;
+    gap: 5px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px;
+    border: 0;
+    border-radius: 0;
     background: var(--bg-subtle);
   }
   #fsPanel.fsSearchOpen #fsSearchBar { display: flex; }
   #fsToolbar .fsSearchTools { margin-left: auto; }
-  #fsSearchToggle[aria-expanded="true"] { border-color: var(--line) !important; background: #fff !important; color: var(--ink) !important; }
-  #fsFindInput, #fsReplInput { width: 190px; padding: 6px 10px; font-size: 12px; }
-  .fsNavGroup, .fsReplaceActions { display: inline-flex; flex: none; }
-  #fsSearchBar button {
-    height: var(--control-h);
-    padding: 0 10px;
-    border: 1px solid var(--line-strong);
-    background: #fff;
-    color: var(--ink-soft);
-    font-size: 12px;
+  #fsToolbar #fsSearchToggle {
+    border: 0;
   }
-  #fsFindPrevBtn, #fsFindNextBtn { width: 34px; padding: 0; text-align: center; flex: none; }
-  .fsNavGroup button, .fsReplaceActions button { margin-left: -1px; border-radius: 0; }
-  .fsNavGroup button:first-child, .fsReplaceActions button:first-child { margin-left: 0; border-radius: 8px 0 0 8px; }
-  .fsNavGroup button:last-child, .fsReplaceActions button:last-child { border-radius: 0 8px 8px 0; }
-  #fsSearchBar button:hover { position: relative; z-index: 1; border-color: var(--ink-faint); color: var(--ink); }
-  #fsFindCount { font-size: 11px; color: var(--ink-faint); margin-left: 3px; white-space: nowrap; }
+  #fsToolbar #fsSearchToggle:hover { border: 0; }
+  #fsToolbar #fsSearchToggle[aria-expanded="true"] {
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-panel));
+  }
+  #fsFindInput, #fsReplInput {
+    box-sizing: border-box;
+    flex: 1 1 190px;
+    min-width: 120px;
+    width: auto;
+    height: 34px;
+    padding: 6px 11px;
+    font-size: 11.5px;
+  }
+  #fsPanel input[type="text"]:focus {
+    outline: none;
+    border-color: var(--line-strong);
+    background: var(--bg-field);
+    box-shadow: none;
+  }
+  .fsNavGroup, .fsReplaceActions { display: inline-flex; align-items: center; gap: 2px; flex: none; }
+  #fsSearchBar button {
+    box-sizing: border-box;
+    height: 30px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 11.5px;
+  }
+  #fsFindPrevBtn, #fsFindNextBtn { width: 30px; padding: 0; text-align: center; flex: none; }
+  #fsSearchBar #fsReplBtn, #fsSearchBar #fsReplAllBtn { color: var(--accent); white-space: nowrap; }
+  #fsSearchBar button:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--ink); }
+  #fsSearchBar #fsReplBtn:hover, #fsSearchBar #fsReplAllBtn:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  #fsFindCount {
+    min-width: 38px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #e9e8e5;
+    color: var(--ink-soft);
+    font-size: 10.5px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+  }
+  #fsFindCount:empty { visibility: hidden; }
 
   /* 미리보기 검색 (Ctrl/⌘+F) — 강조 span 은 미리보기 DOM 에만 존재, 출력물과 무관 */
   #pvSearchBox {
@@ -2029,8 +2235,8 @@
   .cardToolRow {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    justify-content: flex-start;
+    gap: 15px;
   }
   /* 입력창을 접었을 때 보이는 본문 첫 줄 */
   .cardPeek {
@@ -2046,27 +2252,31 @@
   }
   /* 접힌 카드는 살짝 눌러 앉은 느낌으로 구분 */
   .cardEditor.isCollapsed { background: #f7f6f4; }
-  .cardEditor.isCollapsed .cardToolRow { border-bottom: none; }
+  .cardEditor.isCollapsed .cardToolRow { flex-wrap: wrap; gap: 6px; border-bottom: none; }
+  .cardEditor.isCollapsed .cardPeek { flex: 1 0 100%; order: 1; }
   .cardFmtBar { display: inline-flex; gap: 0; flex: none; }
   .cardFoldGroup {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex: 1 1 0;
     min-width: 0;
   }
+  .cardEditor.isCollapsed .cardFoldGroup { flex: 1 1 100%; order: 0; }
   .cardFmtBar .fmtBtn {
-    width: 30px;
-    height: 28px;
+    width: 20px;
+    height: 26px;
     padding: 0;
-    font-size: 12px;
-    background: var(--bg-panel);
-    border-color: var(--line-strong);
-    border-radius: 0;
-    margin-left: -1px;
+    font-size: 10.5px;
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    margin-left: 0;
   }
-  .cardFmtBar .fmtBtn:first-child { margin-left: 0; border-radius: 6px 0 0 6px; }
-  .cardFmtBar .fmtBtn:last-child { border-radius: 0 6px 6px 0; }
-  .cardFmtBar .fmtBtn:hover { background: #fff; border-color: var(--ink-faint); color: var(--ink); }
+  .cardFmtBar .fmtBtn:hover {
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-panel));
+    color: var(--accent);
+  }
 
   /* 회색 줄의 접기 제목 입력 */
   .cardFoldGroup .foldTitleInput {
@@ -2081,7 +2291,12 @@
     background: var(--bg-panel);
   }
   .cardFoldGroup .foldTitleInput:focus { border-color: var(--accent); background: #fff; }
-  .cardFoldGroup .foldChk { white-space: nowrap; }
+  .cardToolRow.isTitleEditing { flex-wrap: nowrap; }
+  .cardToolRow.isTitleEditing .cardFmtBar,
+  .cardToolRow.isTitleEditing .cardPeek { display: none !important; }
+  .cardToolRow.isTitleEditing .cardFoldGroup { flex: 1 1 0; min-width: 0; }
+  .cardToolRow.isTitleEditing .foldTitleInput { flex: 1 1 0; min-width: 0; }
+  .cardFoldGroup .foldChk { margin-left: auto; white-space: nowrap; }
   .cardFoldGroup .delCardBtn {
     display: inline-flex;
     align-items: center;
@@ -2093,11 +2308,12 @@
     border: 1px solid transparent;
     border-radius: 6px;
     background: transparent;
-    color: var(--ink-faint);
+    color: var(--help-ink);
     font-size: 17px;
     line-height: 1;
   }
-  .cardFoldGroup .delCardBtn:hover { border-color: #ebd0cc; background: #fff4f3; color: #a7473f; }
+  .cardFoldGroup .delCardBtn:hover { border-color: transparent; background: #fff4f3; color: #a7473f; }
+  .cardFoldGroup .duplicateCardBtn + .delCardBtn { margin-left: -6px; }
 
   /* 카드 이동 버튼은 하나의 분할 버튼처럼 보이게 묶음 */
   .arrowGroup {
@@ -2109,6 +2325,66 @@
   .arrowGroup .miniCtl { border-radius: 0; margin-left: -1px; }
   .arrowGroup .miniCtl:first-child { margin-left: 0; border-radius: 6px 0 0 6px; }
   .arrowGroup .miniCtl:last-child { border-radius: 0 6px 6px 0; }
+  .cardEditor:not(.commentEditor) .cardEditorHead .miniCtl { border: 0; background: transparent; }
+  .cardEditor:not(.commentEditor) .cardEditorHead .miniCtl:hover {
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+  }
+  .cardEditor:not(.commentEditor) .cardEditorHead .autoExpandBtn[aria-pressed="true"] {
+    background: #f4f8f5;
+  }
+  .cardEditor:not(.commentEditor) .cardEditorHead .visibilityCtl.isHidden {
+    background: var(--bg-muted);
+  }
+  .cardEditor:not(.commentEditor) .cardEditorHead .headLeft,
+  .cardEditor:not(.commentEditor) .cardEditorHead .headRight { gap: 2px; }
+  .cardEditor:not(.commentEditor) .cardEditorHead .cardNum { margin-left: 5px; }
+  .cardEditor:not(.commentEditor) .cardEditorHead .autoExpandBtn {
+    min-width: 28px;
+    margin-left: 12px;
+    padding: 0;
+  }
+  .cardEditor:not(.commentEditor) .cardEditorHead .fsBtn { margin-left: -2px; }
+  .cardEditor:not(.commentEditor) .arrowGroup { gap: 0; }
+  .cardEditor:not(.commentEditor) .arrowGroup .miniCtl,
+  .cardEditor:not(.commentEditor) .arrowGroup .miniCtl:first-child,
+  .cardEditor:not(.commentEditor) .arrowGroup .miniCtl:last-child {
+    margin-left: 0;
+    border-radius: 6px;
+  }
+  .commentEditor .cardEditorHead .headLeft,
+  .commentEditor .cardEditorHead .headRight { gap: 2px; }
+  .commentEditor .cardEditorHead .cardNum { margin-left: 5px; }
+  .commentEditor .cardEditorHead .autoExpandBtn {
+    min-width: 28px;
+    margin-left: 12px;
+    padding: 0;
+  }
+  .commentEditor .cardEditorHead .delCardBtn { margin-left: -2px; }
+  .commentEditor .arrowGroup { gap: 0; }
+  .commentEditor .arrowGroup .miniCtl,
+  .commentEditor .arrowGroup .miniCtl:first-child,
+  .commentEditor .arrowGroup .miniCtl:last-child {
+    margin-left: 0;
+    border-radius: 6px;
+  }
+  .cardEditorHead .cardNum {
+    position: relative;
+    padding-left: 10px;
+  }
+  .cardEditorHead .cardNum::before,
+  .cardEditorHead .autoExpandBtn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 1px;
+    height: 14px;
+    background: color-mix(in srgb, var(--line) 65%, var(--bg-panel));
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .cardEditorHead .cardNum::before { left: 0; }
+  .cardEditorHead .autoExpandBtn { position: relative; }
+  .cardEditorHead .autoExpandBtn::before { left: -7px; }
   .foldChk { width: auto; justify-content: flex-end; }
 
   /* 접기 카드 상태 표시 */
@@ -2142,7 +2418,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
   #fsTitle {
     font-size: 13px;
@@ -2174,14 +2450,29 @@
     font-size: 12px;
   }
   #fsCloseBtn {
-    font-size: 12px;
-    padding: 6px 12px;
-    border: 1px solid var(--line-strong);
-    background: var(--bg-field);
+    position: relative;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: var(--ink-soft);
-    border-radius: 7px;
+    border-radius: 6px;
   }
-  #fsCloseBtn:hover { border-color: var(--ink-faint); color: var(--ink); }
+  #fsCloseBtn:hover { background: var(--bg-muted); color: var(--ink); }
+  #fsCloseBtn .fsCloseIcon::before,
+  #fsCloseBtn .fsCloseIcon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 1.5px;
+    border-radius: 1px;
+    background: currentColor;
+  }
+  #fsCloseBtn .fsCloseIcon::before { transform: translate(-50%, -50%) rotate(45deg); }
+  #fsCloseBtn .fsCloseIcon::after { transform: translate(-50%, -50%) rotate(-45deg); }
   #fsTextareaWrap {
     position: relative;
     flex: 1;
@@ -2199,11 +2490,16 @@
     line-height: 1.85;
     resize: none;
     border: 1px solid var(--line-strong);
-    border-radius: 10px;
+    border-radius: 0;
     background: #fff;
     box-sizing: border-box;
   }
-  #fsTextarea:focus { outline: none; border-color: var(--accent); background: #fff; }
+  #fsTextarea:focus {
+    outline: none;
+    border-color: var(--line-strong);
+    background: #fff;
+    box-shadow: none;
+  }
   #fsTextarea { overscroll-behavior: contain; }
   /* 전체 화면 검색 강조: 비활성 textarea selection은 브라우저에 따라 보이지 않으므로
      입력창 뒤의 미러 레이어에 모든 결과(회색)와 현재 결과(연두)를 직접 표시한다. */
@@ -2221,28 +2517,65 @@
     overflow-wrap: break-word;
     word-wrap: break-word;
     border: 1px solid var(--line-strong);
-    border-radius: 10px;
+    border-radius: 0;
     background: #fff;
     color: transparent;
   }
   #fsTextarea.fsHlOn, #fsTextarea.fsHlOn:focus { background: transparent; }
   #fsCheat {
+    margin-top: 6px;
+    color: var(--help-ink);
+  }
+  #fsCheat > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 24px;
+    padding: 0 2px;
+    list-style: none;
+    color: var(--help-ink);
+    font-size: 10.5px;
+    cursor: pointer;
+  }
+  #fsCheat > summary::-webkit-details-marker { display: none; }
+  #fsCheat > summary::before {
+    content: '';
+    display: block;
+    flex: none;
+    width: 12px;
+    height: 12px;
+    background:
+      linear-gradient(currentColor, currentColor) center / 9px 1px no-repeat,
+      linear-gradient(currentColor, currentColor) center / 1px 9px no-repeat;
+  }
+  #fsCheat[open] > summary::before {
+    background: linear-gradient(currentColor, currentColor) center / 9px 1px no-repeat;
+  }
+  #fsCheat > summary:hover { color: var(--ink-soft); }
+  #fsCheat > summary:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--help-ink) 55%, transparent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  #fsCheat .fsCheatList {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px 14px;
-    margin-top: 12px;
-    font-size: 11px;
-    color: var(--ink-faint);
-    line-height: 1.7;
+    gap: 4px 12px;
+    max-height: min(22vh, 140px);
+    overflow-y: auto;
+    padding: 5px 2px 2px;
+    font-size: 10px;
+    line-height: 1.6;
   }
+  #fsCheat:not([open]) .fsCheatList { display: none; }
   #fsCheat code {
-    background: var(--bg-muted);
-    border: 1px solid var(--line);
-    padding: 1px 5px;
+    background: color-mix(in srgb, var(--bg-muted) 45%, var(--bg-panel));
+    border: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+    padding: 1px 4px;
     border-radius: 4px;
     font-family: ui-monospace, "SF Mono", Consolas, monospace;
-    font-size: 10.5px;
-    color: var(--ink-soft);
+    font-size: 9.5px;
+    color: var(--help-ink);
     margin-right: 3px;
   }
   /* ---------- 미리보기 선택 서식 도구막대 ---------- */
@@ -2409,7 +2742,7 @@
     padding: 5px 8px;
     border: 1px solid var(--line);
     border-radius: 7px;
-    background: var(--bg-panel);
+    background-color: var(--bg-panel);
     color: var(--ink-soft);
     font-size: 11px;
   }
@@ -2528,6 +2861,7 @@
     justify-content: space-between;
     gap: 12px;
     min-height: 44px;
+    margin-bottom: 0;
     padding: 5px 2px;
     border: 0;
     border-bottom: 1px solid var(--line);
@@ -2563,11 +2897,10 @@
     font-size: 12px;
     text-align: left;
   }
-  #tabTheme .themeSaveLabel {
-    margin: 16px 0 7px 1px;
-    color: var(--ink-soft);
-    font-size: 11.5px;
-    font-weight: 650;
+  #tabTheme .themeSaveDivider {
+    margin: 18px 0 14px;
+    border: 0;
+    border-top: 1px solid var(--line);
   }
   #tabTheme .themeSaveActions {
     display: flex;
@@ -2647,33 +2980,55 @@
     background: var(--bg-app);
     color: #212529;
     color-scheme: light;
-    transition: background-color .16s ease, color .16s ease;
   }
   body.layoutMirrored #previewArea { padding: 36px 32px 72px 52px; }
   #previewWrap {
     position: relative;
     width: 100%;
     max-width: 800px;
-    transition: max-width .18s ease;
+    min-width: 0;
   }
   #previewToolbar {
+    position: relative;
+    left: 50%;
     display: flex;
+    width: var(--preview-toolbar-width, 100%);
     align-items: center;
     justify-content: space-between;
     gap: 14px;
     min-height: 30px;
     margin-bottom: 10px;
+    transform: translateX(-50%);
   }
+  #previewToolbar.previewToolbarStacked {
+    flex-wrap: wrap;
+    column-gap: 8px;
+    row-gap: 6px;
+  }
+  #previewToolbar.previewToolbarStacked .previewHeaderLeft { order: 0; }
+  #previewToolbar.previewToolbarStacked .previewTools { display: contents; }
+  #previewToolbar.previewToolbarStacked .previewViewControls {
+    order: 1;
+    margin-left: auto;
+  }
+  #previewToolbar.previewToolbarStacked .previewStyleControls {
+    order: 2;
+    flex: 0 0 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  #previewToolbar.previewToolbarStacked .previewStyleDivider { display: none; }
   .previewHeaderLeft {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    min-width: 0;
+    flex: 0 0 auto;
   }
   #previewLabel {
     display: inline-flex;
     align-items: center;
     gap: 7px;
+    white-space: nowrap;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0;
@@ -2684,6 +3039,8 @@
     font-size: 11.5px;
     height: 30px;
     padding: 0 11px;
+    flex: 0 0 auto;
+    white-space: nowrap;
     border: 1px solid var(--line);
     background: transparent;
     color: var(--ink-faint);
@@ -2699,9 +3056,40 @@
     position: relative;
     z-index: 1;
   }
+  .previewShapeControl button:first-child,
+  .previewShapeControl button:last-child,
+  .previewWidthCycle button:first-child,
+  .previewWidthCycle button:last-child {
+    height: 28px;
+    padding: 0 9px;
+    border-radius: 7px;
+    margin-left: 0;
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .previewFullscreenWidthToggle { display: none; }
+  body.previewFullscreen .previewWidthCycle { display: none; }
+  body.previewFullscreen .previewFullscreenWidthToggle { display: inline-flex; }
   .previewThemeToggle { display:none; }
   .previewThemeToggle button { min-width: 48px; }
   body.previewFullscreen .previewThemeToggle { display:inline-flex; }
+  body.previewFullscreen .previewThemeToggle button,
+  body.previewFullscreen .previewFullscreenWidthToggle button {
+    min-width: 44px;
+    height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  :root.uiNight .previewThemeToggle #previewThemeDarkBtn {
+    order: -1;
+    margin-left: 0;
+    border-radius: 7px 0 0 7px;
+  }
+  :root.uiNight .previewThemeToggle #previewThemeLightBtn {
+    margin-left: -1px;
+    border-radius: 0 7px 7px 0;
+  }
   body.previewFullscreen #previewArea.previewArcaDark {
     /* 아카라이브 다크 테마의 게시글 캔버스에 가까운 중성 회색조.
        출력물이 명시한 인라인 배경·색은 건드리지 않고 게시판 기본값만 바꾼다. */
@@ -2720,23 +3108,23 @@
     border-color: #5a5e64;
     color: #f1f1f1;
   }
-  body.previewFullscreen #previewArea.previewArcaDark .previewStyleToggle { color:#8f949b; }
+  body.previewFullscreen #previewArea.previewArcaDark .previewStyleToggle { color:#858a91; }
   body.previewFullscreen #previewArea.previewArcaDark .previewStyleToggle:hover { color:#c5c8cc; }
-  body.previewFullscreen #previewArea.previewArcaDark .previewStyleToggle[aria-pressed="true"] { color:#b8d2c2; }
   body.previewFullscreen #previewArea.previewArcaDark .previewStyleToggle[aria-pressed="true"]::after { background:#93b6a1; }
   body.previewFullscreen #previewArea.previewArcaDark .previewStyleDivider { background:#484b50; }
   body.previewFullscreen #previewArea.previewArcaDark .previewFullscreenBtn,
   body.previewFullscreen #previewArea.previewArcaDark .layoutMirrorBtn {
-    border-color: #484b50;
     color: #c5c8cc;
   }
   body.previewFullscreen #previewArea.previewArcaDark .previewFullscreenBtn:hover,
   body.previewFullscreen #previewArea.previewArcaDark .layoutMirrorBtn:hover {
-    background: #292b2f;
-    color: #fff;
+    background: color-mix(in srgb, var(--accent) 19%, #292b2f);
+    color: #d7e9dc;
   }
   /* 코멘트는 의도적으로 색상을 출력 HTML에 넣지 않으므로 호스트 게시판의
      기본 본문색을 미리보기에서만 재현한다. 카드의 인라인 스타일은 그대로 유지된다. */
+  #previewArea #preview { color: #212529; }
+  body.previewFullscreen #previewArea.previewArcaDark #preview { color: #dedede; }
   #previewArea #preview > [data-mosaic-comment-index] { color: #212529; }
   body.previewFullscreen #previewArea.previewArcaDark #preview > [data-mosaic-comment-index] { color: #dedede; }
   /* 실제 출력에서 기본·가운데 코멘트는 게시글 폭을 사용한다. 데스크톱 미리보기의
@@ -2752,19 +3140,26 @@
     width:30px;
     height:30px;
     padding:0;
-    border:1px solid var(--line);
+    border:0;
     border-radius:7px;
     background:transparent;
     color:var(--ink-faint);
     font-size:16px;
     line-height:1;
+    cursor:pointer;
   }
   .previewFullscreenBtn:hover,
-  .layoutMirrorBtn:hover { background:var(--bg-field); color:var(--ink); }
+  .layoutMirrorBtn:hover {
+    background:color-mix(in srgb, var(--accent) 10%, var(--bg-panel));
+    color:var(--accent);
+  }
   .layoutMirrorBtn.active {
-    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-    background: color-mix(in srgb, var(--accent) 9%, var(--bg-panel));
     color: var(--accent);
+  }
+  .previewFullscreenBtn:focus-visible,
+  .layoutMirrorBtn:focus-visible {
+    outline:2px solid var(--accent);
+    outline-offset:2px;
   }
   body.previewFullscreen { overflow:hidden; }
   body.previewFullscreen #sidebar,
@@ -2780,7 +3175,13 @@
     background:#fff;
   }
   body.previewFullscreen #previewArea.previewArcaDark { background:#1f2023; }
-  body.previewFullscreen #previewWrap { max-width:980px; }
+  body.previewFullscreen #previewWrap {
+    max-width:980px;
+    padding-top:64px;
+  }
+  body.previewFullscreen #previewWrap:has(> #previewToolbar.previewToolbarStacked) {
+    padding-top:110px;
+  }
   body.previewFullscreen #previewWrap > .previewFloatingControl,
   body.previewFullscreen #previewSyncFloat,
   body.previewFullscreen .previewSyncFloat,
@@ -2795,46 +3196,73 @@
     scroll-behavior:auto !important;
   }
   body.previewFullscreen #previewToolbar {
-    position:sticky;
+    position:fixed;
     top:0;
-    z-index:4;
+    left:50%;
+    z-index:71;
+    width:min(980px, calc(100vw - 104px));
+    box-sizing:border-box;
+    margin-bottom:0;
     padding:14px 0 10px;
     background:#fff;
+    transform:translateX(-50%);
   }
   body.previewFullscreen #previewArea.previewArcaDark #previewToolbar { background:#1f2023; }
   body.previewFullscreen .previewFullscreenBtn {
     color:var(--ink);
-    border-color:var(--line-strong);
   }
   #preview {
     position: relative;
     overflow: visible;
     filter: drop-shadow(0 3px 12px rgba(0,0,0,0.055));
   }
+  /* 폭 설정으로 미리보기 HTML을 다시 그려도 카드가 새 max-width로 먼저
+     뛰어가지 않고, 전환 중인 previewWrap의 폭을 따라가게 한다. */
+  body:not(.previewFullscreen) #preview > :is(
+    [data-mosaic-cover-image],
+    [data-mosaic-title],
+    [data-mosaic-profile],
+    [data-mosaic-card-index],
+    [data-mosaic-comment-width="card"]
+  ) { max-width: 100% !important; }
   /* 복사 시 출력물 앞뒤에 추가되는 한 줄(<br>)을 미리보기에서도 확인한다.
      실제 출력 DOM은 바꾸지 않아 카드 결합 판정과 카드별 복사 범위는 그대로 유지한다. */
   #preview.previewOuterBreaks {
     padding-top:24px;
     padding-bottom:24px;
   }
-  /*
-    출력 HTML의 inline-block 줄바꿈 규칙은 그대로 둔다. 다만 미리보기에서는
-    폭이 한 행의 최소 너비보다 작아진 뒤에도 항목의 50% 폭이 남아 보이는
-    문제를 컨테이너 폭 기준으로만 보정한다. 복사 원본(previewSourceHTML)은
-    이 CSS의 영향을 받지 않는다.
-  */
+  /* 미리보기에서도 출력 HTML과 같은 3열→2열→1열 경계를 사용한다. */
   #preview [data-mosaic-profile-items] { container-type: inline-size; }
-  @container (max-width: 599px) {
-    #preview [data-mosaic-profile-items][data-mosaic-profile-breakpoint="600"] > [data-mosaic-profile-item] {
-      width: 100% !important;
-      min-width: 0 !important;
-    }
+  @container (min-width: 500px) and (max-width: 689px) {
+    #preview [data-mosaic-profile-grid] > [data-mosaic-profile-columns="3"]:not([data-mosaic-profile-row-fill]) { width: 50% !important; }
+    #preview [data-mosaic-profile-grid] > [data-mosaic-profile-row-fill="true"] { width: 100% !important; }
+    #preview [data-mosaic-profile-corners-medium] { --mosaic-tl:0px; --mosaic-tr:0px; --mosaic-br:0px; --mosaic-bl:0px; }
+    #preview [data-mosaic-profile-corners-medium~="tl"] { --mosaic-tl:var(--mosaic-profile-top-radius, 0px); }
+    #preview [data-mosaic-profile-corners-medium~="tr"] { --mosaic-tr:var(--mosaic-profile-top-radius, 0px); }
+    #preview [data-mosaic-profile-corners-medium~="br"] { --mosaic-br:var(--mosaic-profile-bottom-radius, 0px); }
+    #preview [data-mosaic-profile-corners-medium~="bl"] { --mosaic-bl:var(--mosaic-profile-bottom-radius, 0px); }
+    #preview [data-mosaic-profile-corners-medium],
+    #preview [data-mosaic-profile-corners-medium] > div { border-radius:var(--mosaic-tl) var(--mosaic-tr) var(--mosaic-br) var(--mosaic-bl) !important; }
   }
-  @container (max-width: 559px) {
-    #preview [data-mosaic-profile-items][data-mosaic-profile-breakpoint="560"] > [data-mosaic-profile-item] {
-      width: 100% !important;
-      min-width: 0 !important;
-    }
+  @container (max-width: 499px) {
+    #preview [data-mosaic-profile-grid] > [data-mosaic-profile-columns="2"],
+    #preview [data-mosaic-profile-grid] > [data-mosaic-profile-columns="3"] { width: 100% !important; }
+    #preview [data-mosaic-profile-corners-narrow] { --mosaic-tl:0px; --mosaic-tr:0px; --mosaic-br:0px; --mosaic-bl:0px; }
+    #preview [data-mosaic-profile-corners-narrow~="tl"] { --mosaic-tl:var(--mosaic-profile-top-radius, 0px); }
+    #preview [data-mosaic-profile-corners-narrow~="tr"] { --mosaic-tr:var(--mosaic-profile-top-radius, 0px); }
+    #preview [data-mosaic-profile-corners-narrow~="br"] { --mosaic-br:var(--mosaic-profile-bottom-radius, 0px); }
+    #preview [data-mosaic-profile-corners-narrow~="bl"] { --mosaic-bl:var(--mosaic-profile-bottom-radius, 0px); }
+    #preview [data-mosaic-profile-corners-narrow],
+    #preview [data-mosaic-profile-corners-narrow] > div { border-radius:var(--mosaic-tl) var(--mosaic-tr) var(--mosaic-br) var(--mosaic-bl) !important; }
+  }
+  @container (min-width: 690px) {
+    #preview [data-mosaic-profile-corners-wide] { --mosaic-tl:0px; --mosaic-tr:0px; --mosaic-br:0px; --mosaic-bl:0px; }
+    #preview [data-mosaic-profile-corners-wide~="tl"] { --mosaic-tl:var(--mosaic-profile-top-radius, 0px); }
+    #preview [data-mosaic-profile-corners-wide~="tr"] { --mosaic-tr:var(--mosaic-profile-top-radius, 0px); }
+    #preview [data-mosaic-profile-corners-wide~="br"] { --mosaic-br:var(--mosaic-profile-bottom-radius, 0px); }
+    #preview [data-mosaic-profile-corners-wide~="bl"] { --mosaic-bl:var(--mosaic-profile-bottom-radius, 0px); }
+    #preview [data-mosaic-profile-corners-wide],
+    #preview [data-mosaic-profile-corners-wide] > div { border-radius:var(--mosaic-tl) var(--mosaic-tr) var(--mosaic-br) var(--mosaic-bl) !important; }
   }
   .previewBlockCopyBtn,
   .previewProfilePlacementBtn,
@@ -3008,20 +3436,22 @@
   }
   #tabDesign #speakerGroup #speakerNames .row > .speakerNameToggle {
     grid-column: 3;
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 6px;
-    width: auto;
+    width: 100%;
     min-width: 0;
     color: var(--ink-soft);
     font-size: 11.5px;
     cursor: pointer;
   }
   #tabDesign #speakerGroup #speakerNames .speakerNameToggle input {
-    flex: none;
-    width: auto;
+    width: 14px;
+    height: 14px;
     margin: 0;
   }
+  #tabDesign #speakerGroup #speakerNames .speakerNameToggle span { white-space: nowrap; }
 
   /* 디자인 탭: 컨트롤을 화면 끝까지 늘이지 않고, 같은 기준선에 여유 있게 정렬한다. */
   #tabDesign .designFold .foldBody {
@@ -3061,24 +3491,32 @@
     margin-bottom: 0;
   }
 
-  /* 체크 옵션 묶음은 안쪽 카드를 만들지 않고, 짧은 소제목 아래 한 열로 정돈한다. */
-  #tabDesign .foldCardOptionTitle {
-    margin-bottom: 6px;
-    color: var(--ink-soft);
-    font-size: 11.5px;
-    font-weight: 700;
-  }
-  #tabDesign #speakerGroup .dialogueSectionLabel {
-    margin: 0 0 8px;
-    color: var(--ink-soft);
-    font-size: 11.5px;
-    font-weight: 700;
-  }
   .settingsForm .selectCycleRow {
     grid-template-columns: var(--settings-label-w) minmax(0, 1fr) 46px;
   }
   .settingsForm .selectCycleRow > select {
     grid-column: 2;
+  }
+  #tabDesign .settingsForm .selectCycleRow > select {
+    min-width: 0;
+    padding: 6px 25px 6px 2px;
+    border: 0;
+    border-bottom: 1px solid var(--line-strong);
+    border-radius: 0;
+    background-color: transparent;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
+      linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position: calc(100% - 11px) 50%, calc(100% - 8px) 50%;
+    background-size: 3px 3px, 3px 3px;
+    box-shadow: none;
+  }
+  #tabDesign .settingsForm .selectCycleRow > select:hover {
+    border-bottom-color: var(--ink-soft);
+  }
+  #tabDesign .settingsForm .selectCycleRow > select:focus {
+    border-bottom-color: var(--accent);
+    box-shadow: 0 1px 0 var(--accent);
   }
   .settingsForm .selectCycleStepper {
     grid-column: 3;
@@ -3095,36 +3533,33 @@
     height: 100%;
     min-height: 0;
     padding: 0;
-    border: 1px solid var(--line);
-    border-radius: 7px 0 0 7px;
-    background: var(--bg-field);
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
     color: var(--ink-soft);
     font-size: 17px;
     line-height: 1;
   }
   .settingsForm .selectCycleStepper button + button {
-    margin-left: -1px;
-    border-radius: 0 7px 7px 0;
+    margin-left: 0;
   }
   .settingsForm .selectCycleStepper button:hover {
-    position: relative;
-    z-index: 1;
-    border-color: var(--line-strong);
     background: var(--bg-muted);
     color: var(--ink);
   }
-
-  /* 프로필 기본 설정: 짧은 선택지는 드롭다운보다 한눈에 비교되는 텍스트 선택으로 표시한다. */
-  #profileGroup .profileConfigurationLabel {
-    margin: 16px 0 7px;
-    color: var(--ink-soft);
-    font-size: 11.5px;
-    font-weight: 700;
+  .settingsForm .selectCycleStepper button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
+
+  /* 프로필의 짧은 선택지는 드롭다운보다 한눈에 비교되는 텍스트 선택으로 표시한다. */
   .settingsForm .segmentedChoiceRow {
     grid-template-columns: var(--settings-label-w) minmax(0, 1fr) auto;
   }
   .settingsForm .segmentedChoiceSource {
+    display: none;
+  }
+  #tabCover .segmentedChoiceRow > input[type="checkbox"][hidden] {
     display: none;
   }
   /* 표지 탭의 단일 선택은 문단 설정과 같은 텍스트·밑줄 방식으로 통일한다. */
@@ -3144,6 +3579,28 @@
     border-radius: 0;
     background: transparent;
   }
+  /* 프로필 선택지는 공통 세 열을 쓴다. 두 선택지의 첫 칸을 비워
+     기본·최상단은 클래식, 미니멀·사진 배경·표지 아래는 포트레이트와 맞춘다. */
+  #tabCover #profileGroup .profileBaseSettings .segmentedChoice:is(
+    [data-minimal-control="profileMinimal"],
+    [data-background-control="profileImageBackgroundOn"],
+    [data-control="profilePlacement"],
+    [data-control="profileStyle"],
+    [data-control="profileTextPosition"]
+  ) {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 3fr));
+    justify-items: center;
+    column-gap: 0;
+    width: 160px;
+    max-width: 100%;
+  }
+  #tabCover #profileGroup .profileBaseSettings .segmentedChoice:is(
+    [data-minimal-control="profileMinimal"],
+    [data-background-control="profileImageBackgroundOn"],
+    [data-control="profilePlacement"]
+  ) > button:first-child { grid-column: 2; }
+  #tabCover #profileTextPositionRow[hidden] { display: none; }
   #tabCover .settingsForm .segmentedChoice button {
     position: relative;
     width: auto;
@@ -3242,6 +3699,110 @@
   #tabDesign .designFold .foldBody {
     padding: 0 10px 4px;
   }
+  #tabDesign .advancedDesignGroup > summary.foldHead {
+    --advanced-off-ink: color-mix(in srgb, var(--ink-faint) 38%, var(--bg-field));
+    background: color-mix(in srgb, var(--bg-subtle) 52%, var(--bg-panel));
+    color: var(--help-ink-strong);
+  }
+  #tabDesign .advancedDesignGroup.isAdvancedInactive > summary.foldHead .designSummaryTitle {
+    color: var(--advanced-off-ink);
+  }
+  #tabDesign .advancedDesignGroup > summary.foldHead:hover,
+  #tabDesign .advancedDesignGroup[open] > summary.foldHead {
+    background: var(--bg-subtle);
+    color: var(--ink-soft);
+  }
+  #tabDesign .advancedDesignGroup:not(.isAdvancedInactive) > summary.foldHead {
+    background: color-mix(in srgb, var(--accent) 7%, var(--bg-panel));
+    color: var(--ink);
+  }
+  #tabDesign .advancedDesignGroup:not(.isAdvancedInactive) > summary.foldHead:hover {
+    background: color-mix(in srgb, var(--accent) 11%, var(--bg-panel));
+  }
+  #tabDesign .advancedDesignGroup .typeSectionLabel {
+    margin: 0 0 8px;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  #tabDesign .advancedDesignGroup .advancedOptionPanel {
+    margin-top: 12px;
+    padding: 12px 10px 10px;
+    border-radius: 10px;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 55%, transparent);
+  }
+  #tabDesign .advancedDesignGroup .advancedOptionPanel:first-child { margin-top: 4px; }
+  #tabDesign .advancedDesignGroup .typographySubsectionBody > .advancedOptionPanel:last-child { margin-bottom: 14px; }
+  #tabDesign .advancedDesignGroup :is(#detailCardInteriorSection, #detailCardExteriorSection) .typographySubsectionBody > .advancedOptionPanel:last-child { margin-bottom: 8px; }
+  #tabDesign .advancedDesignGroup .advancedOptionPanel > .row:last-child { margin-bottom: 0; }
+  #tabDesign .advancedDesignGroup .advancedOptionHeading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 22px;
+    margin-bottom: 8px;
+  }
+  #tabDesign .advancedDesignGroup .advancedOptionHeading .typeSectionLabel { margin: 0; }
+  #tabDesign .advancedDesignGroup .advancedOptionResetBtn {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    color: color-mix(in srgb, var(--ink-faint) 45%, transparent);
+    font-size: 12px;
+  }
+  #tabDesign .advancedDesignGroup .advancedOptionResetBtn:hover:not(:disabled) {
+    background: var(--bg-subtle);
+    color: var(--ink-soft);
+  }
+  #tabDesign .advancedDesignGroup .advancedOptionResetBtn:disabled { cursor: not-allowed; }
+  #tabDesign .advancedDesignGroup .advancedOptionResetBtn:disabled:hover {
+    background: transparent;
+    color: color-mix(in srgb, var(--ink-faint) 45%, transparent);
+  }
+  #tabDesign .advancedDesignGroup .coverFoldActions {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+  #tabDesign .advancedDesignGroup .coverFoldActions + .foldArrow { margin-left: 0; }
+  #tabDesign .advancedDesignGroup.isAdvancedInactive > .foldBody { opacity: .48; filter: grayscale(1); }
+  #tabDesign .advancedDesignGroup [data-hr-control].isUnavailable { opacity: .42; filter: grayscale(1); }
+  #tabDesign .advancedDesignGroup .row[data-hr-control].isUnavailable { cursor: not-allowed; }
+  #tabDesign .advancedDesignGroup .row[data-hr-control].isUnavailable .rangeEditor { pointer-events: none; }
+  #tabDesign .advancedDesignGroup .shapeChoice button:disabled { cursor: not-allowed; }
+  #tabDesign :is(.advancedRadiusRow, .advancedDividerLengthRow, .advancedLayoutOnlyRow, .advancedProfileTopOnlyRow, #foldAutoNumberStyleRow, #cardTitleOrnamentOpacityRow).isUnavailable { opacity: .42; filter: grayscale(1); }
+  #tabDesign :is(.advancedRadiusRow, .advancedDividerLengthRow, .advancedLayoutOnlyRow, .advancedProfileTopOnlyRow).isUnavailable input { cursor: not-allowed; }
+  #tabDesign #foldAutoNumberStyleRow.isUnavailable button { cursor: not-allowed; }
+  #tabDesign #cardTitleOrnamentOpacityRow.isUnavailable input { cursor: not-allowed; }
+  #tabDesign .advancedDesignGroup #creditAppearancePanel.isUnavailable {
+    opacity: .42;
+    filter: grayscale(1);
+  }
+  #tabDesign .advancedDesignGroup #topProfileDetailPanel.isUnavailable {
+    opacity: .42;
+    filter: grayscale(1);
+  }
+  #tabDesign .advancedDesignGroup #profileItemGapRow.isUnavailable { opacity: .42; filter: grayscale(1); }
+  #tabDesign .advancedDesignGroup #profileItemGapRow.isUnavailable input { cursor: not-allowed; }
+  #tabDesign .advancedDesignGroup #topProfileDetailPanel.isUnavailable button { cursor: not-allowed; }
+  #tabDesign .advancedDesignGroup #creditAppearancePanel.isUnavailable :is(.layoutToggleChoice, #creditWidthRow input, #creditCardGapRow input) { cursor: not-allowed; }
+  #tabDesign .advancedDesignGroup #creditAppearancePanel.isUnavailable .layoutToggleChoice input:disabled + span { opacity: 1; }
+  #tabDesign .advancedDesignGroup .creditAppearanceOptionsRow .layoutToggleLabel {
+    font-weight: 400;
+  }
+  #tabDesign .advancedDesignGroup .creditAppearanceOptionsRow .layoutToggleChoices {
+    grid-column: 2 / 4;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  #tabDesign .advancedDesignGroup .creditAppearanceOptionsRow .layoutToggleChoice input:disabled + span {
+    opacity: .42;
+    cursor: not-allowed;
+  }
 
   /* 표지 탭의 네 영역도 디자인 탭과 같은 아코디언 카드로 묶는다. */
   #tabCover > .coverFold {
@@ -3270,6 +3831,12 @@
     background: var(--bg-muted);
     color: var(--ink);
   }
+  #tabCover .coverFold:not(.isCoverInactive) > summary.foldHead {
+    background: color-mix(in srgb, var(--accent) 7%, var(--bg-panel));
+  }
+  #tabCover .coverFold:not(.isCoverInactive) > summary.foldHead:hover {
+    background: color-mix(in srgb, var(--accent) 11%, var(--bg-panel));
+  }
   #tabCover .coverFold[open] > summary.foldHead {
     margin-bottom: 14px;
   }
@@ -3292,11 +3859,26 @@
   #tabCover .coverFold[open] .coverFoldMeta {
     display: none;
   }
+  #tabCover .coverFoldActions {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+  }
+  #tabCover .coverFold[open] .coverFoldActions { margin-left: auto; }
+  #tabCover .coverFoldActions + .foldArrow { margin-left: 0; }
   #tabCover .coverFold .foldArrow {
     flex: 0 0 auto;
   }
   #tabCover .coverFold .foldBody {
     padding: 0 10px 4px;
+    transition: opacity .15s ease, filter .15s ease;
+  }
+  #tabCover :is(.titleBackgroundChoiceRow,.profileBackgroundChoiceRow) > label:first-child {
+    grid-column: 1;
+  }
+  #tabCover .coverFold.isCoverInactive > .foldBody {
+    opacity: .48;
+    filter: grayscale(1);
   }
   /* 본문 입력 아래의 보조 설정도 다른 탭과 같은 아코디언 카드 위계를 사용한다. */
   #tabBody > .bodyFold {
@@ -3351,8 +3933,7 @@
     border-color: var(--line-strong);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
   }
-  /* URL은 내용 설정을 보조하는 메타 정보다. 대표 이미지·프로필 사진·이름 링크·
-     표제 링크 모두 같은 낮은 위계로 묶고, 값이 채워져도 일반 텍스트보다 조용하게 보인다. */
+  /* 이미지 URL은 내용 설정을 보조하는 메타 정보다. */
   #tabCover input[type="url"] {
     color: var(--help-ink-strong);
     background: var(--bg-subtle);
@@ -3377,25 +3958,6 @@
   }
   #tabCover .row:has(input[type="url"]) > label { color: var(--ink-soft); }
   #tabCover .row:has(input[type="url"]):has(input[type="url"]:placeholder-shown) > label { color: var(--help-ink); }
-  /* 프로필 이미지 주소만 다른 URL보다 한 단계 잘 보이게 해 이미지 설정임을 빠르게 구분한다.
-     대표 이미지 주소는 상단의 공통 URL 규칙을 따라 차분한 회색조로 유지한다. */
-  #profileGroup #profileCharImage,
-  #profileGroup #profileUserImage,
-  #profileGroup #profileCharImage:not(:placeholder-shown):not(:focus),
-  #profileGroup #profileUserImage:not(:placeholder-shown):not(:focus) {
-    color: color-mix(in srgb, var(--accent) 78%, var(--ink-soft));
-    background: color-mix(in srgb, var(--accent) 6%, var(--bg-panel));
-    border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
-  }
-  #profileGroup #profileCharImage:focus,
-  #profileGroup #profileUserImage:focus {
-    color: var(--ink);
-    background: color-mix(in srgb, var(--accent) 4%, #fff);
-    border-color: color-mix(in srgb, var(--accent) 42%, var(--line-strong));
-  }
-  #profileGroup .profileImageRow > label {
-    color: color-mix(in srgb, var(--accent) 82%, var(--ink-soft));
-  }
   /* 프로필에서 사용하던 작고 옅은 예시 문구 위계를 모든 입력창으로 확장한다.
      실제 입력 글자도 같은 크기로 맞추되 각 입력의 기존 글자색·배경·테두리는 유지한다. */
   input[placeholder],
@@ -3408,13 +3970,12 @@
     font-size: 11.5px !important;
     opacity: 1;
   }
-  /* 상단 프로필의 긴 입력 목록을 기능별 얇은 하위 아코디언으로 구분한다. */
+  /* 인물별 입력 목록은 얇은 하위 아코디언으로 구분한다. */
   #profileGroup .profileSubFold {
     position: relative;
     margin: 0;
     border-top: 1px solid var(--line);
   }
-  #profileGroup .profileSubFold:first-of-type { border-top: 0; }
   #profileGroup .profileSubHead {
     display: flex;
     align-items: center;
@@ -3434,21 +3995,12 @@
     font-size: 12.5px;
     font-weight: 750;
   }
-  #profileGroup .profileSubMeta {
+  #profileExtraEditors .profileSubTitle {
     flex: 1 1 auto;
     min-width: 0;
-    margin-left: 8px;
     overflow: hidden;
-    color: var(--ink-faint);
-    font-size: 10.5px;
-    font-weight: 500;
-    text-align: right;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  #profileGroup .profileSubMeta:empty { display: none; }
-  #profileGroup .profileSubFold[open] > .profileSubHead .profileSubMeta {
-    display: none;
   }
   #profileGroup .profileSubFold[open] > .profileSubHead .profileSubArrow {
     margin-left: auto;
@@ -3482,7 +4034,7 @@
   #profileGroup .profileSubFold[open] > .profileSubHead .profileSubActions + .profileSubArrow {
     margin-left: 0;
   }
-  #profileGroup .profileEntitySwitch {
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitch {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -3491,7 +4043,7 @@
     min-height: 32px;
     justify-content: center;
   }
-  #profileGroup .profileEntitySwitch input {
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitch input {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -3500,7 +4052,7 @@
     clip: rect(0 0 0 0);
     clip-path: inset(50%);
   }
-  #profileGroup .profileEntitySwitchTrack {
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitchTrack {
     position: relative;
     width: 28px;
     height: 16px;
@@ -3509,7 +4061,7 @@
     background: var(--bg-field);
     transition: border-color .14s ease, background .14s ease;
   }
-  #profileGroup .profileEntitySwitchTrack::after {
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitchTrack::after {
     content: '';
     position: absolute;
     top: 2px;
@@ -3520,28 +4072,53 @@
     background: var(--ink-faint);
     transition: transform .14s ease, background .14s ease;
   }
-  #profileGroup .profileEntitySwitch input:checked + .profileEntitySwitchTrack {
-    border-color: color-mix(in srgb, var(--accent) 28%, var(--bg-field));
-    background: color-mix(in srgb, var(--accent) 14%, var(--bg-field));
+  #tabDesign .advancedDesignGroup #advancedOn:not(:checked) + .coverVisibilitySwitchTrack::after {
+    background: var(--advanced-off-ink);
   }
-  #profileGroup .profileEntitySwitch input:checked + .profileEntitySwitchTrack::after {
+  :is(#tabCover > .coverFold,#tabDesign > .advancedDesignGroup) > summary.foldHead .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack {
+    border-color: color-mix(in srgb, var(--accent) 20%, var(--bg-panel));
+    background: color-mix(in srgb, var(--accent) 6%, var(--bg-panel));
+  }
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack::after {
     transform: translateX(12px);
-    background: color-mix(in srgb, var(--accent) 68%, white);
   }
-  #profileGroup .profileEntitySwitch input:focus-visible + .profileEntitySwitchTrack {
+  :is(#tabCover > .coverFold,#tabDesign > .advancedDesignGroup) > summary.foldHead .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack::after {
+    background: color-mix(in srgb, var(--accent) 76%, white);
+  }
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitch input:focus-visible + .coverVisibilitySwitchTrack {
     outline: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
     outline-offset: 2px;
   }
-  #profileGroup .profileEntitySwitch:has(input:disabled) { cursor: default; }
-  #profileGroup .profileEntitySwitch input:disabled + .profileEntitySwitchTrack {
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitch:has(input:disabled) { cursor: default; }
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitch input:disabled + .coverVisibilitySwitchTrack {
     border-color: color-mix(in srgb, var(--line-strong) 70%, var(--bg-field));
     background: var(--bg-muted);
     opacity: .52;
   }
-  #profileGroup .profileEntitySwitch input:disabled + .profileEntitySwitchTrack::after {
+  :is(#tabCover,#tabDesign) .coverVisibilitySwitch input:disabled + .coverVisibilitySwitchTrack::after {
     background: color-mix(in srgb, var(--ink-faint) 58%, var(--bg-field));
   }
-  #profileGroup .profileResetIconBtn {
+  #tabCover .imageBackgroundToggleRow.isUnavailable {
+    opacity: .42;
+    filter: grayscale(1);
+  }
+  #tabCover .imageBackgroundToggleRow.isUnavailable label { cursor: not-allowed; }
+  /* 프로필 하위 스위치는 트랙 대비를 낮추고 ON 손잡이만 밝게 구분한다. */
+  #profileGroup .profileSubActions .coverVisibilitySwitch input:not(:checked):not(:disabled) + .coverVisibilitySwitchTrack {
+    border-color: color-mix(in srgb, var(--line-strong) 55%, var(--bg-field));
+    background: color-mix(in srgb, var(--bg-muted) 55%, var(--bg-field));
+  }
+  #profileGroup .profileSubActions .coverVisibilitySwitch input:not(:checked):not(:disabled) + .coverVisibilitySwitchTrack::after {
+    background: color-mix(in srgb, var(--ink-faint) 52%, var(--bg-field));
+  }
+  #profileGroup .profileSubActions .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack {
+    border-color: color-mix(in srgb, var(--accent) 11%, var(--bg-field));
+    background: color-mix(in srgb, var(--accent) 4%, var(--bg-field));
+  }
+  #profileGroup .profileSubActions .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack::after {
+    background: color-mix(in srgb, var(--accent) 68%, white);
+  }
+  :is(#profileGroup, #advancedDesignGroup) .profileResetIconBtn {
     width: 28px;
     height: 30px;
     padding: 0;
@@ -3553,11 +4130,50 @@
     line-height: 1;
     transition: color .14s ease, background .14s ease;
   }
-  #profileGroup .profileResetIconBtn:hover {
+  :is(#profileGroup, #advancedDesignGroup) .profileResetIconBtn:hover:not(:disabled) {
     background: var(--bg-muted);
     color: #a65f59;
   }
+  :is(#profileGroup, #advancedDesignGroup) .profileResetIconBtn:disabled { cursor: default; }
+  #profileGroup .profileSubActions .profileResetIconBtn:disabled { opacity: .4; }
+  #profileGroup .profileSubFold[hidden] { display: none !important; }
+  #profileGroup .profileSubActions :is(.profileMoveBtn, .profileRemoveBtn) {
+    width: 24px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-faint);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  #profileGroup .profileSubActions :is(.profileMoveBtn, .profileRemoveBtn):hover:not(:disabled) {
+    background: var(--bg-muted);
+    color: var(--accent);
+  }
+  #profileGroup .profileSubActions .profileMoveBtn:disabled { opacity: .3; cursor: default; }
+  #profileGroup .profileAddBtn {
+    display: block;
+    width: 100%;
+    margin: 8px 0 14px;
+    padding: 9px 12px;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+  #profileGroup .profileAddBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  #profileGroup .profileAddBtn:disabled { opacity: .4; cursor: default; }
+  #tabDesign .advancedDesignGroup.isAdvancedInactive > summary.foldHead #advancedResetBtn {
+    color: var(--advanced-off-ink);
+  }
   #profileGroup .profileSubBody.isEntityDisabled { opacity: .46; }
+  /* 상위 프로필과 하위 항목의 흐림이 중복되지 않도록 한다. */
+  #profileGroup.isCoverInactive .profileSubBody.isEntityDisabled { opacity: 1; }
   #profileGroup .profileTagsRow { align-items: center; }
   #profileGroup .profileImageRow { align-items: center; }
   #profileGroup .profileImageField {
@@ -3572,6 +4188,7 @@
     width: 100%;
     min-width: 0;
   }
+  #profileGroup .profileImageField > .profileImageAdjustBtn { grid-column: 3; }
   #profileGroup .profileImageDot {
     display: inline-grid;
     place-items: center;
@@ -3598,75 +4215,29 @@
   #profileGroup .profileImageAdjustBtn[aria-expanded="true"] { color: var(--ink); background: var(--bg-muted); }
   #profileGroup .profileImageAdjustBtn:disabled { opacity: .35; cursor: default; }
   #profileGroup .profileImageAdjustPanel[hidden] { display: none; }
-  /* 사진 위치·배율은 사진 행 아래에서 필요할 때만 펼친다. */
+  /* 세로선은 URL 입력칸 시작선에, 조정 라벨은 그 안쪽에 둔다. */
   #profileGroup .profileImageAdjustments {
-    margin: 4px 0 8px 10px;
-    padding-top: 8px;
-    padding-left: 10px;
-    border-left: 1px solid var(--line);
+    position: relative;
+    margin: 4px 0 8px calc(var(--settings-label-w) + var(--settings-row-gap));
+    padding: 8px 0 8px 12px;
   }
-  #profileGroup .profileImageAdjustFooter {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 2px;
+  #profileGroup .profileImageAdjustments::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 0;
+    width: 1px;
+    background: var(--line);
+    pointer-events: none;
   }
-  #profileGroup .profileImageResetBtn {
-    min-height: 26px;
-    padding: 0 2px;
-    border: 0;
-    background: transparent;
-    color: var(--ink-faint);
-    font-size: 10.5px;
+  #profileGroup .profileImageAdjustments .row {
+    grid-template-columns: 42px minmax(0, 1fr) var(--design-value-width);
+    column-gap: 8px;
+    padding-right: var(--settings-row-gap);
+    margin-bottom: 2px;
   }
-  #profileGroup .profileImageResetBtn:hover { color: #a65f59; background: transparent; }
-  #profileGroup .profileImageAdjustments input[type="range"] {
-    height: 18px;
-    padding: 0;
-    appearance: none;
-    -webkit-appearance: none;
-    background: transparent;
-    accent-color: #b8b4ad;
-  }
-  #profileGroup .profileImageAdjustments input[type="range"]::-webkit-slider-runnable-track {
-    height: 4px;
-    border: 0;
-    border-radius: 999px;
-    background: #dedbd5;
-  }
-  #profileGroup .profileImageAdjustments input[type="range"]::-webkit-slider-thumb {
-    width: 14px;
-    height: 14px;
-    margin-top: -5px;
-    border: 0;
-    border-radius: 50%;
-    appearance: none;
-    -webkit-appearance: none;
-    background: #aaa69f;
-  }
-  #profileGroup .profileImageAdjustments input[type="range"]::-moz-range-track {
-    height: 4px;
-    border: 0;
-    border-radius: 999px;
-    background: #dedbd5;
-  }
-  #profileGroup .profileImageAdjustments input[type="range"]::-moz-range-progress {
-    height: 4px;
-    border-radius: 999px;
-    background: #c7c3bc;
-  }
-  #profileGroup .profileImageAdjustments input[type="range"]::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
-    border: 0;
-    border-radius: 50%;
-    background: #aaa69f;
-  }
-  #profileGroup .profileImageAdjustments input[type="range"]:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 3px rgba(113, 109, 102, .16);
-  }
-  #profileGroup .profileImageAdjustments input[type="range"]:focus-visible::-moz-range-thumb {
-    box-shadow: 0 0 0 3px rgba(113, 109, 102, .16);
-  }
+  #profileGroup .profileImageAdjustments .row:last-child { margin-bottom: 0; }
   #profileGroup .profileImageAdjustments .row > label {
     color: var(--ink-faint);
     font-size: 11.5px;
@@ -3692,8 +4263,6 @@
     font-size: 13px;
     line-height: 1.5;
   }
-  #titleMinimal,
-  #profileMinimal { accent-color: #85837f; }
   #creditGroup .creditConfigurationSection {
     margin-top: 14px;
   }
@@ -3770,32 +4339,29 @@
     background: transparent;
   }
   #creditGroup .creditRowActions button {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 26px;
     min-width: 0;
     width: 26px;
     height: 26px;
     padding: 0;
     border: 0;
-    border-radius: 0;
+    border-radius: 4px;
     background: transparent;
     color: var(--ink-faint);
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1;
   }
   #creditGroup .creditMoveGroup button + button { border-left: 0; }
   #creditGroup .creditRowActions button:hover:not(:disabled) { background: var(--bg-muted); color: var(--ink-soft); }
   #creditGroup .creditRowActions button:disabled { opacity: .32; }
-  #creditGroup .creditDividerBtn {
-    border-radius: 6px !important;
-    font-size: 14px !important;
-  }
+  #creditGroup .creditDividerBtn,
+  #creditGroup .creditDeleteBtn { font-size: 13px !important; }
   #creditGroup .creditDividerBtn[aria-pressed="true"] {
-    background: var(--accent-soft) !important;
+    background: var(--bg-muted) !important;
     color: var(--accent) !important;
   }
-  #creditGroup .creditDeleteBtn {
-    border-radius: 6px !important;
-    font-size: 15px !important;
-  }
-  #creditGroup .creditDeleteBtn:hover:not(:disabled) { background:#fff8f8 !important; color:#9a5148 !important; }
   #creditGroup .creditEditorRow.isCreditDragging {
     opacity: .44;
     box-shadow: none;
@@ -3819,15 +4385,13 @@
     font-size: 12px;
   }
   #creditGroup .creditAddBtn:hover:not(:disabled) { background: var(--bg-subtle); color: var(--ink-soft); }
-  #creditGroup .creditControlsDisabled { opacity: .42; }
-  #creditGroup .creditControlsDisabled button:hover { background: transparent; color: var(--ink-faint); }
-  #creditGroup .creditPresetSection {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSection {
     display: block;
     margin-top: 14px;
     padding-top: 7px;
     border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
   }
-  #creditGroup .creditPresetSummary {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSummary {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -3842,8 +4406,8 @@
     cursor: pointer;
     user-select: none;
   }
-  #creditGroup .creditPresetSummary::-webkit-details-marker { display: none; }
-  #creditGroup .creditPresetSummary::after {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSummary::-webkit-details-marker { display: none; }
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSummary::after {
     content: "+";
     flex: none;
     margin-left: 12px;
@@ -3852,37 +4416,32 @@
     font-weight: 500;
     line-height: 1;
   }
-  #creditGroup .creditPresetSection[open] > .creditPresetSummary::after { content: "−"; }
-  #creditGroup .creditPresetSummary:hover { color: var(--ink-faint); }
-  #creditGroup .creditControlsDisabled .creditPresetSummary {
-    color: var(--help-ink);
-    cursor: default;
-    pointer-events: none;
-  }
-  #creditGroup .creditPresetControls {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSection[open] > .creditPresetSummary::after { content: "−"; }
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSummary:hover { color: var(--ink-faint); }
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetControls {
     width: min(360px, 100%);
     min-width: 0;
     margin: 4px 0 0 auto;
   }
-  #creditGroup .creditPresetLoadRow,
-  #creditGroup .creditPresetSaveRow {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow,
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
     gap: 4px;
     margin-top: 0;
   }
-  #creditGroup .creditPresetSaveRow {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow {
     grid-template-columns: minmax(0, 1fr) auto;
     margin-top: 4px;
   }
-  #creditGroup .creditPresetLoadRow select,
-  #creditGroup .creditPresetSaveRow input,
-  #creditGroup .creditPresetLoadRow button,
-  #creditGroup .creditPresetSaveRow button {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow select,
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow input,
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow button,
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow button {
     min-width: 0;
   }
-  #creditGroup .creditPresetLoadRow select,
-  #creditGroup .creditPresetSaveRow input {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow select,
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow input {
     box-sizing: border-box;
     height: 32px;
     padding-left: 12px;
@@ -3892,27 +4451,27 @@
     font-size: 11.5px;
     box-shadow: none;
   }
-  #creditGroup .creditPresetSaveRow input[type="text"]:not(:placeholder-shown):not(:focus) {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow input[type="text"]:not(:placeholder-shown):not(:focus) {
     border-color: color-mix(in srgb, var(--line) 82%, transparent);
     background-color: color-mix(in srgb, var(--bg-field) 72%, var(--bg-panel));
     color: var(--ink-faint);
   }
-  #creditGroup .creditPresetLoadRow select:focus,
-  #creditGroup .creditPresetSaveRow input[type="text"]:focus {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow select:focus,
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow input[type="text"]:focus {
     border-color: var(--line-strong);
     background-color: var(--bg-field);
     color: var(--ink-soft);
     box-shadow: none;
   }
-  #creditGroup .creditPresetSaveRow input::placeholder { color: var(--help-ink); }
-  #creditGroup .creditPresetLoadRow select {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow input::placeholder { color: var(--help-ink); }
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow select {
     padding-right: 30px;
     background-image:
       linear-gradient(45deg, transparent 50%, var(--help-ink) 50%),
       linear-gradient(135deg, var(--help-ink) 50%, transparent 50%);
   }
-  #creditGroup .creditPresetLoadRow button,
-  #creditGroup .creditPresetSaveRow button {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow button,
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow button {
     min-width: 50px;
     height: 26px;
     padding: 0 10px;
@@ -3924,37 +4483,37 @@
     font-weight: 500;
     white-space: nowrap;
   }
-  #creditGroup .creditPresetLoadRow button:hover:not(:disabled),
-  #creditGroup .creditPresetSaveRow button:hover:not(:disabled) {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow button:hover:not(:disabled),
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow button:hover:not(:disabled) {
     background: color-mix(in srgb, var(--ink) 5%, transparent);
     color: var(--ink-soft);
   }
-  #creditGroup #creditPresetDeleteBtn {
+  :is(#creditGroup, #advancedDesignGroup) :is(#creditPresetDeleteBtn, #detailPresetDeleteBtn) {
     border-color: transparent;
     background: transparent;
     color: #b47770;
   }
-  #creditGroup #creditPresetDeleteBtn:hover:not(:disabled) {
+  :is(#creditGroup, #advancedDesignGroup) :is(#creditPresetDeleteBtn, #detailPresetDeleteBtn):hover:not(:disabled) {
     border-color: transparent;
     background: #fff3f1;
     color: #a45d56;
   }
-  #creditGroup .creditPresetLoadRow button:active:not(:disabled),
-  #creditGroup .creditPresetSaveRow button:active:not(:disabled) {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow button:active:not(:disabled),
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow button:active:not(:disabled) {
     background: color-mix(in srgb, var(--ink) 10%, transparent);
   }
-  #creditGroup #creditPresetDeleteBtn:active:not(:disabled) {
+  :is(#creditGroup, #advancedDesignGroup) :is(#creditPresetDeleteBtn, #detailPresetDeleteBtn):active:not(:disabled) {
     background: #f8e7e4;
   }
-  #creditGroup .creditPresetLoadRow button:disabled,
-  #creditGroup .creditPresetSaveRow button:disabled {
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetLoadRow button:disabled,
+  :is(#creditGroup, #advancedDesignGroup) .creditPresetSaveRow button:disabled {
     border: 0;
     background: transparent;
     color: var(--ink-faint);
     opacity: .45;
     cursor: default;
   }
-  #creditGroup #creditPresetDeleteBtn:disabled {
+  :is(#creditGroup, #advancedDesignGroup) :is(#creditPresetDeleteBtn, #detailPresetDeleteBtn):disabled {
     border-color: transparent;
     background: transparent;
     color: var(--ink-faint);
@@ -3973,10 +4532,6 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     #profileGroup .profileTagFields input:last-child { grid-column: 1 / -1; }
-    #profileGroup .profileImageAdjustments {
-      margin-left: 8px;
-      padding-left: 8px;
-    }
     #creditGroup .creditRowFields { grid-template-columns: minmax(0, 1fr); }
     #creditGroup .creditLabelInput,
     #creditGroup .creditValueInput,
@@ -4258,11 +4813,6 @@
       width: auto;
       margin-left: 0;
     }
-    #tabDesign .halfControls .row > label ~ input[type="range"] {
-      flex: 1;
-      width: auto;
-      margin-left: 0;
-    }
     .editorToolbar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
     #bodyInputGroup > .foldBody > .editorToolbar { justify-content: safe center; }
     #bodyInputGroup > .foldBody > #bodyEditorToolbar {
@@ -4276,7 +4826,6 @@
     .editorToolbar .tbGroup { flex: none; }
     #previewArea,
     body.layoutMirrored #previewArea { padding: 22px 48px 52px 12px; }
-    #previewWrap { max-width: 100% !important; }
     #previewToolbar { margin-bottom: 8px; }
     #preview { filter: drop-shadow(0 2px 8px rgba(0,0,0,0.045)); }
     #sidebarResizer { display: none; }
@@ -4313,11 +4862,12 @@
     .cardFoldGroup .foldTitleInput { flex: 1 1 110px; }
     #previewToolbar { align-items: flex-start; gap: 6px; }
     .previewTools { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-    .previewStyleToggles { gap: 10px; }
+    .previewStyleControls { gap: 10px; }
     .previewStyleDivider { display:none; }
     .previewThemeToggle button { min-width: 42px; padding-left: 7px; padding-right: 7px; }
     .previewSyncFloat { right:12px; bottom:12px; }
     body.previewFullscreen #previewArea { padding:16px 16px 40px; }
+    body.previewFullscreen #previewToolbar { width:calc(100vw - 32px); }
     .widthToggle button { padding: 0 9px; font-size: 11px; }
     #pvSearchBox { margin-left:0; margin-right:0; flex-wrap:wrap; }
     .pvSearchMain, #pvReplaceRow { flex:1 1 100%; }
@@ -4333,7 +4883,7 @@
     #fsFindInput, #fsReplInput { width: 150px; }
     #fsTextarea { padding: 14px; font-size: 14px; }
     #fsHl { padding: 14px; font-size: 14px; }
-    #fsCheat { display: none; }
+    #fsCheat .fsCheatList { max-height: 120px; }
     .cardEditorHead .miniCtl, .pvIconBtn { min-width: 36px; min-height: 36px; }
     #tabDesign .designFold .foldBody {
       max-width: 100%;
@@ -4355,10 +4905,6 @@
       column-gap: var(--settings-row-gap);
       padding-right: var(--settings-row-gap);
     }
-    #tabDesign #speakerGroup #speakerNames .row {
-      grid-template-columns: 92px minmax(0, 1fr) 44px;
-      column-gap: 10px;
-    }
   }
 
   @media (max-width: 420px) {
@@ -4366,10 +4912,6 @@
     .subtitleLine .subtitleDot { display: none; }
     .subtitleLine #logSubtitle { grid-column: 1 / -1; }
     #tabDesign .designFold .row {
-      grid-template-columns: 82px minmax(0, 1fr) 42px;
-      column-gap: 8px;
-    }
-    #tabDesign #speakerGroup #speakerNames .row {
       grid-template-columns: 82px minmax(0, 1fr) 42px;
       column-gap: 8px;
     }
@@ -4452,6 +4994,9 @@
     margin-top: -2px;
   }
   .imageCheckRow:has(.imageLoadStatus[hidden]) { display: none; }
+  /* 대표 이미지의 세 슬라이더는 본문 나레이션 크기·줄간격과 같은 행 간격으로 묶는다. */
+  #tabCover #imageGroup .row:has(> #imgHeight),
+  #tabCover #imageGroup .row:has(> #xpos) { margin-bottom: 2px; }
   .imageLoadStatus {
     color: var(--ink-faint);
     font-size: 10.5px;
@@ -4520,8 +5065,10 @@
     align-items: center;
     justify-content: center;
     flex: none;
+    position: relative;
     width: 28px;
     height: 28px;
+    margin-left: 8px;
     padding: 0;
     border: 1px solid transparent;
     border-radius: 6px;
@@ -4531,7 +5078,7 @@
     line-height: 1;
   }
   .cardFoldGroup .duplicateCardBtn:hover {
-    border-color: var(--line);
+    border-color: transparent;
     background: var(--bg-field);
     color: var(--ink-soft);
   }
@@ -4575,11 +5122,160 @@
     min-height: 34px;
     margin-bottom: 8px;
   }
-  #tabDesign #layoutDesignGroup .foldBody > .designSectionLabel {
-    margin: 0 0 8px;
+  #tabDesign .typographyGroup .row {
+    grid-template-columns: 80px minmax(0, 1fr) var(--design-value-width);
+    column-gap: 10px;
+  }
+  #tabDesign .typographyGroup .typographyBodyRow { margin-bottom: 2px; }
+  #tabDesign .typographyGroup .typographyBodyGroupEnd { margin-bottom: 14px; }
+  #tabDesign .designFold .selectCycleRow {
+    grid-template-columns: 80px minmax(0, 1fr) 56px;
+    column-gap: 10px;
+  }
+  #tabDesign .advancedDesignGroup .row {
+    grid-template-columns: 80px minmax(0, 1fr) var(--design-value-width);
+    column-gap: 10px;
+  }
+  #tabDesign .advancedDesignGroup .row:has(> input[type="range"]) {
+    min-height: 26px;
+    margin-bottom: 0;
+  }
+  #tabDesign .advancedDesignGroup #creditAppearancePanel > .creditAppearanceOptionsRow {
+    min-height: 30px;
+    margin-bottom: 0;
+  }
+  #tabDesign .advancedDesignGroup {
+    --advanced-range-fill: color-mix(in srgb, var(--accent) 66%, var(--bg-panel));
+    --advanced-range-thumb: color-mix(in srgb, var(--accent) 60%, var(--bg-panel));
+    --advanced-range-rest: var(--line-strong);
+  }
+  #tabDesign :is(#detailCoverSection, #detailCardInteriorSection, #detailCardExteriorSection, #detailCreditSection) {
+    --advanced-range-fill: #858585;
+    --advanced-range-thumb: #858585;
+    --advanced-range-rest: #c6c6c6;
+  }
+  :root.uiNight #tabDesign :is(#detailCoverSection, #detailCardInteriorSection, #detailCardExteriorSection, #detailCreditSection) {
+    --advanced-range-fill: #a0a0a0;
+    --advanced-range-thumb: #a0a0a0;
+    --advanced-range-rest: #626262;
+  }
+  #tabDesign .advancedDesignGroup .row > input[type="range"] {
+    height: 26px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+  }
+  #tabDesign .advancedDesignGroup .row > input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(to right,
+      var(--advanced-range-fill) 0 var(--advanced-range-progress, 50%),
+      var(--advanced-range-rest) var(--advanced-range-progress, 50%) 100%);
+  }
+  #tabDesign .advancedDesignGroup .row > input[type="range"]::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    margin-top: -3px;
+    border: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--advanced-range-thumb);
+  }
+  #tabDesign .advancedDesignGroup .row > input[type="range"]::-moz-range-track {
+    height: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--advanced-range-rest);
+  }
+  #tabDesign .advancedDesignGroup .row > input[type="range"]::-moz-range-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--advanced-range-fill);
+  }
+  #tabDesign .advancedDesignGroup .row > input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 0;
+    background: var(--advanced-range-thumb);
+  }
+  #tabDesign .advancedDesignGroup .selectCycleRow {
+    grid-template-columns: 80px minmax(0, 1fr) 56px;
+  }
+  #tabDesign .advancedDesignGroup .shapeChoiceRow {
+    grid-template-columns: 80px minmax(0, 1fr);
+  }
+  #tabDesign .advancedDesignGroup .shapeChoiceRow,
+  #tabDesign .advancedDesignGroup .shapeChoiceRow + .row,
+  #tabDesign .advancedDesignGroup .shapeChoiceRow + .row + .row {
+    margin-bottom: 0;
+  }
+  #tabDesign .advancedDesignGroup .shapeChoiceRow {
+    margin-bottom: 10px;
+  }
+  #tabDesign .advancedDesignGroup .shapeChoiceRow + .row,
+  #tabDesign .advancedDesignGroup .shapeChoiceRow + .row + .row {
+    min-height: 26px;
+  }
+  #tabDesign .advancedDesignGroup .shapeChoiceLabel {
     color: var(--ink-soft);
     font-size: 11.5px;
-    font-weight: 700;
+  }
+  #tabDesign .advancedDesignGroup .shapeChoice {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    gap: 3px;
+  }
+  #tabDesign .advancedDesignGroup .shapeChoice button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 30px;
+    padding: 0 3px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  #tabDesign .advancedDesignGroup .shapeChoice button:hover { background: var(--bg-subtle); color: var(--ink); }
+  #tabDesign .advancedDesignGroup .shapeChoice button[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--accent) 12%, var(--bg-panel));
+    color: var(--accent);
+  }
+  #tabDesign .advancedDesignGroup .shapeChoice button[aria-pressed="true"]:hover {
+    background: color-mix(in srgb, var(--accent) 17%, var(--bg-panel));
+  }
+  #tabDesign .advancedDesignGroup .shapeChoice button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  #tabDesign .advancedDesignGroup .shapePreview { display: block; color: currentColor; pointer-events: none; }
+  #tabDesign .advancedDesignGroup .shapePreviewLine { width: min(30px, 86%); height: 0; }
+  #tabDesign .advancedDesignGroup .shapePreviewSolid { border-top: 2px solid currentColor; }
+  #tabDesign .advancedDesignGroup .shapePreviewDashed { border-top: 2px dashed currentColor; }
+  #tabDesign .advancedDesignGroup .shapePreviewStarLine { display: flex; align-items: center; gap: 3px; width: min(30px, 86%); font-size: 9px; line-height: 1; }
+  #tabDesign .advancedDesignGroup .shapePreviewStarLine::before,
+  #tabDesign .advancedDesignGroup .shapePreviewStarLine::after { content: ''; flex: 1; border-top: 1px solid currentColor; }
+  #tabDesign .advancedDesignGroup .shapePreviewShortLine { width: 17px; height: 0; border-top: 2px solid currentColor; }
+  #tabDesign .advancedDesignGroup .shapePreviewGlyph { font-size: 14px; line-height: 1; }
+  #tabDesign .advancedDesignGroup .shapePreviewDiamond {
+    width: 12px;
+    height: 12px;
+    background: currentColor;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+  #tabDesign .advancedDesignGroup .shapePreviewTripleStars { padding-left: 1px; font-size: 10px; letter-spacing: 1px; line-height: 1; white-space: nowrap; }
+  #tabDesign .advancedDesignGroup .shapePreviewBreath { font-size: 17px; line-height: 1; white-space: nowrap; }
+  #tabDesign #speakerGroup #speakerNames .row {
+    grid-template-columns: 80px minmax(0, 1fr) 56px;
+    column-gap: 10px;
+  }
+  #tabDesign .designFold .selectCycleRow > select {
+    grid-column: 2;
   }
   #tabDesign .rangeEditor,
   #tabCover .rangeEditor {
@@ -4656,13 +5352,24 @@
     justify-content: flex-end;
     white-space: nowrap;
   }
-  #tabDesign .typographyGroup .typographySubsection {
+  #tabDesign :is(.typographyGroup, .advancedDesignGroup) .typographySubsection {
     display: block;
     margin: 8px 0 0;
     padding: 5px 0 0;
     border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
   }
-  #tabDesign .typographyGroup .typographySubsectionSummary {
+  #tabDesign .advancedDesignGroup .typographySubsection { padding-top: 7px; }
+  #tabDesign .advancedDesignGroup #detailDividerSection {
+    margin-top: 1px;
+    padding-top: 1px;
+    border-top: 0;
+  }
+  #tabDesign .advancedDesignGroup > .foldBody > .typographySubsection:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  #tabDesign :is(.typographyGroup, .advancedDesignGroup) .typographySubsectionSummary {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4677,8 +5384,21 @@
     cursor: pointer;
     user-select: none;
   }
-  #tabDesign .typographyGroup .typographySubsectionSummary::-webkit-details-marker { display: none; }
-  #tabDesign .typographyGroup .typographySubsectionSummary::after {
+  #tabDesign .advancedDesignGroup .typographySubsectionSummary { min-height: 36px; font-size: 12.5px; }
+  #tabDesign #detailDividerSection .advancedSubsectionLabel {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 400;
+  }
+  #tabDesign #detailDividerSection .advancedSubsectionBranch {
+    flex: 0 0 12.5px;
+    width: 12.5px;
+    color: var(--help-ink);
+    font-size: 11px;
+    font-weight: 400;
+  }
+  #tabDesign :is(.typographyGroup, .advancedDesignGroup) .typographySubsectionSummary::-webkit-details-marker { display: none; }
+  #tabDesign :is(.typographyGroup, .advancedDesignGroup) .typographySubsectionSummary::after {
     content: "+";
     flex: none;
     margin-left: 12px;
@@ -4687,12 +5407,28 @@
     font-weight: 500;
     line-height: 1;
   }
-  #tabDesign .typographyGroup .typographySubsection[open] > .typographySubsectionSummary::after { content: "−"; }
-  #tabDesign .typographyGroup .typographySubsectionSummary:hover { color: var(--ink); }
-  #tabDesign .typographyGroup .typographySubsectionBody { padding: 4px 0 1px; }
+  #tabDesign :is(.typographyGroup, .advancedDesignGroup) .typographySubsection[open] > .typographySubsectionSummary::after { content: "−"; }
+  #tabDesign :is(.typographyGroup, .advancedDesignGroup) .typographySubsectionSummary:hover { color: var(--ink); }
+  #tabDesign #detailDividerSection > .typographySubsectionSummary::after { display: none; }
+  #tabDesign .advancedDesignGroup .typographySubsection[open] > .typographySubsectionSummary {
+    color: var(--accent);
+  }
+  #tabDesign .advancedDesignGroup .typographySubsection[open] > .typographySubsectionSummary::after,
+  #tabDesign .advancedDesignGroup .typographySubsection[open] > .typographySubsectionSummary .advancedSubsectionBranch {
+    color: inherit;
+  }
+  #tabDesign :is(.typographyGroup, .advancedDesignGroup) .typographySubsectionBody { padding: 4px 0 1px; }
+  #tabDesign .typographyGroup .typographySubsectionBody > .row { margin-bottom: 2px; }
+  #tabDesign .typographyGroup .typographySubsectionBody > .row:last-child { margin-bottom: 0; }
   #tabDesign .typographyGroup .titleStyleRow {
-    grid-template-columns: var(--design-label-width) minmax(0, 1fr) var(--design-value-width) auto;
+    grid-template-columns: 80px minmax(0, 1fr) var(--design-value-width) auto;
     column-gap: 10px;
+  }
+  /* 오른쪽 보조 컨트롤만 살짝 당겨 대사 드롭다운 화살표와 시각적 중심을 맞춘다. */
+  #tabDesign .typographyGroup .titleStyleRow > .rangeEditor,
+  #tabDesign .typographyGroup .titleStyleRow > .titleRowBold,
+  #tabDesign #speakerGroup #speakerNames .row > .speakerNameToggle {
+    transform: translateX(-6px);
   }
   #tabDesign .typographyGroup .titleRowBold {
     grid-column: 4;
@@ -4709,36 +5445,100 @@
   #tabDesign .typographyGroup .titleRowBold input {
     margin: 0;
   }
-  #tabDesign .designCheckList {
+  /* 각 옵션은 독립 체크박스로 유지하고, 프로필의 텍스트 선택과 같은 시각 언어로 표시한다. */
+  #tabDesign .layoutToggleRow {
     display: grid;
-    gap: 0;
+    grid-template-columns: 80px minmax(0, 1fr);
+    column-gap: 10px;
+    align-items: start;
+    min-height: 30px;
+    margin-bottom: 12px;
   }
-  #tabDesign .compactCheckList { margin-top: 5px; }
-  #tabDesign .designCheckRow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 32px;
-    margin: 0;
-    padding: 0;
-    border-radius: 0;
+  #tabDesign .layoutToggleLabel {
+    padding-top: 5px;
     color: var(--ink-soft);
     font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  #tabDesign .layoutToggleChoices {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px 12px;
+    min-width: 0;
+  }
+  #tabDesign .layoutToggleChoice {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    white-space: nowrap;
     cursor: pointer;
-    transition: background-color .12s ease, color .12s ease;
   }
-  #tabDesign .designCheckRow:hover {
-    background: transparent;
-    color: var(--ink);
+  #tabDesign .layoutToggleChoice input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    clip-path: inset(50%);
   }
-  #tabDesign .designCheckRow input { flex: none; margin: 0; }
+  #tabDesign .layoutToggleChoice span {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    padding: 0 3px;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1;
+    transition: color .16s ease;
+  }
+  #tabDesign .layoutToggleChoice span::after {
+    content: "";
+    position: absolute;
+    right: 3px;
+    bottom: 2px;
+    left: 3px;
+    height: 1px;
+    background: currentColor;
+    opacity: 0;
+    transform: scaleX(.45);
+    transition: opacity .16s ease, transform .16s ease;
+  }
+  #tabDesign .layoutToggleChoice:hover span { color: var(--ink); }
+  #tabDesign .layoutToggleChoice input:checked + span { color: var(--accent); }
+  #tabDesign .layoutToggleChoice input:checked + span::after {
+    opacity: .72;
+    transform: scaleX(1);
+  }
+  #tabDesign .layoutToggleChoice input:focus-visible + span {
+    outline: 2px solid color-mix(in srgb, var(--accent) 52%, transparent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  #tabDesign #layoutDesignGroup .foldBody > .layoutToggleRow:not(.foldCardOptionSection) {
+    margin-top: 22px;
+    margin-bottom: 0;
+  }
   #tabDesign .foldCardOptionSection {
-    margin-top: 20px;
+    margin-top: 6px;
+    margin-bottom: 0;
     padding: 0;
     border: 0;
   }
+  #tabDesign .foldCardOptionSection .layoutToggleChoices {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
   #tabDesign #speakerGroup #speakerNames {
-    margin: 7px 0 2px;
+    margin: 22px 0 2px;
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -4751,7 +5551,36 @@
     }
     #tabDesign .designFold .row,
     #tabDesign #speakerGroup #speakerNames .row { column-gap: 9px; }
-    #tabDesign .typographyGroup .titleStyleRow { column-gap: 7px; }
+    #tabDesign .typographyGroup .row {
+      grid-template-columns: 72px minmax(0, 1fr) var(--design-value-width);
+      column-gap: 8px;
+    }
+    #tabDesign .typographyGroup .titleStyleRow {
+      grid-template-columns: 72px minmax(0, 1fr) var(--design-value-width) auto;
+      column-gap: 7px;
+    }
+    #tabDesign .layoutToggleRow {
+      grid-template-columns: 72px minmax(0, 1fr);
+      column-gap: 8px;
+    }
+    #tabDesign .designFold .selectCycleRow {
+      grid-template-columns: 72px minmax(0, 1fr) 52px;
+      column-gap: 8px;
+    }
+    #tabDesign .advancedDesignGroup .row {
+      grid-template-columns: 72px minmax(0, 1fr) var(--design-value-width);
+      column-gap: 8px;
+    }
+    #tabDesign .advancedDesignGroup .selectCycleRow {
+      grid-template-columns: 72px minmax(0, 1fr) 52px;
+    }
+    #tabDesign .advancedDesignGroup .shapeChoiceRow {
+      grid-template-columns: 72px minmax(0, 1fr);
+    }
+    #tabDesign #speakerGroup #speakerNames .row {
+      grid-template-columns: 72px minmax(0, 1fr) 52px;
+      column-gap: 8px;
+    }
   }
   /* 테마 탭도 표지·디자인 탭과 같은 아코디언 카드 체계를 사용한다. */
   #tabTheme > .themeFold {
@@ -4890,7 +5719,6 @@
 #sidebarNewLogBtn::before { content:''; flex:none; width:7px; height:7px; margin-right:6px; opacity:.58; background:linear-gradient(currentColor,currentColor) center / 7px 1px no-repeat, linear-gradient(currentColor,currentColor) center / 1px 7px no-repeat; }
 #sidebarNewLogBtn:hover { color:var(--accent); background:transparent; }
 
-/* v1.7.0 additions: existing profile and link styles stay available. */
 .transparentSwatch { margin-top:8px; padding:6px 8px; border-radius:6px; background:repeating-conic-gradient(#e8e7e4 0% 25%,#fff 0% 50%) 0 / 12px 12px; color:#555; font-size:11px; }
 #transparentThemeHint { color:var(--muted, #777); font-size:11px; line-height:1.4; margin:8px 0 0; text-align:center; }
 
@@ -4911,79 +5739,190 @@
 .expressionTransparentChoice::before { content:''; position:absolute; left:0; top:50%; width:1px; height:16px; background:var(--line-strong); transform:translateY(-50%); }
 .expressionTransparentChoice input { flex:none; width:14px; height:14px; margin:0; }
 .expressionTransparentChoice input:checked + span { color:var(--accent); }
-#tabTheme > .expressionThemeGroup { margin-top:18px; padding:16px 14px; border-radius:10px; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 7%,var(--line)); }
+#tabTheme > .expressionThemeGroup { margin-top:18px; padding:16px 14px; border-radius:10px; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--line) 55%,transparent); }
 #tabTheme > .expressionThemeGroup + .themeFold { padding-top:16px; border-top:0; }
 .paletteUnavailable #comboList { opacity:.4; }
 
-  #tabCover .coverFoldActions {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-  }
-  #tabCover .coverFold[open] .coverFoldActions { margin-left: auto; }
-  #tabCover .coverFoldActions + .foldArrow { margin-left: 0; }
+/* 편집 UI는 카드 출력 모양과 관계없이 직각으로 통일한다.
+   실제 출력 미리보기의 내용은 선택한 카드 테마 고유의 모양을 유지한다. */
+body :where(*:not(#preview):not(#preview *)) { border-radius: 0 !important; }
+/* 둥근 카드일 때 미리보기 도구의 모양·테마·폭 버튼만 직각 UI 규칙에서 제외한다. */
+body .previewShapeControl #previewCardShapeBtn.isRoundedCard { border-radius: 7px !important; }
+body #previewToolbar:has(#previewCardShapeBtn.isRoundedCard) .previewWidthCycle button {
+  border-radius: 7px !important;
+}
+body #previewToolbar:has(#previewCardShapeBtn.isRoundedCard) :is(.previewThemeToggle, .previewFullscreenWidthToggle) button:first-child {
+  border-radius: 7px 0 0 7px !important;
+}
+body #previewToolbar:has(#previewCardShapeBtn.isRoundedCard) :is(.previewThemeToggle, .previewFullscreenWidthToggle) button:last-child {
+  border-radius: 0 7px 7px 0 !important;
+}
+/* 다크 작업 화면에서는 모양·폭 선택 버튼의 윤곽을 배경과 구별한다. */
+:root.uiNight body:not(.previewFullscreen) #previewToolbar :is(.previewShapeControl, .previewWidthCycle) button {
+  border-color: color-mix(in srgb, var(--line-strong) 80%, var(--ink-soft));
+}
+/* 다크 전체화면에서는 다크 버튼이 시각적으로 왼쪽이다. DOM 순서와 별개로 모서리를 지정한다. */
+:root.uiNight body.previewFullscreen #previewToolbar:has(#previewCardShapeBtn.isRoundedCard) .previewThemeToggle #previewThemeDarkBtn {
+  border-radius: 7px 0 0 7px !important;
+}
+:root.uiNight body.previewFullscreen #previewToolbar:has(#previewCardShapeBtn.isRoundedCard) .previewThemeToggle #previewThemeLightBtn {
+  border-radius: 0 7px 7px 0 !important;
+}
+body input[type="range"]::-webkit-slider-thumb { border-radius: 0 !important; }
+body input[type="range"]::-moz-range-thumb { border-radius: 0 !important; }
+body #tabDesign .typographyGroup .row > input[type="range"]::-webkit-slider-thumb { border-radius: 50% !important; }
+body #tabDesign .typographyGroup .row > input[type="range"]::-moz-range-thumb { border-radius: 50% !important; }
+body #tabCover .settingsForm .row > input[type="range"]::-webkit-slider-thumb { border-radius: 50% !important; }
+body #tabCover .settingsForm .row > input[type="range"]::-moz-range-thumb { border-radius: 50% !important; }
+body #tabDesign .advancedDesignGroup .row > input[type="range"]::-webkit-slider-thumb { border-radius: 50% !important; }
+body #tabDesign .advancedDesignGroup .row > input[type="range"]::-moz-range-thumb { border-radius: 50% !important; }
+body input[type="color"]::-webkit-color-swatch { border-radius: 0 !important; }
+body input[type="color"]::-moz-color-swatch { border-radius: 0 !important; }
+/* 상태 스위치·색상 표식·카드 모양 견본은 원래 윤곽을 유지한다. */
+body :is(#tabCover,#tabDesign) .coverVisibilitySwitchTrack { border-radius: 999px !important; }
+body :is(#tabCover,#tabDesign) .coverVisibilitySwitchTrack::after { border-radius: 50% !important; }
+body .expressionThemeOptions .expressionShapeIcon { border-radius: 5px !important; }
+body .expressionThemeOptions button[data-output-shape="document"] .expressionShapeIcon { border-radius: 1px !important; }
+body .uiPaletteCurrent { border-radius: 50% !important; }
 
-  #tabCover .coverVisibilitySwitch {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-    min-width: 32px;
-    min-height: 32px;
-    justify-content: center;
-  }
-  #tabCover .coverVisibilitySwitch input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-  }
-  #tabCover .coverVisibilitySwitchTrack {
-    position: relative;
-    width: 28px;
-    height: 16px;
-    border: 1px solid var(--line-strong);
-    border-radius: 999px;
-    background: var(--bg-field);
-    transition: border-color .14s ease, background .14s ease;
-  }
-  #tabCover .coverVisibilitySwitchTrack::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--ink-faint);
-    transition: transform .14s ease, background .14s ease;
-  }
-  #tabCover .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack {
-    border-color: color-mix(in srgb, var(--accent) 28%, var(--bg-field));
-    background: color-mix(in srgb, var(--accent) 14%, var(--bg-field));
-  }
-  #tabCover .coverVisibilitySwitch input:checked + .coverVisibilitySwitchTrack::after {
-    transform: translateX(12px);
-    background: color-mix(in srgb, var(--accent) 68%, white);
-  }
-  #tabCover .coverVisibilitySwitch input:focus-visible + .coverVisibilitySwitchTrack {
-    outline: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
-    outline-offset: 2px;
-  }
-  #tabCover .coverVisibilitySwitch:has(input:disabled) { cursor: default; }
-  #tabCover .coverVisibilitySwitch input:disabled + .coverVisibilitySwitchTrack {
-    border-color: color-mix(in srgb, var(--line-strong) 70%, var(--bg-field));
-    background: var(--bg-muted);
-    opacity: .52;
-  }
-  #tabCover .coverVisibilitySwitch input:disabled + .coverVisibilitySwitchTrack::after {
-    background: color-mix(in srgb, var(--ink-faint) 58%, var(--bg-field));
-  }
+/* 작업 화면 색상은 출력 HTML의 색과 별도로 기억한다. */
+.uiAppearancePanel { display:flex; align-items:center; justify-content:flex-end; margin-top:16px; padding-top:12px; border-top:1px solid var(--line); }
+.uiAppearanceControls { position:relative; display:flex; align-items:center; gap:4px; }
+.uiAppearanceDivider { width:1px; height:20px; margin:0 4px; background:var(--line); }
+.uiAppearanceButton { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; padding:0; border:0; border-radius:6px; background:transparent; color:var(--ink-faint); cursor:pointer; }
+.uiAppearanceButton:hover { background:var(--bg-muted); color:var(--ink); }
+.uiAppearanceButton[aria-pressed="true"] { background:color-mix(in srgb,var(--accent) 17%,var(--bg-panel)); color:var(--accent); }
+.uiAppearanceButton:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.uiPaletteButton { position:relative; }
+.uiPaletteButton[aria-expanded="true"] { background:var(--bg-muted); color:var(--ink); }
+.uiPaletteCurrent { position:absolute; right:4px; bottom:3px; width:7px; height:7px; border-radius:50%; background:var(--palette-swatch,#789a82); box-shadow:0 0 0 1px var(--bg-panel); }
+:root[data-ui-palette="gray"] { --palette-swatch:#909090; }
+:root[data-ui-palette="blue"] { --palette-swatch:#668da9; }
+:root[data-ui-palette="pink"] { --palette-swatch:#b8879b; }
+:root[data-ui-palette="yellow"] { --palette-swatch:#b59b63; }
+.uiPaletteMenu { order:-1; display:flex; align-items:center; gap:3px; margin-right:3px; }
+.uiPaletteMenu[hidden] { display:none; }
+.uiPaletteMenu button { display:inline-flex; align-items:center; justify-content:center; flex:none; width:26px; height:30px; padding:0; border:0; border-radius:6px; background:transparent; cursor:pointer; }
+.uiPaletteMenu button:hover { background:var(--bg-muted); }
+.uiPaletteMenu button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.uiPaletteSwatch { display:block; width:20px; height:20px; border-radius:50% !important; background:var(--swatch); box-shadow:0 0 0 1px var(--line-strong); }
+.uiPaletteMenu button[aria-pressed="true"] .uiPaletteSwatch { box-shadow:0 0 0 2px var(--bg-panel), 0 0 0 4px var(--ink-soft); }
 
-#tabCover .segmentedChoiceRow > input[hidden] { display:none; }
-#previewArea #preview { color:#212529; }
-body.previewFullscreen #previewArea.previewArcaDark #preview { color:#dedede; }
-.transparentTextRow { margin-top:12px; }
+/* 화면 모드를 바꾸는 프레임에는 개별 컨트롤의 전환 효과도 잠시 멈춘다. */
+:root.uiModeSwitching body,
+:root.uiModeSwitching body *,
+:root.uiModeSwitching body *::before,
+:root.uiModeSwitching body *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* 나이트 모드는 작업 영역의 바탕도 어둡게 하되 출력 카드의 지정 색상은 유지한다. */
+:root.uiNight body:not(.previewFullscreen) #previewArea {
+  color-scheme: dark;
+  background: var(--bg-preview-night);
+  color: var(--ink);
+}
+:root.uiNight body.previewFullscreen #previewArea.previewArcaDark {
+  color-scheme: dark;
+  background: var(--bg-app);
+  color: var(--ink);
+}
+:root.uiNight body:not(.previewFullscreen) #previewArea #preview > [data-mosaic-comment-index],
+:root.uiNight body.previewFullscreen #previewArea.previewArcaDark #preview > [data-mosaic-comment-index] { color:#e0e5df; }
+:root.uiNight body.previewFullscreen #previewArea:not(.previewArcaDark) {
+  color-scheme: light;
+  background: #fff;
+  color: #212529;
+  --ink: #242320;
+  --ink-soft: #68655f;
+  --ink-faint: #716d66;
+  --help-ink: #918d86;
+  --help-ink-strong: #77736d;
+  --line: #e4e0d9;
+  --line-strong: #d3cec6;
+  --bg-app: #f3f1ed;
+  --bg-panel: #fcfbf8;
+  --bg-field: #f8f7f4;
+  --bg-subtle: #f6f4f0;
+  --bg-muted: #efede8;
+  --accent: #3e6851;
+  --accent-hover: #345943;
+}
+:root.uiNight body.previewFullscreen #previewArea.previewArcaDark #previewToolbar { background:var(--bg-app); }
+:root.uiNight #previewArea :is(.previewBlockCopyBtn, .previewProfilePlacementBtn, .previewOptionToggleBtn),
+:root.uiNight #previewArea :is(.previewBlockCopyBtn, .previewProfilePlacementBtn, .previewOptionToggleBtn):hover,
+:root.uiNight #previewArea :is(.previewBlockCopyBtn, .previewProfilePlacementBtn, .previewOptionToggleBtn):focus-visible {
+  background:var(--bg-panel);
+  border-color:var(--line);
+}
+:root.uiNight :is(#sidebar, #archiveDrawer, #fsPanel, #codePanel) input[type="text"],
+:root.uiNight :is(#sidebar, #archiveDrawer, #fsPanel, #codePanel) input[type="url"],
+:root.uiNight :is(#sidebar, #archiveDrawer, #fsPanel, #codePanel) input[type="number"],
+:root.uiNight :is(#sidebar, #archiveDrawer, #fsPanel, #codePanel) select,
+:root.uiNight :is(#sidebar, #archiveDrawer, #fsPanel, #codePanel) textarea { box-shadow:none; }
+:root.uiNight .cardFoldRow,
+:root.uiNight .cardEditor.isCollapsed { background:var(--bg-subtle); }
+:root.uiNight .cardEditor textarea,
+:root.uiNight .cardEditor textarea:focus,
+:root.uiNight .cardFoldGroup .foldTitleInput:focus,
+:root.uiNight .presetCard .pNameInput,
+:root.uiNight #fsTextarea,
+:root.uiNight #fsTextarea:focus,
+:root.uiNight #fsHl,
+:root.uiNight #tabCover input[type="text"]:not(.rangeval):not(:placeholder-shown),
+:root.uiNight #tabCover textarea:not(:placeholder-shown),
+:root.uiNight #tabCover input[type="url"]:focus { background:var(--bg-field); }
+:root.uiNight #tabTheme .comboCard,
+:root.uiNight #tabTheme .themeColorGrid,
+:root.uiNight #tabTheme .themeColorGrid .row,
+:root.uiNight #tabTheme #charList .row,
+:root.uiNight #tabTheme .presetCard { background:var(--bg-panel); }
+:root.uiNight #bodyInputGroup > .foldBody > .editorToolbar button:hover,
+:root.uiNight #fsToolbar button:hover { background:var(--bg-muted); }
+:root.uiNight .cardEditor:not(.commentEditor) .cardEditorHead .autoExpandBtn[aria-pressed="true"] { background:var(--bg-muted); }
+:root.uiNight .cardFoldGroup .delCardBtn:hover,
+:root.uiNight .btnDanger:hover,
+:root.uiNight #draftConflictBtn:hover { background:#442d2d; }
+:root.uiNight #copyBtn,
+:root.uiNight #archiveDrawer #saveSlotBtn,
+:root.uiNight #savePresetBtn,
+:root.uiNight #selToolbar button.active,
+:root.uiNight #blockToolbar button.active { color:#19241c; }
+:root.uiNight #savePresetBtn:hover { border-color:var(--ink-soft); background:var(--ink-soft); }
+:root.uiNight #undoToast { background:#2d322f; color:#f4f7f3; border-color:var(--line-strong); }
+
+/* 회색 팔레트에서는 작업 UI의 별도 고정색도 중성 회색으로 통일한다. */
+:root[data-ui-palette="gray"] body:not(.previewFullscreen) #previewArea #preview > [data-mosaic-comment-index] { color:#2b2b2b; }
+:root.uiNight[data-ui-palette="gray"] body:not(.previewFullscreen) #previewArea #preview > [data-mosaic-comment-index],
+:root[data-ui-palette="gray"] body.previewFullscreen #previewArea.previewArcaDark #preview > [data-mosaic-comment-index] { color:#e5e5e5; }
+:root[data-ui-palette="gray"] body.previewFullscreen #previewArea.previewArcaDark .previewStyleToggle[aria-pressed="true"]::after { background:#b0b0b0; }
+:root[data-ui-palette="gray"] body.previewFullscreen #previewArea.previewArcaDark :is(.previewFullscreenBtn, .layoutMirrorBtn):hover { background:#353535; color:#e2e2e2; }
+:root.uiNight[data-ui-palette="gray"] body.previewFullscreen #previewArea:not(.previewArcaDark) {
+  --ink:#2b2b2b; --ink-soft:#686868; --ink-faint:#777777;
+  --help-ink:#969696; --help-ink-strong:#777777;
+  --line:#e1e1e1; --line-strong:#cecece;
+  --bg-app:#f1f1f1; --bg-panel:#fcfcfc; --bg-field:#f7f7f7;
+  --bg-subtle:#f5f5f5; --bg-muted:#ececec;
+  --accent:#626262; --accent-hover:#4f4f4f;
+}
+:root.uiNight[data-ui-palette="gray"] :is(#copyBtn, #archiveDrawer #saveSlotBtn, #savePresetBtn, #selToolbar button.active, #blockToolbar button.active) { color:#1d1d1d; }
+:root.uiNight[data-ui-palette="gray"] #undoToast { background:#363636; color:#f5f5f5; }
+
+/* ---------- log_studio 커스텀 (v1.8.0 위에 추가) ---------- */
+/* 표제 URL: 본 입력 흐름을 방해하지 않도록 얇은 하위 접기로 분리한다. */
+.titleLinkFold { margin: 12px 0 0; padding-top: 2px; border-top: 1px solid var(--line); }
+.titleLinkFold > summary { display: flex; align-items: center; min-height: 38px; gap: 10px; padding: 0 2px; list-style: none; cursor: pointer; user-select: none; color: var(--ink-soft); font-size: 12.5px; font-weight: 750; }
+.titleLinkFold > summary::-webkit-details-marker { display: none; }
+.titleLinkFold > summary::after { content: "+"; flex: none; margin-left: 0; color: var(--ink-faint); font-size: 15px; font-weight: 400; }
+.titleLinkFold[open] > summary::after { content: "−"; margin-left: auto; }
+.titleLinkFold:not([open]) > *:not(summary) { display: none; }
+.titleLinkMeta { min-width: 0; margin-left: auto; overflow: hidden; color: var(--ink-faint); font-size: 10.5px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.titleLinkFold[open] > summary .titleLinkMeta { display: none; }
+.titleLinkBody { padding: 3px 2px 6px; }
+/* 프로필 사진 초기화 */
+#profileGroup .profileImageAdjustFooter { display: flex; justify-content: flex-end; margin-top: 2px; }
+#profileGroup .profileImageResetBtn { min-height: 26px; padding: 0 2px; border: 0; background: transparent; color: var(--ink-faint); font-size: 10.5px; }
+#profileGroup .profileImageResetBtn:hover { color: #a65f59; background: transparent; }
+/* 투명 배경 글자색 */
+.transparentTextRow { margin-top: 12px; }

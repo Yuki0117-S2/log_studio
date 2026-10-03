@@ -1,23 +1,25 @@
 <!DOCTYPE html>
-<!-- 조각로그 v1.7.0 · 배포본 index(v1.4.2.1) 기반 기능 통합·정리본 -->
+<!-- 조각로그 v1.8.0 · 배포본 index(v1.4.2.1) 기반 기능 통합·정리본 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script>try{if(localStorage.getItem('mosaicUiMode_v1')==='night')document.documentElement.classList.add('uiNight');const palette=localStorage.getItem('mosaicUiPalette_v1');if(['gray','blue','pink','yellow'].includes(palette))document.documentElement.dataset.uiPalette=palette}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>조각로그</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext x='52.5%25' y='53%25' dominant-baseline='central' text-anchor='middle' font-size='56'%3E%F0%9F%A7%A9%3C/text%3E%3C/svg%3E">
 <!-- 미설치 환경에서도 디자인 탭에서 서체를 비교할 수 있도록 웹폰트를 불러옵니다. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&amp;family=Noto+Serif+KR:wght@400;600;700;800&amp;display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="./styles.css?v=1.7.0-studio-1">
+<link rel="stylesheet" href="./styles.css?v=1.8.0-studio-1">
 </head>
 <body>
 
 <div id="sidebar">
   <div id="sidebarTop">
     <div id="brandRow">
-      <h1><span class="brandName">조각로그</span><span class="brandMeta"><span class="enName">Mosaic Log</span><a class="appVersion" href="https://github.com/mosaic-log/mosaic-log.github.io" target="_blank" rel="noopener noreferrer" title="GitHub에서 현재 버전 보기" aria-label="조각로그 v1.7.0 GitHub 저장소 열기">v1.7.0 + 커스텀</a></span></h1>
+      <h1><span class="brandName">조각로그</span><span class="brandMeta"><span class="enName">Mosaic Log</span><a class="appVersion" href="https://github.com/mosaic-log/mosaic-log.github.io" target="_blank" rel="noopener noreferrer" title="GitHub에서 현재 버전 보기" aria-label="조각로그 v1.8.0 GitHub 저장소 열기">v1.8.0 + 커스텀</a></span></h1>
       <span class="brandActions">
         <span id="draftStatus" class="draftStatus" data-state="saved" aria-live="polite">저장됨</span>
         <button class="uiButton" type="button" id="archiveOpenBtn" aria-expanded="false" aria-controls="archiveDrawer">보관함</button>
@@ -49,7 +51,7 @@
     <div class="imageCheckRow"><span class="imageLoadStatus" id="imageLoadStatus" data-state="idle" aria-live="polite" hidden></span></div>
     <div class="row">
       <label for="imgHeight">이미지 높이</label>
-      <input type="range" id="imgHeight" min="200" max="600" step="10" value="300">
+      <input type="range" id="imgHeight" min="100" max="600" step="10" value="300">
       <span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="imgHeightVal" data-range="imgHeight" value="300" aria-label="이미지 높이 직접 입력"><span class="rangeUnit">px</span></span>
     </div>
     <div class="row">
@@ -69,7 +71,22 @@
     <summary class="group-title foldHead"><span class="coverFoldTitle">표제</span><span class="coverFoldMeta" id="titleCoverSummary"></span><span class="coverFoldActions"><label class="coverVisibilitySwitch" title="표제 표시 전환"><input type="checkbox" id="logTitleOn" aria-label="표제 표시"><span class="coverVisibilitySwitchTrack" aria-hidden="true"></span></label></span><span class="foldArrow" aria-hidden="true"></span></summary>
     <div class="foldBody">
     <p class="group-desc">제목·부제 구성 · 빈 항목 자동 생략</p>
-    <div class="row segmentedChoiceRow"><label id="titleMinimalLabel">표현</label><input type="checkbox" id="titleMinimal" hidden><span class="segmentedChoice" data-minimal-control="titleMinimal" role="group" aria-labelledby="titleMinimalLabel"><button class="uiButton" type="button" data-value="default" aria-pressed="true">기본</button><button class="uiButton" type="button" data-value="minimal" aria-pressed="false">미니멀</button></span></div>
+    <div class="row segmentedChoiceRow">
+      <label id="titleMinimalLabel">표현</label>
+      <input type="checkbox" id="titleMinimal" hidden>
+      <span class="segmentedChoice" data-minimal-control="titleMinimal" role="group" aria-labelledby="titleMinimalLabel">
+        <button class="uiButton" type="button" data-value="default" aria-pressed="true">기본</button>
+        <button class="uiButton" type="button" data-value="minimal" aria-pressed="false">미니멀</button>
+      </span>
+    </div>
+    <div class="row imageBackgroundToggleRow segmentedChoiceRow titleBackgroundChoiceRow">
+      <label id="titleImageBackgroundLabel">배경</label>
+      <input type="checkbox" id="titleImageBackgroundOn" hidden>
+      <span class="segmentedChoice" data-background-control="titleImageBackgroundOn" role="group" aria-labelledby="titleImageBackgroundLabel">
+        <button class="uiButton" type="button" data-value="default" aria-pressed="true">기본</button>
+        <button class="uiButton" type="button" data-value="image" aria-pressed="false">대표 이미지</button>
+      </span>
+    </div>
     <div class="row titleFieldRow">
       <label for="logNumber">메모</label>
       <input type="text" class="miniInput" id="logNumber" placeholder="예: 모델 - 프롬프트">
@@ -131,12 +148,16 @@
   <details class="group foldGroup coverFold halfControls settingsForm" id="profileGroup">
     <summary class="group-title foldHead"><span class="coverFoldTitle">프로필</span><span class="coverFoldMeta" id="profileCoverSummary"></span><span class="coverFoldActions"><label class="coverVisibilitySwitch" title="프로필 표시 전환"><input type="checkbox" id="profileOn" aria-label="프로필 표시"><span class="coverVisibilitySwitchTrack" aria-hidden="true"></span></label></span><span class="foldArrow" aria-hidden="true"></span></summary>
     <div class="foldBody">
-      <details class="profileSubFold" id="profileBaseGroup" open>
-        <summary class="profileSubHead"><span class="profileSubTitle">기본 설정</span><span class="profileSubMeta" id="profileBaseSummary"></span><span class="profileSubArrow" aria-hidden="true"></span></summary>
-        <div class="profileSubBody">
-      <p class="group-desc">최상단 또는 표지 아래에 봇과 유저 소개</p>
-      <div class="row segmentedChoiceRow"><label id="profileMinimalLabel">표현</label><input type="checkbox" id="profileMinimal" hidden><span class="segmentedChoice" data-minimal-control="profileMinimal" role="group" aria-labelledby="profileMinimalLabel"><button class="uiButton" type="button" data-value="default" aria-pressed="true">기본</button><button class="uiButton" type="button" data-value="minimal" aria-pressed="false">미니멀</button></span></div>
-      <div class="profileConfigurationLabel">구성</div>
+      <div class="profileSubBody profileBaseSettings">
+      <p class="group-desc">최상단 또는 표지 아래에 인물 소개</p>
+      <div class="row segmentedChoiceRow">
+        <label id="profileMinimalLabel">표현</label>
+        <input type="checkbox" id="profileMinimal" hidden>
+        <span class="segmentedChoice" data-minimal-control="profileMinimal" role="group" aria-labelledby="profileMinimalLabel">
+          <button class="uiButton" type="button" data-value="default" aria-pressed="true">기본</button>
+          <button class="uiButton" type="button" data-value="minimal" aria-pressed="false">미니멀</button>
+        </span>
+      </div>
       <div class="row segmentedChoiceRow">
         <label id="profilePlacementLabel">배치</label>
         <select id="profilePlacement" class="segmentedChoiceSource" tabindex="-1" aria-hidden="true">
@@ -146,6 +167,27 @@
         <span class="segmentedChoice" data-control="profilePlacement" role="group" aria-labelledby="profilePlacementLabel">
           <button class="uiButton" type="button" data-value="top" aria-pressed="false">최상단</button>
           <button class="uiButton" type="button" data-value="below" aria-pressed="true">표지 아래</button>
+        </span>
+      </div>
+      <div class="row imageBackgroundToggleRow segmentedChoiceRow profileBackgroundChoiceRow">
+        <label id="profileImageBackgroundLabel">배경</label>
+        <input type="checkbox" id="profileImageBackgroundOn" hidden>
+        <span class="segmentedChoice" data-background-control="profileImageBackgroundOn" role="group" aria-labelledby="profileImageBackgroundLabel">
+          <button class="uiButton" type="button" data-value="default" aria-pressed="true">기본</button>
+          <button class="uiButton" type="button" data-value="image" aria-pressed="false">사진 배경</button>
+        </span>
+      </div>
+      <div class="row segmentedChoiceRow" id="profileTextPositionRow" hidden>
+        <label id="profileTextPositionLabel">라벨 위치</label>
+        <select id="profileTextPosition" class="segmentedChoiceSource" tabindex="-1" aria-hidden="true">
+          <option value="top">상단</option>
+          <option value="center" selected>중앙</option>
+          <option value="bottom">하단</option>
+        </select>
+        <span class="segmentedChoice" data-control="profileTextPosition" role="group" aria-labelledby="profileTextPositionLabel">
+          <button class="uiButton" type="button" data-value="top" aria-pressed="false">상단</button>
+          <button class="uiButton" type="button" data-value="center" aria-pressed="true">중앙</button>
+          <button class="uiButton" type="button" data-value="bottom" aria-pressed="false">하단</button>
         </span>
       </div>
       <div class="row segmentedChoiceRow">
@@ -173,33 +215,11 @@
         </span>
       </div>
       <input type="hidden" id="profileOrder" value="bot-user">
-        </div>
-      </details>
+      </div>
 
       <details class="profileSubFold" id="profileCharGroup">
-        <summary class="profileSubHead"><span class="profileSubTitle">BOT</span><span class="profileSubActions"><button type="button" class="profileResetIconBtn" id="profileCharResetBtn" aria-label="BOT 전체 초기화" title="BOT 전체 초기화">↺</button><label class="profileEntitySwitch" title="BOT 프로필 표시 전환"><input type="checkbox" id="profileCharOn" checked aria-label="BOT 프로필 표시"><span class="profileEntitySwitchTrack" aria-hidden="true"></span></label></span><span class="profileSubArrow" aria-hidden="true"></span></summary>
+        <summary class="profileSubHead"><span class="profileSubTitle">BOT</span><span class="profileSubActions"><button type="button" class="profileResetIconBtn" id="profileCharResetBtn" aria-label="BOT 전체 초기화" title="BOT 전체 초기화">↺</button><label class="coverVisibilitySwitch" title="BOT 프로필 표시 전환"><input type="checkbox" id="profileCharOn" checked aria-label="BOT 프로필 표시"><span class="coverVisibilitySwitchTrack" aria-hidden="true"></span></label></span><span class="profileSubArrow" aria-hidden="true"></span></summary>
         <div class="profileSubBody">
-      <div class="row">
-        <label for="profileCharName">이름</label>
-        <input type="text" id="profileCharName" maxlength="100" placeholder="표시 이름">
-      </div>
-      <div class="row">
-        <label for="profileCharUrl">BOT 링크</label>
-        <input type="url" id="profileCharUrl" maxlength="8192" placeholder="표제와 공유 · https://…">
-      </div>
-      <div class="row profileTagsRow">
-        <label id="profileCharTagsLabel">태그</label>
-        <div class="profileTagFields" role="group" aria-labelledby="profileCharTagsLabel">
-          <input type="text" id="profileCharTag1" maxlength="150" placeholder="태그 1">
-          <input type="text" id="profileCharTag2" maxlength="150" placeholder="태그 2">
-          <input type="text" id="profileCharTag3" maxlength="150" placeholder="태그 3">
-        </div>
-        <input type="hidden" id="profileCharTags" value="">
-      </div>
-      <div class="row">
-        <label for="profileCharDesc">소개</label>
-        <textarea id="profileCharDesc" maxlength="500" rows="2" style="min-height:58px; resize:vertical;" placeholder="한 줄 설명"></textarea>
-      </div>
       <div class="row profileImageRow">
         <label for="profileCharImage">이미지 URL</label>
         <div class="profileImageField">
@@ -228,33 +248,37 @@
         <div class="profileImageAdjustFooter"><button type="button" class="profileImageResetBtn uiButton" id="profileCharImageResetBtn">사진 초기화</button></div>
         </div>
       </div>
+      <div class="row">
+        <label for="profileCharRole">라벨</label>
+        <input type="text" id="profileCharRole" maxlength="24" value="BOT" placeholder="BOT">
+      </div>
+      <div class="row">
+        <label for="profileCharName">이름</label>
+        <input type="text" id="profileCharName" maxlength="100" placeholder="표시 이름">
+      </div>
+      <div class="row">
+        <label for="profileCharUrl">BOT 링크</label>
+        <input type="url" id="profileCharUrl" maxlength="8192" placeholder="표제와 공유 · https://…">
+      </div>
+      <div class="row profileTagsRow">
+        <label id="profileCharTagsLabel">태그</label>
+        <div class="profileTagFields" role="group" aria-labelledby="profileCharTagsLabel">
+          <input type="text" id="profileCharTag1" maxlength="150" placeholder="태그 1">
+          <input type="text" id="profileCharTag2" maxlength="150" placeholder="태그 2">
+          <input type="text" id="profileCharTag3" maxlength="150" placeholder="태그 3">
+        </div>
+        <input type="hidden" id="profileCharTags" value="">
+      </div>
+      <div class="row">
+        <label for="profileCharDesc">소개</label>
+        <textarea id="profileCharDesc" maxlength="500" rows="2" style="min-height:58px; resize:vertical;" placeholder="한 줄 설명"></textarea>
+      </div>
         </div>
       </details>
 
       <details class="profileSubFold" id="profileUserGroup">
-        <summary class="profileSubHead"><span class="profileSubTitle">USER</span><span class="profileSubActions"><button type="button" class="profileResetIconBtn" id="profileUserResetBtn" aria-label="USER 전체 초기화" title="USER 전체 초기화">↺</button><label class="profileEntitySwitch" title="USER 프로필 표시 전환"><input type="checkbox" id="profileUserOn" checked aria-label="USER 프로필 표시"><span class="profileEntitySwitchTrack" aria-hidden="true"></span></label></span><span class="profileSubArrow" aria-hidden="true"></span></summary>
+        <summary class="profileSubHead"><span class="profileSubTitle">USER</span><span class="profileSubActions"><button type="button" class="profileResetIconBtn" id="profileUserResetBtn" aria-label="USER 전체 초기화" title="USER 전체 초기화">↺</button><label class="coverVisibilitySwitch" title="USER 프로필 표시 전환"><input type="checkbox" id="profileUserOn" checked aria-label="USER 프로필 표시"><span class="coverVisibilitySwitchTrack" aria-hidden="true"></span></label></span><span class="profileSubArrow" aria-hidden="true"></span></summary>
         <div class="profileSubBody">
-      <div class="row">
-        <label for="profileUserName">이름</label>
-        <input type="text" id="profileUserName" maxlength="100" placeholder="표시 이름">
-      </div>
-      <div class="row">
-        <label for="profileUserUrl">USER 링크</label>
-        <input type="url" id="profileUserUrl" maxlength="8192" placeholder="표제와 공유 · https://…">
-      </div>
-      <div class="row profileTagsRow">
-        <label id="profileUserTagsLabel">태그</label>
-        <div class="profileTagFields" role="group" aria-labelledby="profileUserTagsLabel">
-          <input type="text" id="profileUserTag1" maxlength="150" placeholder="태그 1">
-          <input type="text" id="profileUserTag2" maxlength="150" placeholder="태그 2">
-          <input type="text" id="profileUserTag3" maxlength="150" placeholder="태그 3">
-        </div>
-        <input type="hidden" id="profileUserTags" value="">
-      </div>
-      <div class="row">
-        <label for="profileUserDesc">소개</label>
-        <textarea id="profileUserDesc" maxlength="500" rows="2" style="min-height:58px; resize:vertical;" placeholder="한 줄 설명"></textarea>
-      </div>
       <div class="row profileImageRow">
         <label for="profileUserImage">이미지 URL</label>
         <div class="profileImageField">
@@ -283,11 +307,40 @@
         <div class="profileImageAdjustFooter"><button type="button" class="profileImageResetBtn uiButton" id="profileUserImageResetBtn">사진 초기화</button></div>
         </div>
       </div>
+      <div class="row">
+        <label for="profileUserRole">라벨</label>
+        <input type="text" id="profileUserRole" maxlength="24" value="USER" placeholder="USER">
+      </div>
+      <div class="row">
+        <label for="profileUserName">이름</label>
+        <input type="text" id="profileUserName" maxlength="100" placeholder="표시 이름">
+      </div>
+      <div class="row">
+        <label for="profileUserUrl">USER 링크</label>
+        <input type="url" id="profileUserUrl" maxlength="8192" placeholder="표제와 공유 · https://…">
+      </div>
+      <div class="row profileTagsRow">
+        <label id="profileUserTagsLabel">태그</label>
+        <div class="profileTagFields" role="group" aria-labelledby="profileUserTagsLabel">
+          <input type="text" id="profileUserTag1" maxlength="150" placeholder="태그 1">
+          <input type="text" id="profileUserTag2" maxlength="150" placeholder="태그 2">
+          <input type="text" id="profileUserTag3" maxlength="150" placeholder="태그 3">
+        </div>
+        <input type="hidden" id="profileUserTags" value="">
+      </div>
+      <div class="row">
+        <label for="profileUserDesc">소개</label>
+        <textarea id="profileUserDesc" maxlength="500" rows="2" style="min-height:58px; resize:vertical;" placeholder="한 줄 설명"></textarea>
+      </div>
         </div>
       </details>
 
+      <input type="hidden" id="profileExtraCount" value="0">
+      <div id="profileExtraEditors"></div>
+      <button type="button" id="profileAddBtn" class="profileAddBtn">+ 인물 추가</button>
+
       <details class="profileSubFold" id="profileCommonGroup">
-        <summary class="profileSubHead"><span class="profileSubTitle">관계와 상황</span><span class="profileSubActions"><button type="button" class="profileResetIconBtn" id="profileCommonResetBtn" aria-label="관계와 상황 내용 초기화" title="관계와 상황 내용 초기화">↺</button><label class="profileEntitySwitch" title="관계와 상황 표시 전환"><input type="checkbox" id="profileCommonOn" checked aria-label="관계와 상황 표시"><span class="profileEntitySwitchTrack" aria-hidden="true"></span></label></span><span class="profileSubArrow" aria-hidden="true"></span></summary>
+        <summary class="profileSubHead"><span class="profileSubTitle">관계와 상황</span><span class="profileSubActions"><button type="button" class="profileResetIconBtn" id="profileCommonResetBtn" aria-label="관계와 상황 내용 초기화" title="관계와 상황 내용 초기화">↺</button><label class="coverVisibilitySwitch" title="관계와 상황 표시 전환"><input type="checkbox" id="profileCommonOn" checked aria-label="관계와 상황 표시"><span class="coverVisibilitySwitchTrack" aria-hidden="true"></span></label></span><span class="profileSubArrow" aria-hidden="true"></span></summary>
         <div class="profileSubBody">
       <div class="row profileTagsRow">
         <label id="profileRelationshipLabel">관계·키워드</label>
@@ -324,7 +377,7 @@
     <div class="foldBody">
       <p class="group-desc">로그 최상단 또는 최하단의 모델·링크·메모</p>
       <input type="hidden" id="creditItems" value="[]">
-      <div id="creditEditorArea" class="creditControlsDisabled" aria-disabled="true">
+      <div id="creditEditorArea">
         <div class="creditConfigurationSection">
           <div class="row segmentedChoiceRow creditPlacementRow">
             <label id="creditPlacementLabel">배치</label>
@@ -385,11 +438,11 @@
       <span class="tbGroup">
         <span class="separatorInsertSplit">
           <button class="uiToolbarButton" type="button" id="insertHrBtn" title="얇은 구분선 [HR] 삽입">구분선</button>
-          <select id="separatorInsertSelect" class="separatorInsertSelect" aria-label="다른 구분 요소 삽입" title="장면 전환·호흡·넓은 여백 선택">
+          <select id="separatorInsertSelect" class="separatorInsertSelect" aria-label="다른 구분 요소 삽입" title="장면 전환·호흡·여백 선택">
             <option value="" selected disabled>다른 구분 요소</option>
             <option value="hr2">장면 전환</option>
             <option value="hr3">호흡</option>
-            <option value="gap">넓은 여백</option>
+            <option value="hr4">여백 [HR4]</option>
           </select>
         </span>
       </span>
@@ -405,25 +458,23 @@
       <button class="uiButton" type="button" id="addCardBtn">+ 카드</button>
       <button class="uiButton" type="button" id="addCommentBtn">+ 코멘트</button>
     </div>
-    <div class="counterRow"><span id="bodyCounter"></span><button type="button" class="btnDanger uiButton" id="clearBodyBtn">전체 비우기</button></div>
+    <div class="counterRow"><span id="bodyCounter"></span><button type="button" id="clearBodyBtn" aria-label="본문 전체 비우기" title="본문 전체 비우기">↺</button></div>
     <details class="helpFold">
       <summary>카드·드래그 도움말</summary>
-      <p class="hint">카드 1개 = 아카라이브 둥근 박스 1개 · 대표 이미지: 첫 카드 위 · 꼬리말: 마지막 카드 아래</p>
-      <p class="hint"><b>카드 순서:</b> 카드·코멘트 헤더를 직접 끌어 이동 · 번호와 미리보기 순서 자동 갱신</p>
-      <p class="hint"><b>드래그 이동:</b> 이미지·구분선·장면 전환·호흡·여백 위치 변경 · 되돌리기 지원 · 접기 블록 제외</p>
-      <p class="hint"><b>코멘트:</b> 카드 사이에 아카라이브 기본 문단을 삽입 · Shift+Enter 줄바꿈 외 본문 문법·찾기·치환 미적용</p>
+      <p class="hint"><b>드래그 이동:</b> 이미지·구분선·장면 전환·호흡·여백 위치 변경</p>
       <p class="hint"><b>한 번 클릭:</b> 본문 이미지 삭제·비율·캡션 · 구분 요소 변경·삭제</p>
+      <p class="hint"><b>코멘트:</b> 카드 사이에 아카라이브 기본 문단을 삽입 · 본문 문법·찾기·치환 미적용</p>
     </details>
     <details class="syntaxHelp">
       <summary>입력 문법 도움말</summary>
       <div class="syntaxHelpSection">
         <div class="syntaxHelpSectionTitle">글자와 대사</div>
         <p class="hint"><b>자동 인물색:</b> <code>**이름** "대사"</code> · 등록 없이 이름과 대사를 같은 색으로 표시 · 서술은 유지</p>
-        <p class="hint"><b>대사:</b> <code>"…"</code> 인식 · 옵션 3–6은 출력에서 자동 줄바꿈</p>
+        <p class="hint"><b>대사:</b> <code>"…"</code> 인식 · 글자 강조·배경 강조 외 방식은 대사를 별도 줄로 출력</p>
         <p class="hint"><b>강조:</b> <code>*이 부분*</code> → 강조 색상 이탤릭</p>
         <p class="hint"><b>속마음:</b> <code>'이 부분'</code> → 강조 색상 · 기울임 없음</p>
         <p class="hint"><b>굵게:</b> <code>**이 부분**</code> · 굵게 + 강조 <code>***둘 다***</code></p>
-        <p class="hint"><b>인물 대사:</b> <code>&lt;&lt;카일&gt;&gt; "내가 갈게."</code> 또는 <code>[카일]"내가 갈게."</code> · 이름: <b>테마 &gt; 현재 테마</b>에 자동 등록</p>
+        <p class="hint"><b>제3~제5 인물:</b> <code>&lt;&lt;카일&gt;&gt; "내가 갈게."</code> 또는 <code>[카일]"내가 갈게."</code> · 이름: <b>테마 &gt; 현재 테마</b>에 자동 등록</p>
         <p class="hint"><b>색 덮어쓰기:</b> 줄 맨 앞 <code>{#색상코드}</code> · 예: <code>{#009966}&gt;&gt;"초록 대사"</code></p>
       </div>
       <div class="syntaxHelpSection">
@@ -432,7 +483,7 @@
         <p class="hint"><b>소제목:</b> 맨 앞 <code>#</code> 개수로 크기 결정 · <code>#</code> 최대 → <code>####</code> 최소</p>
         <p class="hint"><b>인용 블록:</b> 줄 맨 앞 <code>&gt; </code> · 편지·문자·시스템 메시지용 · <code>&gt;&gt;</code>와 구분</p>
         <p class="hint"><b>상태창:</b> 줄 전체를 <code>[ 내용 | 내용 ]</code>으로 입력 · 바깥 대괄호는 숨기고 연한 보조색 배경으로 출력</p>
-        <p class="hint"><b>문단 구분:</b> <code>---</code> → <code>[HR]</code> 선 · <code>[HR2]</code> ✦ ✦ ✦ · <code>[HR3]</code> 호흡(· · ·) · <code>[GAP]</code> 넓은 여백</p>
+        <p class="hint"><b>문단 구분:</b> <code>---</code> → <code>[HR]</code> 선 · <code>[HR2]</code> ✦ · <code>[HR3]</code> 호흡(· · ·) · <code>[HR4]</code> 여백</p>
       </div>
       <div class="syntaxHelpSection">
         <div class="syntaxHelpSectionTitle">접기와 이미지</div>
@@ -509,23 +560,30 @@
   <details class="group foldGroup bodyFold" id="nameReplaceGroup">
     <summary class="group-title foldHead"><span class="bodyFoldTitle">이름 바꾸기</span><span class="foldArrow" aria-hidden="true"></span></summary>
     <div class="foldBody">
-      <p class="group-desc">모든 카드의 이름·후속 조사 일괄 변경</p>
+      <p class="group-desc">규칙을 저장하면 기존·새 입력의 이름과 조사를 계속 변경</p>
       <div class="nameReplaceRow">
         <div class="nameFieldGroup">
-          <input type="text" id="nameFrom" aria-label="현재 이름" placeholder="현재 이름">
+          <input type="text" id="nameFrom" maxlength="80" aria-label="현재 이름" placeholder="현재 이름">
           <span class="arrowSep">→</span>
-          <input type="text" id="nameTo" aria-label="새 이름" placeholder="새 이름">
+          <input type="text" id="nameTo" maxlength="80" aria-label="새 이름" placeholder="새 이름">
+          <div class="nameQuickFill" role="group" aria-label="새 이름 빠른 입력">
+            <button type="button" data-name-fill="char" aria-label="새 이름에 char 입력">char</button>
+            <button type="button" data-name-fill="user" aria-label="새 이름에 user 입력">user</button>
+            <button type="button" data-name-fill="○○" aria-label="새 이름에 동그라미 두 개 입력">○○</button>
+          </div>
         </div>
         <div class="nameActionGroup">
-          <button class="uiButton" type="button" id="nameFindBtn">찾기</button>
-          <button class="uiButton" type="button" id="nameReplaceBtn">바꾸기</button>
+          <button class="uiButton" type="button" id="nameReplaceBtn">적용</button>
         </div>
       </div>
+      <input type="hidden" id="nameRules" value="[]">
       <div id="nameStatus" class="hint" aria-live="polite"></div>
+      <div id="nameRuleList" class="keywordRuleList" aria-label="활성 이름 바꾸기 규칙 목록"></div>
       <details class="helpFold">
         <summary>도움말</summary>
-        <p class="hint">모든 카드 적용 · <b>은/는·이/가·을/를·과/와</b> 자동 변환</p>
-        <p class="hint">정확히 일치하는 캐릭터·유저·커스텀 인물 함께 변경 · 인물 색상 유지</p>
+        <p class="hint">적용 버튼 또는 Enter로 규칙 추가 · 기존 카드와 이후 입력 모두 적용</p>
+        <p class="hint">각 규칙의 되돌리기는 현재 본문과 일치하는 이름 필드를 되돌리고 규칙을 제거</p>
+        <p class="hint">은/는·이/가·을/를·과/와 자동 변환 · 인물 색상 유지</p>
       </details>
     </div>
   </details>
@@ -541,7 +599,7 @@
           <input type="text" id="keywordTo" maxlength="80" aria-label="바꿀 키워드" placeholder="바꿀 키워드">
         </div>
         <div class="nameActionGroup">
-          <button class="uiButton" type="button" id="keywordAddBtn">치환</button>
+          <button class="uiButton" type="button" id="keywordAddBtn">적용</button>
         </div>
       </div>
       <input type="hidden" id="keywordRules" value="[]">
@@ -549,7 +607,7 @@
       <div id="keywordRuleList" class="keywordRuleList" aria-label="활성 키워드 치환 목록"></div>
       <details class="helpFold">
         <summary>도움말</summary>
-        <p class="hint">치환 버튼 또는 Enter로 규칙 추가 · 기존 카드와 이후 입력 모두 적용</p>
+        <p class="hint">적용 버튼 또는 Enter로 규칙 추가 · 기존 카드와 이후 입력 모두 적용</p>
         <p class="hint">각 규칙의 되돌리기는 현재 본문에서 바뀐 문구를 원래 문구로 되돌리고 규칙을 제거</p>
         <p class="hint">모든 카드 적용 · 대소문자를 구분해 입력한 문구와 정확히 일치하는 부분만 변경</p>
         <p class="hint">이름·조사 자동 변환과 테마의 인물 이름 변경은 적용하지 않음</p>
@@ -583,22 +641,22 @@
       </span>
     </div>
     <div class="typeSectionLabel designSectionLabel">본문</div>
-    <div class="row">
+    <div class="row typographyBodyRow">
       <label for="narrSize">나레이션 크기</label>
       <input type="range" id="narrSize" value="14" step="0.5" min="9" max="24">
       <span class="rangeEditor"><input type="text" inputmode="decimal" class="rangeval" id="narrSizeVal" data-range="narrSize" value="14" aria-label="나레이션 크기 직접 입력"><span class="rangeUnit">px</span></span>
     </div>
-    <div class="row">
+    <div class="row typographyBodyRow typographyBodyGroupEnd">
       <label for="narrLine">나레이션 줄간격</label>
       <input type="range" id="narrLine" value="1.7" step="0.05" min="1" max="3">
       <span class="rangeEditor"><input type="text" inputmode="decimal" class="rangeval" id="narrLineVal" data-range="narrLine" value="1.7" aria-label="나레이션 줄간격 직접 입력"></span>
     </div>
-    <div class="row">
+    <div class="row typographyBodyRow">
       <label for="dlgSize">대사 크기</label>
       <input type="range" id="dlgSize" value="14" step="0.5" min="9" max="24">
       <span class="rangeEditor"><input type="text" inputmode="decimal" class="rangeval" id="dlgSizeVal" data-range="dlgSize" value="14" aria-label="대사 크기 직접 입력"><span class="rangeUnit">px</span></span>
     </div>
-    <div class="row">
+    <div class="row typographyBodyRow typographyBodyGroupEnd">
       <label for="dlgLine">대사 줄간격</label>
       <input type="range" id="dlgLine" value="1.7" step="0.05" min="1" max="3">
       <span class="rangeEditor"><input type="text" inputmode="decimal" class="rangeval" id="dlgLineVal" data-range="dlgLine" value="1.7" aria-label="대사 줄간격 직접 입력"></span>
@@ -606,6 +664,11 @@
     <details class="typographySubsection" id="typographySpacingSection">
       <summary class="typographySubsectionSummary">간격</summary>
       <div class="typographySubsectionBody">
+        <div class="row">
+          <label for="narrDialogueGap">나레이션 ↔ 대사</label>
+          <input type="range" id="narrDialogueGap" value="20" step="2" min="10" max="40">
+          <span class="rangeEditor"><input type="text" inputmode="decimal" class="rangeval" id="narrDialogueGapVal" data-range="narrDialogueGap" value="20" aria-label="나레이션과 대사 사이 간격 직접 입력"><span class="rangeUnit">px</span></span>
+        </div>
         <div class="row">
           <label for="paragraphGap">단락 간격</label>
           <input type="range" id="paragraphGap" value="20" step="2" min="8" max="40">
@@ -645,19 +708,18 @@
       <span class="foldArrow" aria-hidden="true"></span>
     </summary>
     <div class="foldBody">
-    <div class="dialogueSectionLabel">대사</div>
     <div class="row dialogueStyleRow selectCycleRow">
       <label for="dlgStyle">표현 방식</label>
       <select id="dlgStyle">
         <optgroup label="문장 속 대사도 적용">
-          <option value="softlight" selected>옵션 1 - 글자 강조</option>
-          <option value="highlight">옵션 2 - 배경 강조</option>
+          <option value="softlight" selected>글자 강조</option>
+          <option value="highlight">배경 강조</option>
         </optgroup>
         <optgroup label="출력에서 대사를 분리해 적용">
-          <option value="badge">옵션 3 - 이름 배지</option>
-          <option value="gradient">옵션 4 - 그라데이션</option>
-          <option value="box">옵션 5 - 인용박스</option>
-          <option value="messenger">옵션 6 - 메신저</option>
+          <option value="badge">이름표</option>
+          <option value="gradient">그라데이션</option>
+          <option value="box">인용박스</option>
+          <option value="messenger">메신저</option>
         </optgroup>
       </select>
       <span class="selectCycleStepper" role="group" aria-label="대사 표현 방식 이전·다음">
@@ -700,7 +762,6 @@
       <span class="foldArrow" aria-hidden="true"></span>
     </summary>
     <div class="foldBody">
-    <div class="designSectionLabel">카드</div>
     <div class="row selectCycleRow">
       <label for="spacingMode">내용 간격</label>
       <select id="spacingMode">
@@ -730,20 +791,203 @@
       <option value="separate" selected>개별 카드</option>
       <option value="unified">카드 이어보기</option>
     </select>
-    <div class="designCheckList compactCheckList">
-      <label class="designCheckRow" title="여러 카드를 하나의 배경 안에 이어서 표시"><input type="checkbox" id="cardLayoutUnifiedOn"><span>카드 이어보기</span></label>
-      <label class="designCheckRow"><input type="checkbox" id="cardBorderOn" checked><span>카드 외곽선 표시</span></label>
-    </div>
 
-    <div class="foldCardOptionSection">
-      <div class="foldCardOptionTitle">접기 카드</div>
-      <div class="designCheckList">
-        <label class="designCheckRow" title="카드 제목에 ✦ 장식을 표시"><input type="checkbox" id="foldTitleDecorationOn" checked><span>카드 제목 장식 표시</span></label>
-        <label class="designCheckRow" title="카드 제목과 내부 접기의 제목 아래에 구분선을 표시"><input type="checkbox" id="foldDividerOn" checked><span>카드 제목 구분선 표시</span></label>
-        <label class="designCheckRow" title="빈 접기 카드에 위에서부터 1, 2, 3 표시"><input type="checkbox" id="foldTitleAutoNumber"><span>빈 제목 자동 번호</span></label>
+    <div class="layoutToggleRow" role="group" aria-labelledby="layoutCardOptionsLabel">
+      <span class="layoutToggleLabel" id="layoutCardOptionsLabel">카드 구성</span>
+      <div class="layoutToggleChoices">
+        <label class="layoutToggleChoice" title="카드 외곽선 표시 전환"><input type="checkbox" id="cardBorderOn" checked><span>외곽선</span></label>
+        <label class="layoutToggleChoice" title="여러 카드를 하나의 배경 안에 이어서 표시"><input type="checkbox" id="cardLayoutUnifiedOn"><span>이어보기</span></label>
+      </div>
+    </div>
+    <div class="foldCardOptionSection layoutToggleRow" role="group" aria-labelledby="layoutFoldOptionsLabel">
+      <span class="layoutToggleLabel" id="layoutFoldOptionsLabel">카드 제목</span>
+      <div class="layoutToggleChoices">
+        <label class="layoutToggleChoice" title="카드 제목에 ✦ 장식을 표시"><input type="checkbox" id="foldTitleDecorationOn" checked><span>제목 장식</span></label>
+        <label class="layoutToggleChoice" title="카드 제목과 내부 접기의 제목 아래에 구분선을 표시"><input type="checkbox" id="foldDividerOn" checked><span>구분선</span></label>
+        <label class="layoutToggleChoice" title="빈 접기 카드에 위에서부터 1, 2, 3 표시"><input type="checkbox" id="foldTitleAutoNumber"><span>자동 번호</span></label>
       </div>
     </div>
 
+    </div>
+  </details>
+
+  <details class="group foldGroup designFold halfControls settingsForm advancedDesignGroup" id="advancedDesignGroup">
+    <summary class="group-title foldHead">
+      <span class="designSummaryTitle">세부 조정</span>
+      <span class="coverFoldActions"><button type="button" class="profileResetIconBtn" id="advancedResetBtn" aria-label="세부 조정 초기화" title="세부 조정 초기화">↺</button><label class="coverVisibilitySwitch" title="세부 조정 적용 전환"><input type="checkbox" id="advancedOn" checked aria-label="세부 조정 적용"><span class="coverVisibilitySwitchTrack" aria-hidden="true"></span></label></span>
+      <span class="foldArrow" aria-hidden="true"></span>
+    </summary>
+    <div class="foldBody">
+      <details class="typographySubsection" id="detailCoverSection">
+        <summary class="typographySubsectionSummary">표제</summary>
+        <div class="typographySubsectionBody">
+          <div class="advancedOptionPanel" id="topProfileDetailPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel">최상단 프로필</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="topProfileDetailResetBtn" data-reset-group="topProfile" aria-label="최상단 프로필 조정 초기화" title="최상단 프로필 조정 초기화">↺</button>
+              </div>
+              <div class="row shapeChoiceRow"><span class="shapeChoiceLabel" id="profileOuterBackgroundLabel">바깥 배경</span><select id="profileOuterBackground" class="segmentedChoiceSource" tabindex="-1" aria-hidden="true"><option value="filled" selected>기본</option><option value="transparent">투명</option></select><span class="segmentedChoice shapeChoice" data-control="profileOuterBackground" role="group" aria-labelledby="profileOuterBackgroundLabel"><button class="uiButton" type="button" data-value="filled" aria-pressed="true">기본</button><button class="uiButton" type="button" data-value="transparent" aria-pressed="false">투명</button></span></div>
+              <div class="row" id="profileItemGapRow"><label for="profileItemGap">프로필 사이</label><input type="range" id="profileItemGap" min="-10" max="40" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="profileItemGapVal" data-range="profileItemGap" value="10" aria-label="프로필 사이 실제 간격 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel">표지</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="coverSpaceResetBtn" data-reset-group="coverSpace" aria-label="표지 초기화" title="표지 초기화">↺</button>
+              </div>
+              <div class="row"><label for="coverVerticalSpace">위아래 여백</label><input type="range" id="coverVerticalSpace" min="0" max="60" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="coverVerticalSpaceVal" data-range="coverVerticalSpace" value="0" aria-label="표지 위아래 여백 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row advancedDividerLengthRow" id="coverDividerLengthRow"><label for="coverDividerLength">표지선 길이</label><input type="range" id="coverDividerLength" min="20" max="100" step="5" value="100"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="coverDividerLengthVal" data-range="coverDividerLength" value="100" aria-label="표지 아래 구분선 길이 직접 입력"><span class="rangeUnit">%</span></span></div>
+          </div>
+        </div>
+      </details>
+      <details class="typographySubsection" id="detailCardInteriorSection">
+        <summary class="typographySubsectionSummary">카드 내부</summary>
+        <div class="typographySubsectionBody">
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel">본문 여백</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="cardInteriorResetBtn" data-reset-group="cardInterior" aria-label="본문 여백 초기화" title="본문 여백 초기화">↺</button>
+              </div>
+              <div class="row"><label for="cardBodyTopSpace">본문 위 여백</label><input type="range" id="cardBodyTopSpace" min="0" max="40" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="cardBodyTopSpaceVal" data-range="cardBodyTopSpace" value="0" aria-label="각 카드 본문 첫 줄 위 추가 여백 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row"><label for="cardBodyBottomSpace">본문 아래 여백</label><input type="range" id="cardBodyBottomSpace" min="-28" max="40" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="cardBodyBottomSpaceVal" data-range="cardBodyBottomSpace" value="0" aria-label="각 카드 본문 아래 여백 조절값 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row"><label for="cardInlinePadding">좌우 안쪽 여백</label><input type="range" id="cardInlinePadding" min="0" max="66" step="1" value="22"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="cardInlinePaddingVal" data-range="cardInlinePadding" value="0" aria-label="카드 좌우 여백 조절값 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row advancedLayoutOnlyRow" id="unifiedBottomSpaceRow"><label for="unifiedBottomSpace">이어보기 끝</label><input type="range" id="unifiedBottomSpace" min="0" max="60" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="unifiedBottomSpaceVal" data-range="unifiedBottomSpace" value="0" aria-label="이어보기 마지막 카드 안쪽 끝 여백 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel">소제목 여백</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="headingSpacingResetBtn" data-reset-group="headingSpacing" aria-label="소제목 여백 초기화" title="소제목 여백 초기화">↺</button>
+              </div>
+              <div class="row"><label for="headingTopSpace">소제목 위 여백</label><input type="range" id="headingTopSpace" min="-20" max="40" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="headingTopSpaceVal" data-range="headingTopSpace" value="0" aria-label="소제목 위 여백 조절값 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row"><label for="headingBetweenSpace">소제목 사이</label><input type="range" id="headingBetweenSpace" min="-20" max="40" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="headingBetweenSpaceVal" data-range="headingBetweenSpace" value="0" aria-label="연속 소제목 사이 여백 조절값 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row"><label for="headingBottomSpace">소제목 아래 여백</label><input type="range" id="headingBottomSpace" min="-20" max="40" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="headingBottomSpaceVal" data-range="headingBottomSpace" value="0" aria-label="소제목 아래 여백 조절값 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+        </div>
+      </details>
+      <details class="typographySubsection" id="detailDividerSection">
+        <summary class="typographySubsectionSummary"><span class="advancedSubsectionLabel"><span class="advancedSubsectionBranch" aria-hidden="true">└</span>구분선</span></summary>
+        <div class="typographySubsectionBody">
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel" data-hr-control="hr">[HR] 구분선</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="hrResetBtn" data-reset-group="hr" data-hr-control="hr" aria-label="[HR] 구분선 초기화" title="[HR] 구분선 초기화">↺</button>
+              </div>
+              <div class="row shapeChoiceRow" data-hr-control="hr">
+                <span class="shapeChoiceLabel" id="hrShapeLabel">모양</span>
+                <select id="hrShape" class="segmentedChoiceSource" tabindex="-1" aria-hidden="true"><option value="solid">실선</option><option value="dashed">파선</option><option value="star">중앙 별</option></select>
+                <span class="segmentedChoice shapeChoice" data-control="hrShape" role="group" aria-labelledby="hrShapeLabel" aria-label="구분선 모양">
+                  <button class="uiButton" type="button" data-value="solid" aria-label="실선" title="실선" aria-pressed="true"><span class="shapePreview shapePreviewLine shapePreviewSolid" aria-hidden="true"></span></button>
+                  <button class="uiButton" type="button" data-value="dashed" aria-label="파선" title="파선" aria-pressed="false"><span class="shapePreview shapePreviewLine shapePreviewDashed" aria-hidden="true"></span></button>
+                  <button class="uiButton" type="button" data-value="star" aria-label="중앙 별" title="중앙 별" aria-pressed="false"><span class="shapePreview shapePreviewStarLine" aria-hidden="true"><span>✦</span></span></button>
+                </span>
+              </div>
+              <div class="row" data-hr-control="hr"><label for="hrLength">길이</label><input type="range" id="hrLength" min="20" max="100" step="5" value="100"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="hrLengthVal" data-range="hrLength" value="100" aria-label="[HR] 구분선 길이 직접 입력"><span class="rangeUnit">%</span></span></div>
+              <div class="row" data-hr-control="hr"><label for="hrOpacity">불투명도</label><input type="range" id="hrOpacity" min="0" max="100" step="5" value="50"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="hrOpacityVal" data-range="hrOpacity" value="50" aria-label="구분선 불투명도 직접 입력"><span class="rangeUnit">%</span></span></div>
+              <div class="row" data-hr-control="hr"><label for="hrVerticalSpace">위아래 여백</label><input type="range" id="hrVerticalSpace" min="0" max="80" step="2" value="26"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="hrVerticalSpaceVal" data-range="hrVerticalSpace" value="26" aria-label="[HR] 위아래 여백 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel" data-hr-control="hr2">[HR2] 장면 전환</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="hr2ResetBtn" data-reset-group="hr2" data-hr-control="hr2" aria-label="[HR2] 장면 전환 초기화" title="[HR2] 장면 전환 초기화">↺</button>
+              </div>
+              <div class="row shapeChoiceRow" data-hr-control="hr2">
+                <span class="shapeChoiceLabel" id="hr2ShapeLabel">모양</span>
+                <select id="hr2Shape" class="segmentedChoiceSource" tabindex="-1" aria-hidden="true"><option value="star">별</option><option value="diamond">마름모</option><option value="triple-star">별 세 개</option></select>
+                <span class="segmentedChoice shapeChoice" data-control="hr2Shape" role="group" aria-labelledby="hr2ShapeLabel" aria-label="장면 전환 모양">
+                  <button class="uiButton" type="button" data-value="star" aria-label="별" title="별" aria-pressed="true"><span class="shapePreview shapePreviewGlyph" aria-hidden="true">✦</span></button>
+                  <button class="uiButton" type="button" data-value="diamond" aria-label="마름모" title="마름모" aria-pressed="false"><span class="shapePreview shapePreviewDiamond" aria-hidden="true"></span></button>
+                  <button class="uiButton" type="button" data-value="triple-star" aria-label="별 세 개" title="별 세 개" aria-pressed="false"><span class="shapePreview shapePreviewTripleStars" aria-hidden="true">✦ ✦ ✦</span></button>
+                </span>
+              </div>
+              <div class="row" data-hr-control="hr2"><label for="hr2Opacity">불투명도</label><input type="range" id="hr2Opacity" min="0" max="100" step="5" value="50"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="hr2OpacityVal" data-range="hr2Opacity" value="50" aria-label="장면 전환 불투명도 직접 입력"><span class="rangeUnit">%</span></span></div>
+              <div class="row" data-hr-control="hr2"><label for="hr2VerticalSpace">위아래 여백</label><input type="range" id="hr2VerticalSpace" min="0" max="80" step="2" value="48"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="hr2VerticalSpaceVal" data-range="hr2VerticalSpace" value="48" aria-label="[HR2] 위아래 여백 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel" data-hr-control="hr3">[HR3] 호흡</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="hr3ResetBtn" data-reset-group="hr3" data-hr-control="hr3" aria-label="[HR3] 호흡 초기화" title="[HR3] 호흡 초기화">↺</button>
+              </div>
+              <div class="row shapeChoiceRow" data-hr-control="hr3">
+                <span class="shapeChoiceLabel" id="hr3ShapeLabel">모양</span>
+                <select id="hr3Shape" class="segmentedChoiceSource" tabindex="-1" aria-hidden="true"><option value="dots">점 세 개</option><option value="one">점 하나</option><option value="line">짧은 선</option></select>
+                <span class="segmentedChoice shapeChoice" data-control="hr3Shape" role="group" aria-labelledby="hr3ShapeLabel" aria-label="호흡 모양">
+                  <button class="uiButton" type="button" data-value="dots" aria-label="점 세 개" title="점 세 개" aria-pressed="true"><span class="shapePreview shapePreviewBreath" aria-hidden="true">· · ·</span></button>
+                  <button class="uiButton" type="button" data-value="one" aria-label="점 하나" title="점 하나" aria-pressed="false"><span class="shapePreview shapePreviewBreath" aria-hidden="true">·</span></button>
+                  <button class="uiButton" type="button" data-value="line" aria-label="짧은 선" title="짧은 선" aria-pressed="false"><span class="shapePreview shapePreviewShortLine" aria-hidden="true"></span></button>
+                </span>
+              </div>
+              <div class="row" data-hr-control="hr3"><label for="hr3Opacity">불투명도</label><input type="range" id="hr3Opacity" min="0" max="100" step="5" value="50"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="hr3OpacityVal" data-range="hr3Opacity" value="50" aria-label="호흡 불투명도 직접 입력"><span class="rangeUnit">%</span></span></div>
+              <div class="row" data-hr-control="hr3"><label for="hr3VerticalSpace">위아래 여백</label><input type="range" id="hr3VerticalSpace" min="0" max="80" step="2" value="36"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="hr3VerticalSpaceVal" data-range="hr3VerticalSpace" value="36" aria-label="[HR3] 위아래 여백 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel" data-hr-control="hr4">[HR4] 여백</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="hr4ResetBtn" data-reset-group="hr4" data-hr-control="hr4" aria-label="[HR4] 여백 초기화" title="[HR4] 여백 초기화">↺</button>
+              </div>
+              <div class="row" data-hr-control="hr4"><label for="gapHeight">여백 높이</label><input type="range" id="gapHeight" min="20" max="100" step="4" value="48"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="gapHeightVal" data-range="gapHeight" value="48" aria-label="[HR4] 여백 높이 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+        </div>
+      </details>
+      <details class="typographySubsection" id="detailCardExteriorSection">
+        <summary class="typographySubsectionSummary">카드 스타일</summary>
+        <div class="typographySubsectionBody">
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel">카드 외곽</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="cardExteriorResetBtn" data-reset-group="cardOutline" aria-label="카드 외곽 초기화" title="카드 외곽 초기화">↺</button>
+              </div>
+              <div class="row advancedRadiusRow" id="cardCornerRadiusRow"><label for="cardCornerRadius">모서리 곡률</label><input type="range" id="cardCornerRadius" min="0" max="16" step="2" value="16"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="cardCornerRadiusVal" data-range="cardCornerRadius" value="16" aria-label="둥근 카드 모서리 곡률 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel">카드 제목</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="cardTitleResetBtn" data-reset-group="cardTitle" aria-label="카드 제목 초기화" title="카드 제목 초기화">↺</button>
+              </div>
+              <div class="row"><label for="cardTitlePadding">제목 높이</label><input type="range" id="cardTitlePadding" min="12" max="40" step="2" value="26"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="cardTitlePaddingVal" data-range="cardTitlePadding" value="26" aria-label="카드 제목 높이 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row advancedDividerLengthRow" id="cardDividerLengthRow"><label for="cardDividerLength">제목선 길이</label><input type="range" id="cardDividerLength" min="20" max="100" step="5" value="100"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="cardDividerLengthVal" data-range="cardDividerLength" value="100" aria-label="카드 제목선 길이 직접 입력"><span class="rangeUnit">%</span></span></div>
+              <div class="row" id="cardTitleOrnamentOpacityRow"><label for="cardTitleOrnamentOpacity">장식 불투명도</label><input type="range" id="cardTitleOrnamentOpacity" min="0" max="100" step="5" value="50"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="cardTitleOrnamentOpacityVal" data-range="cardTitleOrnamentOpacity" value="50" aria-label="카드 제목 장식 불투명도 직접 입력"><span class="rangeUnit">%</span></span></div>
+              <div class="row shapeChoiceRow" id="foldAutoNumberStyleRow"><span class="shapeChoiceLabel" id="foldAutoNumberStyleLabel">자동 번호</span><select id="foldAutoNumberStyle" class="segmentedChoiceSource" tabindex="-1" aria-hidden="true"><option value="arabic" selected>아라비아 숫자</option><option value="roman">로마 숫자</option></select><span class="segmentedChoice shapeChoice" data-control="foldAutoNumberStyle" role="group" aria-labelledby="foldAutoNumberStyleLabel"><button class="uiButton" type="button" data-value="arabic" aria-label="아라비아 숫자" title="아라비아 숫자" aria-pressed="true">1·2·3</button><button class="uiButton" type="button" data-value="roman" aria-label="로마 숫자" title="로마 숫자" aria-pressed="false">I·II·III</button></span></div>
+          </div>
+          <div class="advancedOptionPanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel">카드 간격</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="cardSpacingResetBtn" data-reset-group="cardSpacing" aria-label="카드 간격 초기화" title="카드 간격 초기화">↺</button>
+              </div>
+              <div class="row advancedProfileTopOnlyRow" id="profileTitleGapRow"><label for="profileTitleGap">프로필 ↔ 표제</label><input type="range" id="profileTitleGap" min="-20" max="80" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="profileTitleGapVal" data-range="profileTitleGap" value="0" aria-label="최상단 프로필과 표제 사이 간격 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row"><label for="coverCardGap">표제 ↔ 본문</label><input type="range" id="coverCardGap" min="0" max="80" step="2" value="0"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="coverCardGapVal" data-range="coverCardGap" value="0" aria-label="표제·프로필 카드와 첫 본문 카드 사이 간격 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row"><label for="cardGap">카드 ↔ 카드</label><input type="range" id="cardGap" min="0" max="40" step="1" value="20"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="cardGapVal" data-range="cardGap" value="20" aria-label="카드와 카드 사이 간격 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+        </div>
+      </details>
+      <details class="typographySubsection" id="detailCreditSection">
+        <summary class="typographySubsectionSummary">크레딧</summary>
+        <div class="typographySubsectionBody">
+          <div class="advancedOptionPanel" id="creditAppearancePanel">
+              <div class="advancedOptionHeading">
+                <div class="typeSectionLabel designSectionLabel">표현·간격</div>
+                <button type="button" class="profileResetIconBtn advancedOptionResetBtn" id="creditAppearanceResetBtn" data-reset-group="creditAppearance" aria-label="크레딧 표현·간격 초기화" title="크레딧 표현·간격 초기화">↺</button>
+              </div>
+              <div class="row creditAppearanceOptionsRow"><span class="layoutToggleLabel" id="creditAppearanceOptionsLabel">표현</span><div class="layoutToggleChoices" role="group" aria-labelledby="creditAppearanceOptionsLabel"><label class="layoutToggleChoice" title="크레딧 카드 외곽선 표시"><input type="checkbox" id="creditBorderOn"><span>외곽선</span></label><label class="layoutToggleChoice" title="크레딧 카드 배경을 투명하게 표시"><input type="checkbox" id="creditTransparentOn"><span>투명 배경</span></label></div></div>
+              <div class="row" id="creditWidthRow"><label for="creditWidth">크레딧 폭</label><input type="range" id="creditWidth" min="200" max="900" step="10" value="380"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="creditWidthVal" data-range="creditWidth" value="380" aria-label="크레딧 폭 직접 입력"><span class="rangeUnit">px</span></span></div>
+              <div class="row" id="creditCardGapRow"><label for="creditCardGap">크레딧 ↔ 카드</label><input type="range" id="creditCardGap" min="18" max="80" step="2" value="40"><span class="rangeEditor"><input type="text" inputmode="numeric" class="rangeval" id="creditCardGapVal" data-range="creditCardGap" value="40" aria-label="크레딧과 카드 간격 직접 입력"><span class="rangeUnit">px</span></span></div>
+          </div>
+        </div>
+      </details>
+      <details class="creditPresetSection" id="detailPresetSection">
+        <summary class="creditPresetSummary">프리셋</summary>
+        <div class="creditPresetControls">
+          <div class="creditPresetLoadRow">
+            <select id="detailPresetSelect" aria-label="저장한 세부 조정 프리셋">
+              <option value="">저장된 프리셋 선택</option>
+            </select>
+            <button class="uiButton" type="button" id="detailPresetLoadBtn" disabled>불러오기</button>
+            <button class="uiButton" type="button" id="detailPresetDeleteBtn" disabled>삭제</button>
+          </div>
+          <div class="creditPresetSaveRow">
+            <input type="text" id="detailPresetName" maxlength="80" placeholder="프리셋 이름" aria-label="세부 조정 프리셋 이름">
+            <button class="uiButton" type="button" id="detailPresetSaveBtn" disabled>저장</button>
+          </div>
+        </div>
+      </details>
     </div>
   </details>
 
@@ -751,14 +995,15 @@
 
 <div class="tabPanel" id="tabTheme" role="tabpanel" aria-labelledby="tabBtnTheme">
 
+
   <section class="group expressionThemeGroup" aria-label="카드 모양과 배경">
     <div class="expressionThemeRow">
-      <span class="expressionThemeLabel" id="outputShapeLabel">카드 모양</span>
-      <div class="expressionThemeOptions" role="group" aria-labelledby="outputShapeLabel">
+      <span class="expressionThemeLabel">카드 모양</span>
+      <div class="expressionThemeOptions" role="group" aria-label="카드 모양">
         <button type="button" data-output-shape="solid" aria-label="둥근 카드" title="둥근 카드" aria-pressed="false"><span class="expressionShapeIcon" aria-hidden="true"></span></button>
         <button type="button" data-output-shape="document" aria-label="각진 카드" title="각진 카드" aria-pressed="false"><span class="expressionShapeIcon" aria-hidden="true"></span></button>
       </div>
-      <label class="expressionTransparentChoice"><input type="checkbox" id="outputTransparentOn"><span>투명</span></label>
+      <label class="expressionTransparentChoice"><input type="checkbox" id="outputTransparentOn" aria-label="투명"><span>투명</span></label>
     </div>
     <select id="outputTheme" hidden aria-label="카드 형태와 배경 조합"><option value="solid">둥근 카드 · 색상 배경</option><option value="document">각진 카드 · 색상 배경</option><option value="transparent">둥근 카드 · 투명 배경</option><option value="document-transparent">각진 카드 · 투명 배경</option></select>
     <div class="row transparentTextRow"><label for="transparentTextMode">투명 배경 글자색</label><select id="transparentTextMode"><option value="preserve">기존 색상 유지 (기본)</option><option value="inherit">인물색 끄기 · 게시판 기본색</option></select></div>
@@ -766,9 +1011,9 @@
   </section>
 
   <details class="group foldGroup themeFold" id="comboGroup">
-    <summary class="group-title foldHead"><span class="themeFoldTitle">추천 프리셋</span><span class="themeFoldMeta" id="recommendedPresetStatus">색상 조합</span><span class="foldArrow" aria-hidden="true"></span></summary>
+    <summary class="group-title foldHead"><span class="themeFoldTitle">색상 프리셋</span><span class="themeFoldMeta" id="recommendedPresetStatus">색상 조합</span><span class="foldArrow" aria-hidden="true"></span></summary>
     <div class="foldBody">
-      <div class="comboFamilyFilters" id="comboFamilyFilters" role="group" aria-label="추천 프리셋 색상 계열"></div>
+      <div class="comboFamilyFilters" id="comboFamilyFilters" role="group" aria-label="색상 프리셋 색상 계열"></div>
       <div id="comboList"></div>
     </div>
   </details>
@@ -804,7 +1049,7 @@
     <div class="themeEditorActions">
       <button type="button" class="secondary btnQuiet uiButton" id="resetDefaultsBtn">테마 초기화</button>
     </div>
-    <button type="button" id="currentThemePaletteButton" class="currentThemePaletteButton uiButton" title="같은 컬러칩을 다시 누르면 대사 옵션 1→2→3→4→5 순환">
+    <button type="button" id="currentThemePaletteButton" class="currentThemePaletteButton uiButton" title="누를 때마다 다음 대사 표현 방식으로 변경">
       <span class="currentThemePaletteBar" aria-hidden="true">
         <span data-theme-color="bgColor"></span>
         <span data-theme-color="narrColor"></span>
@@ -812,7 +1057,7 @@
         <span data-theme-color="charColor"></span>
         <span data-theme-color="userColor"></span>
       </span>
-      <span class="currentThemePaletteOption" id="currentThemePaletteOption">대사 옵션 1</span>
+      <span class="currentThemePaletteOption" id="currentThemePaletteOption">글자 강조</span>
     </button>
     <div class="themeColorGrid">
     <div class="row">
@@ -852,10 +1097,9 @@
     </div>
     </div>
     <div id="charList"></div>
-    <div id="charEmpty" class="hint">본문 새 인물 자동 추가</div>
     <input type="hidden" id="extraChars" value="[]">
 
-    <div class="themeSaveLabel">프리셋으로 저장</div>
+    <hr class="themeSaveDivider">
     <div class="presetRow">
       <input type="text" id="presetName" maxlength="80" aria-label="새 프리셋 이름" placeholder="새 이름으로 저장">
     </div>
@@ -918,7 +1162,7 @@
     <div class="presetRow archiveFileRow">
       <button type="button" class="secondary btnSecondary uiButton" id="exportSlotsBtn" style="flex:1;">전체 내보내기</button>
       <button type="button" class="secondary btnSecondary uiButton" id="importSlotsBtn" style="flex:1;">파일 가져오기</button>
-      <input type="file" id="importSlotsFile" accept="application/json" style="display:none;">
+      <input type="file" id="importSlotsFile" accept=".json,.txt,application/json,text/plain" style="display:none;">
     </div>
     <div id="slotImportStatus" class="hint" aria-live="polite"></div>
     <div class="archiveResetRow">
@@ -926,7 +1170,14 @@
     </div>
     <details class="helpFold">
       <summary>보관함 사용법</summary>
-      <p class="hint"><b>저장</b> 슬롯에 보관 · <b>제목 클릭</b> 작업 전환(선택 모드에서는 선택 전환)(되돌리기 가능) · <b>새 로그</b> 본문·표제·이미지만 초기화 · <b>전체 초기화</b> 현재 작업 내용은 비우고 디자인·테마는 기본값으로 복원(보관함·내 프리셋 유지) · <b>선택 → 선택 내보내기</b> 체크한 항목만 백업(검색·정렬 후에도 선택 유지) · <b>전체 내보내기</b> 보관함 전체 백업</p>
+      <ul class="archiveHelpList">
+        <li><strong>저장</strong><span>현재 작업을 보관함에 저장</span></li>
+        <li><strong>제목 클릭</strong><span>저장된 작업으로 전환 · 되돌리기 가능<br>선택 모드에서는 항목 선택</span></li>
+        <li><strong>새 로그</strong><span>본문·표제·이미지만 초기화</span></li>
+        <li><strong>현재 작업 전체 초기화</strong><span>작업 내용 초기화, 디자인·테마 기본값 복원<br>보관함·내 프리셋은 유지</span></li>
+        <li><strong>선택 → 선택 내보내기</strong><span>체크한 항목만 백업 · 검색·정렬 후에도 선택 유지</span></li>
+        <li><strong>전체 내보내기</strong><span>보관함 전체 백업</span></li>
+      </ul>
     </details>
   </div>
 </div><!-- /archiveDrawer -->
@@ -955,11 +1206,30 @@
     <details class="helpFold outputAdvanced" id="outputAdvanced">
       <summary>코드 직접 보기</summary>
       <div id="codeWrap" class="open">
-        <button class="uiButton" type="button" id="codeFsBtn" title="코드를 전체 화면으로 보기">⛶ 전체 화면</button>
+        <button class="uiButton" type="button" id="codeFsBtn" aria-label="코드를 전체 화면으로 보기" title="코드를 전체 화면으로 보기">⛶</button>
         <textarea id="codeBox" aria-label="생성된 HTML 코드" readonly spellcheck="false"></textarea>
       </div>
     </details>
     <button type="button" class="btnQuiet uiButton" id="sidebarNewLogBtn">새 로그 시작하기</button>
+    <div class="uiAppearancePanel" role="group" aria-label="화면 색상">
+      <div class="uiAppearanceControls">
+        <button type="button" class="uiAppearanceButton uiPaletteButton" id="uiPaletteBtn" aria-label="색상 팔레트 열기" aria-expanded="false" aria-controls="uiPaletteMenu" title="색상 팔레트">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2.1 2.1 0 0 0 1.6-3.5 1.7 1.7 0 0 1 1.3-2.8H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="11" r=".7" fill="currentColor" stroke="none"/><circle cx="10" cy="7.5" r=".7" fill="currentColor" stroke="none"/><circle cx="15" cy="7.5" r=".7" fill="currentColor" stroke="none"/></svg>
+          <span class="uiPaletteCurrent" aria-hidden="true"></span>
+        </button>
+        <div class="uiPaletteMenu" id="uiPaletteMenu" role="group" aria-label="작업 화면 팔레트" hidden>
+          <button type="button" data-ui-palette="default" aria-label="기본" title="기본" aria-pressed="true"><span class="uiPaletteSwatch" style="--swatch:#789a82"></span></button>
+          <button type="button" data-ui-palette="gray" aria-label="회색" title="회색" aria-pressed="false"><span class="uiPaletteSwatch" style="--swatch:#909090"></span></button>
+          <button type="button" data-ui-palette="blue" aria-label="파랑" title="파랑" aria-pressed="false"><span class="uiPaletteSwatch" style="--swatch:#668da9"></span></button>
+          <button type="button" data-ui-palette="pink" aria-label="분홍" title="분홍" aria-pressed="false"><span class="uiPaletteSwatch" style="--swatch:#b8879b"></span></button>
+          <button type="button" data-ui-palette="yellow" aria-label="노랑" title="노랑" aria-pressed="false"><span class="uiPaletteSwatch" style="--swatch:#b59b63"></span></button>
+        </div>
+        <span class="uiAppearanceDivider" aria-hidden="true"></span>
+        <button type="button" class="uiAppearanceButton" id="uiNightModeBtn" aria-label="나이트 모드 켜기" aria-pressed="false" title="나이트 모드 켜기">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 15.6A8.7 8.7 0 0 1 8.4 3.8a8.7 8.7 0 1 0 11.8 11.8Z"/></svg>
+        </button>
+      </div>
+    </div>
     <div id="errorBar" role="alert" aria-live="assertive"></div>
   </div>
 </div>
@@ -973,21 +1243,35 @@
         <span id="previewLabel">미리보기</span>
       </span>
       <span class="previewTools">
-        <span class="previewStyleToggles" aria-label="카드 표시 방식">
+        <span class="previewStyleControls">
+          <button type="button" class="previewStyleToggle" id="previewProfileBtn" aria-pressed="false" title="프로필 표시">프로필</button>
+          <button type="button" class="previewStyleToggle" id="previewCreditBtn" aria-pressed="false" title="크레딧 표시">크레딧</button>
           <button type="button" class="previewStyleToggle" id="previewCardBorderBtn" aria-pressed="true" title="카드 외곽선 표시 전환">외곽선</button>
           <button type="button" class="previewStyleToggle" id="previewCardLayoutBtn" aria-pressed="false" title="여러 카드를 이어서 표시 전환">이어보기</button>
+          <span class="previewStyleDivider" aria-hidden="true"></span>
         </span>
-        <span class="previewStyleDivider" aria-hidden="true"></span>
-        <span class="widthToggle previewThemeToggle" aria-label="아카라이브 게시글 테마 미리보기">
-          <button type="button" id="previewThemeLightBtn" class="active" aria-pressed="true" title="아카라이브 라이트 테마로 보기">라이트</button>
-          <button type="button" id="previewThemeDarkBtn" aria-pressed="false" title="아카라이브 다크 테마로 보기">다크</button>
+        <span class="previewViewControls">
+          <span class="widthToggle previewThemeToggle" aria-label="아카라이브 게시글 테마 미리보기">
+            <button type="button" id="previewThemeLightBtn" class="active" aria-pressed="true" title="아카라이브 라이트 테마로 보기">라이트</button>
+            <button type="button" id="previewThemeDarkBtn" aria-pressed="false" title="아카라이브 다크 테마로 보기">다크</button>
+          </span>
+          <span class="previewLayoutControls">
+            <span class="widthToggle previewShapeControl">
+              <button type="button" class="previewShapeToggle" id="previewCardShapeBtn" aria-label="현재 둥근 카드, 각진 카드로 변경" title="각진 카드로 변경"><span id="previewCardShapeText">둥근 카드</span></button>
+            </span>
+            <span class="widthToggle previewWidthCycle">
+              <button type="button" id="previewWidthCycleBtn" aria-label="본문 폭 750px, 다음 폭으로 변경" title="다음 본문 폭으로 변경">750px</button>
+            </span>
+            <span class="widthToggle previewFullscreenWidthToggle">
+              <button type="button" id="widthDesktopBtn" class="active" aria-pressed="true">데스크톱 750</button>
+              <button type="button" id="widthMobileBtn" aria-pressed="false">모바일 380</button>
+            </span>
+          </span>
+          <span class="previewActionControls">
+            <button type="button" class="layoutMirrorBtn" id="layoutMirrorBtn" aria-pressed="false" title="설정과 미리보기 좌우 반전">⇄</button>
+            <button type="button" class="previewFullscreenBtn" id="previewFullscreenBtn" aria-pressed="false" title="전체화면 미리보기">⛶</button>
+          </span>
         </span>
-        <span class="widthToggle">
-          <button type="button" id="widthDesktopBtn" class="active" aria-pressed="true">데스크톱 750</button>
-          <button type="button" id="widthMobileBtn" aria-pressed="false">모바일 380</button>
-        </span>
-        <button type="button" class="layoutMirrorBtn" id="layoutMirrorBtn" aria-pressed="false" title="설정과 미리보기 좌우 반전">⇄</button>
-        <button type="button" class="previewFullscreenBtn" id="previewFullscreenBtn" aria-pressed="false" title="전체화면 미리보기">⛶</button>
       </span>
     </div>
     <div id="pvSearchBox">
@@ -1025,7 +1309,7 @@
       <div class="cActions">
         <span id="codeFsStatus" class="hint" style="margin:0 6px 0 0; align-self:center;"></span>
         <button type="button" id="codeFsCopyBtn">복사</button>
-        <button type="button" id="codeFsCloseBtn">✕ 닫기</button>
+        <button type="button" id="codeFsCloseBtn" aria-label="닫기" title="닫기">✕</button>
       </div>
     </div>
     <textarea id="codeFsArea" aria-label="전체 화면 HTML 코드" readonly spellcheck="false"></textarea>
@@ -1037,10 +1321,10 @@
     <div id="fsHead">
       <span id="fsTitle">카드 1</span>
       <div id="fsFoldGroup">
-        <label id="fsFoldLabel"><input type="checkbox" id="fsFoldChk"> 접기 카드</label>
+        <label id="fsFoldLabel"><input type="checkbox" id="fsFoldChk"> 카드 접기</label>
         <input type="text" id="fsFoldTitle" maxlength="200" aria-label="카드 제목" placeholder="카드 제목">
       </div>
-      <button type="button" id="fsCloseBtn" title="닫기 (Esc)">✕ 닫기</button>
+      <button type="button" id="fsCloseBtn" title="닫기 (Esc)" aria-label="전체 화면 편집기 닫기"><span class="fsCloseIcon" aria-hidden="true"></span></button>
     </div>
     <div class="editorToolbar fmtBar" data-scope="fs" id="fsToolbar">
       <span class="tbGroup">
@@ -1057,7 +1341,7 @@
         <button type="button" data-fs="hr" title="얇은 구분선">구분선</button>
         <button type="button" data-fs="hr2" title="장면 전환 장식">장면 전환</button>
         <button type="button" data-fs="hr3" title="부드러운 호흡 구분">호흡</button>
-        <button type="button" data-fs="gap" title="기호 없는 넓은 여백">여백</button>
+        <button type="button" data-fs="hr4" title="[HR4] 여백">여백</button>
       </span>
       <span class="tbSep"></span>
       <span class="tbGroup">
@@ -1066,7 +1350,7 @@
         <button type="button" data-fs="fold" title="선택 부분을 접기로 감싸기">접기</button>
       </span>
       <span class="tbGroup fsSearchTools">
-        <button type="button" id="fsSearchToggle" title="검색·대치 열기 (Ctrl+F)" aria-expanded="false" aria-controls="fsSearchBar">검색</button>
+        <button type="button" id="fsSearchToggle" title="검색·대치 열기 (Ctrl+F)" aria-label="검색·대치 열기" aria-expanded="false" aria-controls="fsSearchBar">검색</button>
       </span>
     </div>
     <div class="editorToolbar" id="fsSearchBar" aria-hidden="true">
@@ -1086,26 +1370,29 @@
       <div id="fsHl" aria-hidden="true"></div>
       <textarea id="fsTextarea" aria-label="전체 화면 카드 본문" spellcheck="false"></textarea>
     </div>
-    <div id="fsCheat">
-      <span><code>"대사"</code> 대사</span>
-      <span><code>&gt;&gt;</code> {{char}}</span>
-      <span><code>&lt;&lt;</code> {{user}}</span>
-      <span><code>&lt;&lt;이름&gt;&gt; "대사"</code> 또는 <code>[이름]"대사"</code> 다른 인물 · 테마에서 색 변경</span>
-      <span><code>**이름** "대사"</code> 자동 인물색 · 등록 불필요</span>
-      <span><code>**굵게**</code></span>
-      <span><code>*강조*</code></span>
-      <span><code>'속마음'</code></span>
-      <span><code># 소제목</code></span>
-      <span><code>[접기 ## 제목]…[/접기]</code></span>
-      <span><code>&gt; 인용</code></span>
-      <span><code>[C]</code> 가운데</span>
-      <span><code>[HR]</code> 구분선</span>
-      <span><code>[HR2]</code> 장면 전환</span>
-      <span><code>[HR3]</code> 호흡</span>
-      <span><code>[GAP]</code> 넓은 여백</span>
-      <span><code>[IMG 주소]</code></span>
-      <span><code>[접기]…[/접기]</code></span>
-    </div>
+    <details id="fsCheat">
+      <summary>문법</summary>
+      <div class="fsCheatList">
+        <span><code>"대사"</code> 대사</span>
+        <span><code>&gt;&gt;</code> {{char}}</span>
+        <span><code>&lt;&lt;</code> {{user}}</span>
+        <span><code>&lt;&lt;이름&gt;&gt; "대사"</code> 또는 <code>[이름]"대사"</code> 다른 인물</span>
+        <span><code>**이름** "대사"</code> 자동 인물색</span>
+        <span><code>**굵게**</code></span>
+        <span><code>*강조*</code></span>
+        <span><code>'속마음'</code></span>
+        <span><code># 소제목</code></span>
+        <span><code>[접기 ## 제목]…[/접기]</code></span>
+        <span><code>&gt; 인용</code></span>
+        <span><code>[C]</code> 가운데</span>
+        <span><code>[HR]</code> 구분선</span>
+        <span><code>[HR2]</code> 장면 전환</span>
+        <span><code>[HR3]</code> 호흡</span>
+        <span><code>[HR4]</code> 여백</span>
+        <span><code>[IMG 주소]</code></span>
+        <span><code>[접기]…[/접기]</code></span>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -1119,7 +1406,7 @@
   <button type="button" class="separatorChoice" data-block-action="separator-hr" data-separator-type="hr" aria-label="얇은 구분선으로 변경" title="[HR] 얇은 구분선">−</button>
   <button type="button" class="separatorChoice" data-block-action="separator-hr2" data-separator-type="hr2" aria-label="장면 전환으로 변경" title="[HR2] 장면 전환">✦</button>
   <button type="button" class="separatorChoice" data-block-action="separator-hr3" data-separator-type="hr3" aria-label="호흡 구분으로 변경" title="[HR3] 호흡 구분">·</button>
-  <button type="button" class="separatorChoice" data-block-action="separator-gap" data-separator-type="gap" aria-label="넓은 여백으로 변경" title="[GAP] 넓은 여백">[ ]</button>
+  <button type="button" class="separatorChoice" data-block-action="separator-hr4" data-separator-type="hr4" aria-label="여백으로 변경" title="[HR4] 여백">[ ]</button>
   <button type="button" data-block-action="ratio" hidden>비율</button>
   <button type="button" data-block-action="caption" hidden>캡션</button>
   <button type="button" data-block-action="heading-1" data-heading-level="1" hidden>#</button>
@@ -1135,7 +1422,8 @@
 </div>
 
 <script src="../speaker-colors.js" defer></script>
-<script src="./app.js?v=1.7.0-studio-1" defer></script>
+<script src="./settings.js?v=1.8.0-studio-1" defer></script>
+<script src="./app.js?v=1.8.0-studio-1" defer></script>
 
 </body>
 </html>
